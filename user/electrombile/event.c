@@ -189,7 +189,7 @@ int event_threadMsg(const EatEvent_st* event)
             {
                 data.cgi.mcc = gps->cellInfo.mcc;
                 data.cgi.mnc = gps->cellInfo.mnc;
-                data.cellNum = gps->cellInfo.cellNo;
+                data.cgi.cellNo = gps->cellInfo.cellNo;
                 memcpy(data.cells, gps->cellInfo.cell, sizeof(CELL) * gps->cellInfo.cellNo);
                 LOG_DEBUG("receive thread command CMD_GPS_UPDATE: cellid(%x), lac(%d)", data.cells[0].cellid, data.cells[0].lac);
 

@@ -1,8 +1,11 @@
-//
-// Created by jk on 2015/7/1.
-//
-#include <stdlib.h>
+/*
+ * vibration.c
+ *
+ *  Created on: 2015Äê7ÔÂ1ÈÕ
+ *      Author: jk
+ */
 
+#include <stdlib.h>
 #include <eat_interface.h>
 #include <eat_periphery.h>
 
@@ -43,28 +46,28 @@ void app_vibration_thread(void *data)
 	s32 ret;
 	u8 write_buffer[10] = {0};
 
-	LOG_INFO("vibration thread start");
+	LOG_INFO("vibration thread start.");
 
-	ret=eat_i2c_open(EAT_I2C_OWNER_0,0x1D,100);
-	if(ret!=0)
+	ret = eat_i2c_open(EAT_I2C_OWNER_0, 0x1D, 100);
+	if(0 != ret)
 	{
-	    LOG_ERROR("i2c test eat_i2c_open fail :ret=%d",ret);
+	    LOG_ERROR("i2c test eat_i2c_open fail :ret=%d.", ret);
 	}
 	else
 	{
-	    LOG_INFO("i2c test eat_i2c_open success");
+	    LOG_INFO("i2c test eat_i2c_open success.");
 	}
 
-	write_buffer[0]=MMA8X5X_CTRL_REG1;
-	write_buffer[1]=0x1;
-	ret=eat_i2c_write(EAT_I2C_OWNER_0,write_buffer,2);
-	if(ret!=0)
+	write_buffer[0] = MMA8X5X_CTRL_REG1;
+	write_buffer[1] = 0x01;
+	ret = eat_i2c_write(EAT_I2C_OWNER_0, write_buffer, 2);
+	if(0 != ret)
 	{
-		LOG_ERROR("start sample fail :ret=%d",ret);
+		LOG_ERROR("start sample fail :ret=%d.", ret);
 	}
 	else
 	{
-		LOG_INFO("start sample  success");
+		LOG_INFO("start sample success.");
 	}
 
 	eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
@@ -77,7 +80,6 @@ void app_vibration_thread(void *data)
             case EAT_EVENT_TIMER :
 				switch (event.data.timer.timer_id)
 				{
-
 				case TIMER_VIBRATION:
 					vibration_timer_handler();
 					eat_timer_start(event.data.timer.timer_id, setting.vibration_timer_period);
@@ -85,10 +87,9 @@ void app_vibration_thread(void *data)
 
 				default:
 					LOG_ERROR("ERR: timer[%d] expire!", event.data.timer.timer_id);
-
 					break;
 				}
-					break;
+				break;
 
             default:
             	LOG_ERROR("event(%d) not processed", event.event);

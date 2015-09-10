@@ -45,11 +45,10 @@ eat_bool setting_initial(void)
     setting.addr.ipaddr[2] = 157;
     setting.addr.ipaddr[3] = 233;
 
-
     fh = eat_fs_Open(SETITINGFILE_NAME, FS_READ_ONLY);
     if (fh < EAT_FS_NO_ERROR)
     {
-        LOG_ERROR("Create File Fail,and Return Error is %x", fh);
+        LOG_ERROR("Create File Fail, and Return Error is %d", fh);
         return EAT_FALSE;
     }
     else
@@ -80,7 +79,7 @@ eat_bool setting_initial(void)
             eat_fs_Close(fh);
         }
     }
-    
+
     return EAT_TRUE;
 }
 

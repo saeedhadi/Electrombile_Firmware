@@ -11,7 +11,7 @@
 
 void startWatchdog(void)
 {
-	eat_bool rc = eat_watchdog_start(60000,0); //60s, reboot if over time
+	eat_bool rc = eat_watchdog_start(60000, 0); //60s, reboot if over time
 
     if(rc)
     {

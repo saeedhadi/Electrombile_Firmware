@@ -29,7 +29,6 @@
 #define EAT_UART_RX_BUF_LEN_MAX 2048
 #define EAT_MEM_MAX_SIZE 100*1024
 
-
 /********************************************************************
  * Types
  ********************************************************************/
@@ -38,14 +37,11 @@ typedef void (*app_user_func)(void*);
 /********************************************************************
  * Extern Variables (Extern /Global)
  ********************************************************************/
- 
+
 /********************************************************************
  * Local Variables:  STATIC
  ********************************************************************/
-
 static u8 s_memPool[EAT_MEM_MAX_SIZE];
-
-
 
 /********************************************************************
  * External Functions declaration
@@ -57,15 +53,16 @@ extern void APP_InitRegions(void);
  ********************************************************************/
 void app_main(void *data);
 void app_func_ext1(void *data);
+
 /********************************************************************
  * Local Function
  ********************************************************************/
 #pragma arm section rodata = "APP_CFG"
-APP_ENTRY_FLAG 
+APP_ENTRY_FLAG
 #pragma arm section rodata
 
-#pragma arm section rodata="APPENTRY"
-	const EatEntry_st AppEntry = 
+#pragma arm section rodata = "APPENTRY"
+	const EatEntry_st AppEntry =
 	{
 		app_main,
 		app_func_ext1,
@@ -94,7 +91,7 @@ void app_func_ext1(void *data)
 		 eat_pin_set_mode: set GPIO mode
 		 eat_uart_set_at_port: set AT port
 	*/
-  
+
     EatUartConfig_st cfg =
     {
         EAT_UART_BAUD_115200,
@@ -102,9 +99,9 @@ void app_func_ext1(void *data)
         EAT_UART_STOP_BITS_1,
         EAT_UART_PARITY_NONE
     };
-    
+
     eat_uart_set_at_port(EAT_UART_USB);// UART1 is as AT PORT
-  
+
 	eat_uart_set_debug(EAT_UART_1);
     eat_uart_set_debug_config(EAT_UART_DEBUG_MODE_UART, &cfg);
 }
@@ -118,7 +115,7 @@ void app_main(void *data)
     APP_InitRegions();//Init app RAM
     APP_init_clib(); //C library initialize, second step
 
-    LOG_INFO(" app_main ENTRY: version:%s, SIMCOM(version:%s,buildno=%s,buildtime=%s", VERSION_STR, eat_get_version(), eat_get_buildtime(), eat_get_buildno());
+    LOG_INFO(" app_main ENTRY: version:%s, SIMCOM(version:%s,buildno=%s,buildtime=%s", VERSION_STR, eat_get_version(), eat_get_buildno(), eat_get_buildtime());
 
     rc = eat_mem_init(s_memPool,EAT_MEM_MAX_SIZE);
     if (!rc)

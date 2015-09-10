@@ -20,7 +20,6 @@ typedef struct
     eat_bool isGpsFixed;
     GPS gps;
     CGI cgi;
-    char cellNum;
     CELL cells[MAX_CELL_NUM];
 }LOCAL_DATA;
 

@@ -39,7 +39,6 @@ void app_gps_thread(void *data)
 {
     EatEvent_st event;
     eat_gps_power_req(EAT_TRUE);
-    
 
     LOG_INFO("gps current sleep mode %d", eat_gps_sleep_read());
 
@@ -52,7 +51,7 @@ void app_gps_thread(void *data)
         switch(event.event)
         {
             case EAT_EVENT_TIMER :
-                switch ( event.data.timer.timer_id )
+                switch (event.data.timer.timer_id)
                 {
                     case TIMER_GPS:
                     	LOG_INFO("TIMER_GPS expire!");
@@ -60,18 +59,16 @@ void app_gps_thread(void *data)
                         eat_timer_start(event.data.timer.timer_id, setting.gps_timer_period);
                         break;
 
-
                     default:
                     	LOG_ERROR("ERR: timer[%d] expire!", event.data.timer.timer_id);
-
                         break;
                 }
                 break;
-             case EAT_EVENT_MDM_READY_RD:
-             {       
-                   isCellGet = gps_getCells(&mcc, &mnc, &cellNo, cells);   
-                   break;
-             }
+
+            case EAT_EVENT_MDM_READY_RD:
+                isCellGet = gps_getCells(&mcc, &mnc, &cellNo, cells);
+                break;
+
             default:
             	LOG_ERROR("event(%d) not processed", event.event);
                 break;
@@ -86,9 +83,7 @@ static void gps_timer_handler(void)
     float longitude = 0.0;
     eat_bool isGpsFixed = EAT_FALSE;
 
-
     isGpsFixed = gps_getGps(&latitude, &longitude);
-
     if (isGpsFixed)
     {
         LOG_DEBUG("GPS fixed:lat=%f, lng=%f", latitude, longitude);
@@ -97,7 +92,6 @@ static void gps_timer_handler(void)
     }
     else
     {
-
         int len;
         len = eat_modem_write("AT+CENG?\r\n", 10);
         LOG_DEBUG("write at+ceng? len=%d",len);
@@ -179,9 +173,9 @@ static eat_bool gps_getCells(short* mcc, short* mnc, char* cellNo, CELL cells[])
         p = strchr(p + 1, '+');
         if (p)
         {
-            n = sscanf(p + sizeof("+CENG: 0,"), "%d,%d,%d,%x,%*d,%d", &_mcc, &_mnc, &lac, &cellid, &rxl);            
+            n = sscanf(p + sizeof("+CENG: 0,"), "%d,%d,%d,%x,%*d,%d", &_mcc, &_mnc, &lac, &cellid, &rxl);
             if (n != 5)
-            {                
+            {
                 continue;
             }
 
@@ -222,7 +216,6 @@ static eat_bool gps_sendGPS(float latitude, float longitude)
     MSG_THREAD* msg = allocMsg(msgLen);
     LOCAL_GPS* gps = 0;
 
-
     if (!msg)
     {
         LOG_ERROR("alloc msg failed");
@@ -236,7 +229,6 @@ static eat_bool gps_sendGPS(float latitude, float longitude)
     gps->gps.latitude = latitude;
     gps->gps.longitude = longitude;
 
-
     LOG_DEBUG("send gps: lat(%f), lng(%f)", latitude, longitude);
     return gps_sendMsg2Main(msg, msgLen);
 }
@@ -246,7 +238,6 @@ static eat_bool gps_sendCell(short mcc, short mnc, char cellNo, CELL cells[])
     u8 msgLen = sizeof(MSG_THREAD) + sizeof(LOCAL_GPS);
     MSG_THREAD* msg = allocMsg(msgLen);
     LOCAL_GPS* gps = 0;
-
     int i = 0;
 
     if (!msg)
@@ -262,15 +253,16 @@ static eat_bool gps_sendCell(short mcc, short mnc, char cellNo, CELL cells[])
 
     gps->cellInfo.mcc = mcc;
     gps->cellInfo.mnc = mnc;
-
     gps->cellInfo.cellNo = cellNo;
+    LOG_DEBUG("send gps: mcc(%d), mnc(%d), cellNo(%d)", mcc, mnc, cellNo);
+
     for (i = 0; i < cellNo; i++)
     {
         gps->cellInfo.cell[i].lac = cells[i].lac;
         gps->cellInfo.cell[i].cellid = cells[i].cellid;
         gps->cellInfo.cell[i].rxl = cells[i].rxl;
+        LOG_DEBUG("send gps: i(%d), lac(%d), cellid(%d), rxl(%d)", i, cells[i].lac, cells[i].cellid, cells[i].rxl);
     }
-    LOG_DEBUG("send gps: mcc(%d), mnc(%d), cellNo(%d)", mcc, mnc, cellNo);
 
     return gps_sendMsg2Main(msg, msgLen);
 }

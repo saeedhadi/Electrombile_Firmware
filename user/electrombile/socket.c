@@ -123,6 +123,7 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
             LOG_DEBUG("result of CONNECT:%d", result);
             set_socket_state(EAT_TRUE);
             break;
+
         case SOC_CLOSE:
             eat_soc_close(s);
             set_socket_state(EAT_FALSE);

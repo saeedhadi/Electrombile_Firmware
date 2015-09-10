@@ -59,8 +59,8 @@ static void print_hex(const char* data, int length)
 
     for (i = 0; i < length; i += 16)
     {
-        print("%02d  ", i % 16 + 1);
-        for (j = i; j < 16 && j < length; j++)
+        print("%02d  ", i / 16 + 1);
+        for (j = i; j < i + 16 && j < length; j++)
         {
             print("%02x ", data[j] & 0xff);
         }
@@ -72,7 +72,7 @@ static void print_hex(const char* data, int length)
             }
         }
         print("    ");
-        for (j = i; j < 16 && j < length; j++)
+        for (j = i; j < i + 16 && j < length; j++)
         {
             if (data[j] < 32)
             {
@@ -139,34 +139,37 @@ void client_loop(void)
             if (data.isGpsFixed)
             {
                 MSG_GPS* msg = alloc_msg(CMD_GPS, sizeof(MSG_GPS));
-
                 if (!msg)
                 {
                     LOG_ERROR("alloc message failed");
                 }
 
                 msg->gps = data.gps;
-                socket_sendData(msg, sizeof(MSG_GPS));
+
                 LOG_DEBUG("send GPS message");
+                print_hex((const char*)msg, sizeof(MSG_GPS));
+                socket_sendData(msg, sizeof(MSG_GPS));
             }
             else
             {
-                size_t msgLen = sizeof(MSG_HEADER) + sizeof(CGI) + sizeof(CELL) * data.cellNum;
+                size_t msgLen = sizeof(MSG_HEADER) + sizeof(CGI) + sizeof(CELL) * data.cgi.cellNo;
                 MSG_HEADER* msg = alloc_msg(CMD_CELL, msgLen);
-                CGI* cgi = (CGI*) msg + 1;
-                CELL* cell = (CELL*)cgi + 1;
+                CGI* cgi = (CGI*)(msg + 1);
+                CELL* cell = (CELL*)(cgi + 1);
                 if (!msg)
                 {
                     LOG_ERROR("alloc message failed");
                 }
 
                 memcpy(cgi, &(data.cgi), sizeof(CGI));
-                for (i = 0; i < data.cellNum; i++)
+                for (i = 0; i < data.cgi.cellNo; i++)
                 {
                     memcpy(cell + i, data.cells + i, sizeof(CELL));
                 }
-                socket_sendData(msg, msgLen);
+
                 LOG_DEBUG("send CELL message");
+                print_hex((const char*)msg, msgLen);
+                socket_sendData(msg, msgLen);
             }
         }
         else
@@ -182,8 +185,10 @@ void client_loop(void)
             }
 
             memcpy(msg->IMEI, imei, 16);
-            socket_sendData(msg, sizeof(MSG_LOGIN_REQ));
+
             LOG_DEBUG("send login message");
+            print_hex((const char*)msg, sizeof(MSG_LOGIN_REQ));
+            socket_sendData(msg, sizeof(MSG_LOGIN_REQ));
         }
 
     }
