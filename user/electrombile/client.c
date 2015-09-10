@@ -64,7 +64,7 @@ static void print_hex(const char* data, int length)
         {
             print("%02x ", data[j] & 0xff);
         }
-        if (j >= length)
+        if (j == length && length % 16)
         {
             for (j = 0; j < (16 - length % 16); j++)
             {
