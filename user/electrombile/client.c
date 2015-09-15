@@ -98,7 +98,6 @@ int client_proc(const void* m, int msgLen)
     if (msgLen < sizeof(MSG_HEADER))
     {
         LOG_ERROR("receive message length not enough: %zu(at least(%zu)", msgLen, sizeof(MSG_HEADER));
-
         return -1;
     }
 
@@ -142,6 +141,7 @@ void client_loop(void)
                 if (!msg)
                 {
                     LOG_ERROR("alloc message failed");
+                    return;
                 }
 
                 msg->gps = data.gps;
@@ -159,6 +159,7 @@ void client_loop(void)
                 if (!msg)
                 {
                     LOG_ERROR("alloc message failed");
+                    return;
                 }
 
                 memcpy(cgi, &(data.cgi), sizeof(CGI));
@@ -175,16 +176,17 @@ void client_loop(void)
         else
         {
             MSG_LOGIN_REQ* msg = alloc_msg(CMD_LOGIN, sizeof(MSG_LOGIN_REQ));
-            u8 imei[16] = {0};
+            u8 imei[IMEI_LENGTH + 1] = {0};
 
-            eat_get_imei(imei, 15);
+            eat_get_imei(imei, IMEI_LENGTH);
 
             if (!msg)
             {
                 LOG_ERROR("alloc message failed");
+                return;
             }
 
-            memcpy(msg->IMEI, imei, 16);
+            memcpy(msg->IMEI, imei, IMEI_LENGTH + 1);
 
             LOG_DEBUG("send login message");
             print_hex((const char*)msg, sizeof(MSG_LOGIN_REQ));

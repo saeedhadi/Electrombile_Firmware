@@ -117,10 +117,11 @@ void app_main(void *data)
 
     LOG_INFO(" app_main ENTRY: version:%s, SIMCOM(version:%s,buildno=%s,buildtime=%s", VERSION_STR, eat_get_version(), eat_get_buildno(), eat_get_buildtime());
 
-    rc = eat_mem_init(s_memPool,EAT_MEM_MAX_SIZE);
+    rc = eat_mem_init(s_memPool, EAT_MEM_MAX_SIZE);
     if (!rc)
     {
     	LOG_ERROR("eat memory initial error:%d!", rc);
+        return;
     }
   //  SETTING_save();
     setting_initial();

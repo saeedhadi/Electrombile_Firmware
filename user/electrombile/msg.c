@@ -32,16 +32,16 @@ void* alloc_rspMsg(const MSG_HEADER* pMsg)
     size_t msgLen = 0;
     switch (pMsg->cmd)
     {
-    case CMD_LOGIN:
-        msgLen = htons(sizeof(MSG_LOGIN_RSP));
-        break;
+        case CMD_LOGIN:
+            msgLen = htons(sizeof(MSG_LOGIN_RSP));
+            break;
 
-    case CMD_PING:
-        msgLen = htons(sizeof(MSG_PING_RSP));
-        break;
+        case CMD_PING:
+            msgLen = htons(sizeof(MSG_PING_RSP));
+            break;
 
-    default:
-        return NULL;
+        default:
+            return NULL;
     }
 
     msg = eat_mem_alloc(msgLen);

@@ -200,13 +200,10 @@ void app_sms_thread(void *data)
         switch(event.event)
         {
             case EAT_EVENT_TIMER :
-
-                switch ( event.data.timer.timer_id )
+                switch (event.data.timer.timer_id)
                 {
-
                     default:
                     	LOG_ERROR("ERR: timer[%d] expire!");
-
                         break;
                 }
                 break;

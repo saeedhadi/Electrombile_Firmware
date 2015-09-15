@@ -194,8 +194,6 @@ int event_threadMsg(const EatEvent_st* event)
                 LOG_DEBUG("receive thread command CMD_GPS_UPDATE: cellid(%x), lac(%d)", data.cells[0].cellid, data.cells[0].lac);
 
             }
-
-
             break;
         }
 
@@ -206,8 +204,10 @@ int event_threadMsg(const EatEvent_st* event)
         case CMD_THREAD_VIBRATE:
             LOG_DEBUG("receive thread command CMD_VIBRATE");
             break;
+
         default:
-            LOG_ERROR("unknown thread command:%d", msg->cmd);
+            LOG_ERROR("receive unknown thread command:%d", msg->cmd);
+            break;
     }
 
     freeMsg(msg);
