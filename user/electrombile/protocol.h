@@ -22,6 +22,13 @@ enum
     CMD_SMS     = 0x06,
 };
 
+enum ALARM_TYPE
+{
+	ALARM_FENCE_OUT,
+	ALARM_FENCE_IN,
+	ALARM_VIBRATE,
+};
+
 #pragma pack(push, 1)
 
 /*
@@ -106,7 +113,6 @@ typedef struct
 {
     MSG_HEADER header;
     unsigned char alarmType;
-    GPS gps;
 }MSG_ALARM_REQ;
 typedef MSG_HEADER MSG_ALARM_RSP;
 
