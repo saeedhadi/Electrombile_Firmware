@@ -25,7 +25,7 @@ static eat_bool vibration_sendMsg2Main(MSG_THREAD* msg, u8 len);
 static eat_bool vibration_sendAlarm(void);
 static void vibration_timer_handler(void);
 
-float  fangcha(long *array,int len)
+float fangcha(long *array,int len)
 {
    int i;
    float sum=0;
@@ -49,26 +49,22 @@ void app_vibration_thread(void *data)
 	LOG_INFO("vibration thread start.");
 
 	ret = eat_i2c_open(EAT_I2C_OWNER_0, 0x1D, 100);
-	if(0 != ret)
+	if(EAT_DEV_STATUS_OK != ret)
 	{
-	    LOG_ERROR("i2c test eat_i2c_open fail :ret=%d.", ret);
+	    LOG_ERROR("vibration eat_i2c_open fail :ret=%d.", ret);
+        return;
 	}
-	else
-	{
-	    LOG_INFO("i2c test eat_i2c_open success.");
-	}
+	LOG_INFO("vibration eat_i2c_open success.");
 
 	write_buffer[0] = MMA8X5X_CTRL_REG1;
 	write_buffer[1] = 0x01;
 	ret = eat_i2c_write(EAT_I2C_OWNER_0, write_buffer, 2);
-	if(0 != ret)
+	if(EAT_DEV_STATUS_OK != ret)
 	{
-		LOG_ERROR("start sample fail :ret=%d.", ret);
+		LOG_ERROR("vibration start sample fail :ret=%d.", ret);
+        return;
 	}
-	else
-	{
-		LOG_INFO("start sample success.");
-	}
+	LOG_INFO("vibration start sample success.");
 
 	eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
 
@@ -80,61 +76,67 @@ void app_vibration_thread(void *data)
             case EAT_EVENT_TIMER :
 				switch (event.data.timer.timer_id)
 				{
-				case TIMER_VIBRATION:
-					vibration_timer_handler();
-					eat_timer_start(event.data.timer.timer_id, setting.vibration_timer_period);
-					break;
+    				case TIMER_VIBRATION:
+    					vibration_timer_handler();
+    					eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
+    					break;
 
-				default:
-					LOG_ERROR("ERR: timer[%d] expire!", event.data.timer.timer_id);
-					break;
+    				default:
+    					LOG_ERROR("timer(%d) expire!", event.data.timer.timer_id);
+    					break;
 				}
 				break;
 
             default:
-            	LOG_ERROR("event(%d) not processed", event.event);
+            	LOG_ERROR("event(%d) not processed!", event.event);
                 break;
-
         }
     }
 }
 
+
 static void vibration_timer_handler(void)
 {
-    u8 read_buffer[10] =
-    { 0 };
+    u8 read_buffer[MMA8X5X_BUF_SIZE] = { 0 };
+    u8 write_buffer[MMA8X5X_BUF_SIZE] = { 0 };
     s32 ret;
-    u8 write_buffer[10] =
-    { 0 };
 //	float x2y2z2_fangcha;
     long delta;
-    write_buffer[0] = MMA8X5X_OUT_X_MSB;
-    ret = eat_i2c_read(EAT_I2C_OWNER_0, &write_buffer[0], 1, read_buffer,
-    MMA8X5X_BUF_SIZE);
 
+    write_buffer[0] = MMA8X5X_OUT_X_MSB;
+
+    ret = eat_i2c_read(EAT_I2C_OWNER_0, &write_buffer[0], 1, read_buffer, MMA8X5X_BUF_SIZE);
     if (ret != 0)
     {
-//		eat_trace("i2c test eat_i2c_read 0AH fail :ret=%d",ret);
+		LOG_ERROR("i2c test eat_i2c_read 0AH fail :ret=%d", ret);
+        return;
+
     }
     else
     {
-        datax[vibration_data_i] = ((read_buffer[0] << 8) & 0xff00)
-                | read_buffer[1];
-        datay[vibration_data_i] = ((read_buffer[2] << 8) & 0xff00)
-                | read_buffer[3];
-        dataz[vibration_data_i] = ((read_buffer[4] << 8) & 0xff00)
-                | read_buffer[5];
-        data_x2y2z2[vibration_data_i] = datax[vibration_data_i]
-                * datax[vibration_data_i]
-                + datay[vibration_data_i] * datay[vibration_data_i]
-                + dataz[vibration_data_i] * dataz[vibration_data_i];
+        //LOG_DEBUG("read_length=%d", sizeof(read_buffer));
+
+        datax[vibration_data_i] = ((read_buffer[0] << 8) & 0xff00) | read_buffer[1];
+        datay[vibration_data_i] = ((read_buffer[2] << 8) & 0xff00) | read_buffer[3];
+        dataz[vibration_data_i] = ((read_buffer[4] << 8) & 0xff00) | read_buffer[5];
+        data_x2y2z2[vibration_data_i] = datax[vibration_data_i] * datax[vibration_data_i]
+                                      + datay[vibration_data_i] * datay[vibration_data_i]
+                                      + dataz[vibration_data_i] * dataz[vibration_data_i];
         delta = abs(data_x2y2z2[vibration_data_i] - 282305280);
+
+        //LOG_DEBUG("\rdatax=%d, datay=%d, dataz=%d, ", datax[vibration_data_i], datay[vibration_data_i], dataz[vibration_data_i]);
+        //LOG_DEBUG("\rdata_x2y2z2=%d, delta=%d", data_x2y2z2[vibration_data_i], delta);
+
 //		eat_trace("delta=%d, data_x2y2z2[vibration_data_i] = %d",delta, data_x2y2z2[vibration_data_i]);
         if (delta > VIBRATION_TRESHOLD)
+        {
             vibration_sendAlarm();
+        }
+
         vibration_data_i++;
         if (vibration_data_i == 10)
             vibration_data_i = 0;
+
 //		x2y2z2_fangcha = fangcha(data_x2y2z2, 10);
 
     }
@@ -148,15 +150,14 @@ static eat_bool vibration_sendMsg2Main(MSG_THREAD* msg, u8 len)
 
 static eat_bool vibration_sendAlarm(void)
 {
-    u8 msgLen = sizeof(MSG_THREAD) + sizeof(VIBRATE);
+    u8 msgLen = sizeof(MSG_THREAD) + 1;
     MSG_THREAD* msg = allocMsg(msgLen);
-    VIBRATE* vibrate = (VIBRATE*)msg->data;
+    unsigned char* alarmType = (unsigned char*)msg->data;
 
     msg->cmd = CMD_THREAD_VIBRATE;
-    msg->length = sizeof(VIBRATE);
+    msg->length = 1;
+    *alarmType = ALARM_VIBRATE;
 
-    vibrate->isVibrate = EAT_TRUE;
-    eat_trace("isVibrate=%d",vibrate->isVibrate);
-
+    LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
     return vibration_sendMsg2Main(msg, msgLen);
 }

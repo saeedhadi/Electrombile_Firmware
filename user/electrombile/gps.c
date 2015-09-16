@@ -261,7 +261,7 @@ static eat_bool gps_sendCell(short mcc, short mnc, char cellNo, CELL cells[])
         gps->cellInfo.cell[i].lac = cells[i].lac;
         gps->cellInfo.cell[i].cellid = cells[i].cellid;
         gps->cellInfo.cell[i].rxl = cells[i].rxl;
-        LOG_DEBUG("send gps: i(%d), lac(%d), cellid(%d), rxl(%d)", i, cells[i].lac, cells[i].cellid, cells[i].rxl);
+        //LOG_DEBUG("send gps: i(%d), lac(%d), cellid(%d), rxl(%d)", i, cells[i].lac, cells[i].cellid, cells[i].rxl);
     }
 
     return gps_sendMsg2Main(msg, msgLen);

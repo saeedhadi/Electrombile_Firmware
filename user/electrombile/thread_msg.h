@@ -47,11 +47,6 @@ typedef struct
     };
 }LOCAL_GPS;
 
-typedef struct
-{
-    eat_bool isVibrate;
-}VIBRATE;
-
 #pragma pack(pop)
 
 MSG_THREAD* allocMsg(u8 len);

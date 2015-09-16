@@ -94,7 +94,7 @@ int event_mod_ready_rd(const EatEvent_st* event)
 		socket_init();
 		eat_timer_stop(TIMER_AT_CMD);
 	}
- 
+
 	return 0;
 }
 
@@ -175,7 +175,7 @@ int event_threadMsg(const EatEvent_st* event)
             {
                 break;
             }
-            
+
             data.isGpsFixed = gps->isGpsFixed;
 
             if (gps->isGpsFixed)    //update the local GPS data
@@ -192,7 +192,6 @@ int event_threadMsg(const EatEvent_st* event)
                 data.cgi.cellNo = gps->cellInfo.cellNo;
                 memcpy(data.cells, gps->cellInfo.cell, sizeof(CELL) * gps->cellInfo.cellNo);
                 LOG_DEBUG("receive thread command CMD_GPS_UPDATE: cellid(%x), lac(%d)", data.cells[0].cellid, data.cells[0].lac);
-
             }
             break;
         }
@@ -202,8 +201,29 @@ int event_threadMsg(const EatEvent_st* event)
             break;
 
         case CMD_THREAD_VIBRATE:
-            LOG_DEBUG("receive thread command CMD_VIBRATE");
+        {
+            unsigned char* alarm_type = (unsigned char*)msg->data;
+            MSG_ALARM_REQ* socket_msg;
+
+            if (msgLen != 1)
+            {
+                LOG_ERROR("msg length error");
+                break;
+            }
+            LOG_DEBUG("receive thread command CMD_VIBRATE: alarmType(%d)", *alarm_type);
+
+            socket_msg = alloc_msg(CMD_ALARM, sizeof(MSG_ALARM_REQ));
+            if (!socket_msg)
+            {
+                LOG_ERROR("alloc message failed.");
+                break;
+            }
+
+            LOG_DEBUG("send alarm vibrate message.");
+            socket_msg->alarmType = *alarm_type;
+            socket_sendData(socket_msg, sizeof(MSG_ALARM_REQ));
             break;
+        }
 
         default:
             LOG_ERROR("receive unknown thread command:%d", msg->cmd);

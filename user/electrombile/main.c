@@ -106,7 +106,6 @@ void app_func_ext1(void *data)
     eat_uart_set_debug_config(EAT_UART_DEBUG_MODE_UART, &cfg);
 }
 
-
 void app_main(void *data)
 {
     EatEvent_st event;
@@ -129,7 +128,6 @@ void app_main(void *data)
     eat_timer_start(TIMER_WATCHDOG, 50000);
     eat_timer_start(TIMER_AT_CMD, 5000);
     eat_timer_start(TIMER_GPS_SEND, setting.gps_timer_period);
-
 
     while(EAT_TRUE)
     {

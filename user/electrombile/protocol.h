@@ -114,6 +114,7 @@ typedef struct
     MSG_HEADER header;
     unsigned char alarmType;
 }MSG_ALARM_REQ;
+
 typedef MSG_HEADER MSG_ALARM_RSP;
 
 /*
