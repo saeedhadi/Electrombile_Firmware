@@ -88,7 +88,6 @@ static void seek_timer_handler(void)
         }
 
         ret = seek_sendValue(value);
-        LOG_DEBUG("value = %f",value);
         if(EAT_FALSE == ret)
         {
             LOG_ERROR("seek seek_sendValue fail.");
