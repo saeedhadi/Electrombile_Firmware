@@ -18,13 +18,23 @@
 #include "setting.h"
 #include "protocol.h"
 
+#define EAT_ADC0 23
+#define EAT_ADC1 24
 static void seek_timer_handler(void);
 static eat_bool seek_getValue(float* value);
 static eat_bool seek_sendMsg2Main(MSG_THREAD* msg, u8 len);
 static eat_bool seek_sendValue(float value);
+static float adcdata0;
 
-
-
+//ADC callback function
+void adc_cb_proc(EatAdc_st* adc)
+{    
+    if(adc->pin == EAT_ADC0)
+    {
+        adcdata0= adc->v;
+        LOG_DEBUG("adcdata0= %f",adcdata0);
+    }
+}
 void app_seek_thread(void *data)
 {
     EatEvent_st event;
@@ -65,7 +75,7 @@ static void seek_timer_handler(void)
     int ret = EAT_FALSE;
     float value = 0;
 
-    data.isSeekFixed = EAT_TRUE;
+    data.isSeekFixed = EAT_TRUE; //≤‚ ‘”√£¨º«µ√del
     if(EAT_TRUE == data.isSeekFixed)
     {
         LOG_DEBUG("seek fixed.");
@@ -78,6 +88,7 @@ static void seek_timer_handler(void)
         }
 
         ret = seek_sendValue(value);
+        LOG_DEBUG("value = %f",value);
         if(EAT_FALSE == ret)
         {
             LOG_ERROR("seek seek_sendValue fail.");
@@ -90,6 +101,8 @@ static void seek_timer_handler(void)
 
 static eat_bool seek_getValue(float* value)
 {
+    eat_adc_get(EAT_ADC0, 0, adc_cb_proc);
+    *value = adcdata0;
     return EAT_TRUE;
 }
 
