@@ -16,6 +16,7 @@ enum CMD
     CMD_THREAD_GPS,
     CMD_THREAD_SMS,
     CMD_THREAD_VIBRATE,
+    CMD_THREAD_SEEK,
 };
 
 #pragma pack(push,1)
@@ -36,6 +37,11 @@ typedef struct
     CELL cell[MAX_CELL_NUM];
 }CELL_INFO;       //Cell Global Identifier
 
+typedef struct
+{
+    float value;
+}SEEK_INFO;
+
 #pragma anon_unions
 typedef struct
 {
@@ -46,7 +52,6 @@ typedef struct
         CELL_INFO cellInfo;
     };
 }LOCAL_GPS;
-
 #pragma pack(pop)
 
 MSG_THREAD* allocMsg(u8 len);

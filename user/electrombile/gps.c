@@ -4,6 +4,7 @@
  *  Created on: 2015/6/25
  *      Author: jk
  */
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -26,7 +27,7 @@ static short mcc = 0;  //mobile country code
 static short mnc = 0;  //mobile network code
 static char  cellNo;// cell count
 static CELL cells[7] = {0};
-static   eat_bool isCellGet = EAT_FALSE;
+static eat_bool isCellGet = EAT_FALSE;
 
 static void gps_timer_handler(void);
 static eat_bool gps_sendGPS(float latitude, float longitude);
@@ -133,7 +134,7 @@ static eat_bool gps_getGps(float* latitude, float* longitude)
 
 static eat_bool gps_getCells(short* mcc, short* mnc, char* cellNo, CELL cells[])
 {
-    char buf[2048] = {0};  //用于读取AT指令的响应
+    unsigned char buf[2048] = {0};  //用于读取AT指令的响应
     u16 len = 0;        //AT指令回应报文长度
 
     int _mcc = 460;
@@ -144,7 +145,7 @@ static eat_bool gps_getCells(short* mcc, short* mnc, char* cellNo, CELL cells[])
 
     u8 cellCount = 0;
 
-    char* p = buf;
+    unsigned char* p = buf;
 
     int n = 0;  //sscanf返回的参数个数
 

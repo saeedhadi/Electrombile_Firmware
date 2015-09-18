@@ -13,6 +13,7 @@ LOCAL_DATA data =
 {
         EAT_FALSE,
         EAT_FALSE,
+        EAT_FALSE,
         {0}
 };
 
@@ -36,3 +37,4 @@ void set_client_state(eat_bool logined)
 {
     data.logined = logined;
 }
+

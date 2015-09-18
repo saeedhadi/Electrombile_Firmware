@@ -31,6 +31,10 @@ typedef struct
 	//Timer configuration
 	u32 gps_timer_period;
 	u32 vibration_timer_period;
+    u32 seek_timer_period;
+
+    //Switch configuration
+    eat_bool isVibrateFixed;
 }SETTING;
 
 extern SETTING setting;

@@ -20,6 +20,7 @@ enum
     CMD_PING    = 0x04,
     CMD_ALARM   = 0x05,
     CMD_SMS     = 0x06,
+    CMD_SEEK    = 0x07,
 };
 
 enum ALARM_TYPE
@@ -128,6 +129,18 @@ typedef struct
 }MSG_SMS_REQ;
 
 typedef MSG_SMS_REQ MSG_SMS_RSP;
+
+/*
+ * seek message structure
+ */
+typedef struct
+{
+    MSG_HEADER header;
+    float seekValue;
+}MSG_SEEK_REQ;
+
+typedef MSG_HEADER MSG_SEEK_RSP;
+
 
 #pragma pack(pop)
 

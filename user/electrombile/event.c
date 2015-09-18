@@ -157,7 +157,6 @@ int event_threadMsg(const EatEvent_st* event)
 {
     MSG_THREAD* msg = (MSG_THREAD*) event->data.user_msg.data_p;
     u8 msgLen = event->data.user_msg.len;
-    int i = 0;
 
     switch (msg->cmd)
     {
@@ -165,14 +164,9 @@ int event_threadMsg(const EatEvent_st* event)
         {
             LOCAL_GPS* gps = (LOCAL_GPS*) msg->data;
 
-            if (msgLen < sizeof(LOCAL_GPS))
+            if (msgLen < sizeof(LOCAL_GPS)  || !gps)
             {
-                LOG_ERROR("msg length error");
-                break;
-            }
-
-            if (!gps)
-            {
+                LOG_ERROR("msg from THREAD_GPS error");
                 break;
             }
 
@@ -222,6 +216,32 @@ int event_threadMsg(const EatEvent_st* event)
             LOG_DEBUG("send alarm vibrate message.");
             socket_msg->alarmType = *alarm_type;
             socket_sendData(socket_msg, sizeof(MSG_ALARM_REQ));
+            break;
+        }
+
+        case CMD_THREAD_SEEK:
+        {
+            SEEK_INFO* seek = (SEEK_INFO*)msg->data;
+            MSG_SEEK_REQ* seek_msg;
+
+            if (msgLen < sizeof(SEEK_INFO)  || !seek)
+            {
+                LOG_ERROR("msg from THREAD_SEEK error");
+                break;
+            }
+
+            LOG_DEBUG("receive thread command CMD_SEEK: value(%f)", seek->value);
+
+            seek_msg = alloc_msg(CMD_SEEK, sizeof(MSG_SEEK_REQ));
+            if (!seek_msg)
+            {
+                LOG_ERROR("alloc message failed.");
+                break;
+            }
+
+            LOG_DEBUG("send seek value message.");
+            seek_msg->seekValue= seek->value;
+            socket_sendData(seek_msg, sizeof(MSG_SEEK_REQ));
             break;
         }
 

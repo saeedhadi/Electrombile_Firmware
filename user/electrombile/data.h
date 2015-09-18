@@ -17,6 +17,8 @@ typedef struct
     eat_bool connected;     //is the socket connected to server
     eat_bool logined;       //is the client logined to server
 
+    eat_bool isSeekFixed;
+
     eat_bool isGpsFixed;
     GPS gps;
     CGI cgi;

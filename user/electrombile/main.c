@@ -10,7 +10,7 @@
 #include "eat_modem.h"
 #include "eat_interface.h"
 #include "eat_uart.h"
-#include "eat_timer.h" 
+#include "eat_timer.h"
 #include "eat_socket.h"
 #include "eat_clib_define.h" //only in main.c
 
@@ -18,6 +18,7 @@
 #include "gps.h"
 #include "sms.h"
 #include "vibration.h"
+#include "seek.h"
 #include "watchdog.h"
 #include "timer.h"
 #include "setting.h"
@@ -69,7 +70,7 @@ APP_ENTRY_FLAG
 		(app_user_func)app_gps_thread,//app_user1,
 		(app_user_func)app_sms_thread,//app_user2,
 		(app_user_func)app_vibration_thread,//app_user3,
-		(app_user_func)EAT_NULL,//app_user4,
+		(app_user_func)app_seek_thread,//app_user4,
 		(app_user_func)EAT_NULL,//app_user5,
 		(app_user_func)EAT_NULL,//app_user6,
 		(app_user_func)EAT_NULL,//app_user7,

@@ -5,7 +5,7 @@
  *      Author: jk
  */
 #include "setting.h"
-#include "eat_fs_type.h" 
+#include "eat_fs_type.h"
 #include "eat_fs.h"
 #include "eat_fs_errcode.h"
 #include "eat_modem.h"
@@ -18,13 +18,20 @@
 
 SETTING setting =
 {
-		ADDR_TYPE_DOMAIN,
-		{
-				"server.xiaoan110.com",
-		},
-		9877,
-		30 * 1000,
-		100,
+    //Server configuration
+	ADDR_TYPE_DOMAIN,                   //addr_type
+	{
+			"server.xiaoan110.com",     //domain or ipaddr
+	},
+	9877,                               //port
+
+    //Timer configuration
+	30 * 1000,                          //gps_timer_period
+	100,                                //vibration_timer_period
+	30 * 1000,                          //seek_timer_period
+
+    //Switch configuration
+    EAT_FALSE,                          //isVibrateFixed
 };
 
 /*
