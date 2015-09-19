@@ -11,16 +11,19 @@
 #define START_FLAG (0xAA55)
 #define IMEI_LENGTH 15
 #define MAX_CELL_NUM 7
+#define TEL_NO_LENGTH 11
 
 enum
 {
-    CMD_LOGIN   = 0x01,
-    CMD_GPS     = 0x02,
-    CMD_CELL    = 0x03,
-    CMD_PING    = 0x04,
-    CMD_ALARM   = 0x05,
-    CMD_SMS     = 0x06,
-    CMD_SEEK    = 0x07,
+    CMD_LOGIN   = 0x01,		//登录
+    CMD_GPS     = 0x02,		//GPS数据上报
+    CMD_CELL    = 0x03,		//基站信息上报
+    CMD_PING    = 0x04,		//心跳包
+    CMD_ALARM   = 0x05,		//告警
+    CMD_SMS     = 0x06,		//服务器下发的短信回应
+    CMD_433     = 0x07,		//找车模式下，采集到的433模块信号强度
+	CMD_DEFEND  = 0x08,		//打开布防开关
+    CMD_SEEK    = 0x09,		//打开找车开关，进入找车模式
 };
 
 enum ALARM_TYPE
@@ -89,6 +92,7 @@ typedef MSG_HEADER MSG_LOGIN_RSP;
 
 /*
  * GPS message structure
+ * this message has no response
  */
 typedef struct
 {
@@ -97,12 +101,12 @@ typedef struct
 }MSG_GPS;
 
 /*
- * heartbeat message structure
+ * heart-beat message structure
  */
 typedef struct
 {
     MSG_HEADER header;
-    short statue;   //TODO: to define the status bits
+    short status;   //TODO: to define the status bits
 }MSG_PING_REQ;
 
 typedef MSG_HEADER MSG_PING_RSP;
@@ -124,7 +128,8 @@ typedef MSG_HEADER MSG_ALARM_RSP;
 typedef struct
 {
     MSG_HEADER header;
-    char telphone[12];
+    char telphone[TEL_NO_LENGTH + 1];
+    char smsLen;
     char sms[];
 }MSG_SMS_REQ;
 
@@ -132,14 +137,24 @@ typedef MSG_SMS_REQ MSG_SMS_RSP;
 
 /*
  * seek message structure
+ * the message has no response
  */
 typedef struct
 {
     MSG_HEADER header;
-    float seekValue;
-}MSG_SEEK_REQ;
+    int intensity;
+}MSG_433;
 
-typedef MSG_HEADER MSG_SEEK_RSP;
+
+/*
+ * defend message structure
+ */
+typedef MSG_HEADER MSG_DEFEND;
+
+/*
+ * switch on the seek mode
+ */
+typedef MSG_HEADER MSG_SEEK;
 
 
 #pragma pack(pop)

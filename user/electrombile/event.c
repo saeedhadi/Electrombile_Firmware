@@ -220,7 +220,7 @@ int event_threadMsg(const EatEvent_st* event)
         case CMD_THREAD_SEEK:
         {
             SEEK_INFO* seek = (SEEK_INFO*)msg->data;
-            MSG_SEEK_REQ* seek_msg;
+            MSG_433* seek_msg;
 
             if (msgLen < sizeof(SEEK_INFO)  || !seek)
             {
@@ -230,7 +230,7 @@ int event_threadMsg(const EatEvent_st* event)
 
             LOG_DEBUG("receive thread command CMD_SEEK: value(%f).", seek->value);
 
-            seek_msg = alloc_msg(CMD_SEEK, sizeof(MSG_SEEK_REQ));
+            seek_msg = alloc_msg(CMD_SEEK, sizeof(MSG_433));
             if (!seek_msg)
             {
                 LOG_ERROR("alloc message failed!");
@@ -238,8 +238,8 @@ int event_threadMsg(const EatEvent_st* event)
             }
 
             LOG_DEBUG("send seek value message.");
-            seek_msg->seekValue= seek->value;
-            socket_sendData(seek_msg, sizeof(MSG_SEEK_REQ));
+            seek_msg->intensity= seek->value;
+            socket_sendData(seek_msg, sizeof(MSG_433));
             break;
         }
 
