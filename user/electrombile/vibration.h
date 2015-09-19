@@ -1,9 +1,12 @@
-//
-// Created by jk on 2015/7/1.
-//
-
+/*
+ * vibration.h
+ *
+ *  Created on: 2015?и║7??1ии?
+ *      Author: jk
+ */
 #ifndef ELECTROMBILE_FIRMWARE_VIBRATION_H
 #define ELECTROMBILE_FIRMWARE_VIBRATION_H
+
 #define MMA8X5X_BUF_SIZE    6
 /* register enum for mma8x5x registers */
 enum {

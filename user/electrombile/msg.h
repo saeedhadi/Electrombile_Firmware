@@ -14,8 +14,8 @@
 
 #define htonl(l) ((((l >> 24) & 0x000000ff)) | \
                   (((l >>  8) & 0x0000ff00)) | \
-                  (((h) & 0x0000ff00) <<  8) | \
-                  (((h) & 0x000000ff) << 24))
+                  (((l) & 0x0000ff00) <<  8) | \
+                  (((l) & 0x000000ff) << 24))
 #define ntohl(l) htonl(l)
 
 #define htons(s) ((((s) >> 8) & 0xff) | \

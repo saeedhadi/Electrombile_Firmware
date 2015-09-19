@@ -26,8 +26,11 @@ SETTING setting =
 	9877,                               //port
 
     //Timer configuration
+    50000,                              //watchdog_timer_period;
+    5000,                               //at_cmd_timer_period;
 	30 * 1000,                          //gps_timer_period
-	100,                                //vibration_timer_period
+	30 * 1000,                          //gps_send_timer_period
+	1000,                               //vibration_timer_period
 	30 * 1000,                          //seek_timer_period
 
     //Switch configuration
@@ -46,7 +49,6 @@ eat_bool setting_initial(void)
     UINT readLen;
 
     setting.addr_type = ADDR_TYPE_IP;
-
     setting.addr.ipaddr[0] = 120;
     setting.addr.ipaddr[1] = 25;
     setting.addr.ipaddr[2] = 157;
@@ -60,6 +62,8 @@ eat_bool setting_initial(void)
     }
     else
     {
+        LOG_DEBUG("eat_fs_Open():Create File Success,and FileHandle is %x", fh);
+
         seekRet = eat_fs_Seek(fh, 0, EAT_FS_FILE_BEGIN);
         if (0 > seekRet)
         {
@@ -69,11 +73,10 @@ eat_bool setting_initial(void)
         }
         else
         {
-            eat_trace("eat_fs_Seek():Seek File Pointer Success");
+            LOG_DEBUG("eat_fs_Seek():Seek File Pointer Success");
         }
 
-        eat_trace("eat_fs_Open():Create File Success,and FileHandle is %x", fh);
-
+        /* TODO
         fs_Op_ret = (eat_fs_error_enum) eat_fs_Read(fh, &setting, sizeof(SETTING), &readLen);
         if (EAT_FS_NO_ERROR != fs_Op_ret)
         {
@@ -83,8 +86,10 @@ eat_bool setting_initial(void)
         }
         else
         {
+            LOG_DEBUG("eat_fs_Read():Read File Pointer Success");
             eat_fs_Close(fh);
         }
+        */
     }
 
     return EAT_TRUE;
@@ -97,31 +102,30 @@ eat_bool setting_save(void)
 {
     FS_HANDLE fh;   //File handle
     eat_fs_error_enum fs_Op_ret;
-
     UINT writedLen;
-    eat_trace("setting_save");
-    fh = eat_fs_Open(SETITINGFILE_NAME, FS_CREATE_ALWAYS | FS_READ_WRITE);
 
+    LOG_INFO("setting saving");
+
+    fh = eat_fs_Open(SETITINGFILE_NAME, FS_CREATE_ALWAYS | FS_READ_WRITE);
     if (fh < EAT_FS_NO_ERROR)
     {
-        eat_trace("eat_fs_Open():Create File Fail,and Return Error is %x", fh);
+        LOG_ERROR("eat_fs_Open():Create File Fail,and Return Error is %x", fh);
         return EAT_FALSE;
     }
     else
     {
-        eat_trace("eat_fs_Open():Create File Success,and FileHandle is %x", fh);
+        LOG_DEBUG("eat_fs_Open():Create File Success,and FileHandle is %x", fh);
+
         fs_Op_ret = (eat_fs_error_enum) eat_fs_Write(fh, &setting, sizeof(SETTING), &writedLen);
         if (EAT_FS_NO_ERROR != fs_Op_ret)
         {
-            eat_trace(
-                    "eat_fs_Write():eat_fs_Write File Fail,and Return Error is %d,Readlen is %d",
-                    fs_Op_ret, writedLen);
+            LOG_ERROR("eat_fs_Write():eat_fs_Write File Fail,and Return Error is %d,Readlen is %d",fs_Op_ret, writedLen);
             eat_fs_Close(fh);
             return EAT_FALSE;
         }
         else
         {
-            eat_trace("eat_fs_Write:eat_fs_Write File Success");
+            LOG_DEBUG("eat_fs_Write:eat_fs_Write File Success");
             eat_fs_Close(fh);
         }
     }

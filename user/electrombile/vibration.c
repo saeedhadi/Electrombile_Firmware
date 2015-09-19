@@ -127,7 +127,6 @@ static void vibration_timer_handler(void)
         //LOG_DEBUG("\rdatax=%d, datay=%d, dataz=%d, ", datax[vibration_data_i], datay[vibration_data_i], dataz[vibration_data_i]);
         //LOG_DEBUG("\rdata_x2y2z2=%d, delta=%d", data_x2y2z2[vibration_data_i], delta);
 
-//		eat_trace("delta=%d, data_x2y2z2[vibration_data_i] = %d",delta, data_x2y2z2[vibration_data_i]);
         if (delta > VIBRATION_TRESHOLD)
         {
             vibration_sendAlarm();

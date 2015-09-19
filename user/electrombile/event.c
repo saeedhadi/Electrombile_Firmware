@@ -35,7 +35,7 @@ int event_timer(const EatEvent_st* event);
 int event_threadMsg(const EatEvent_st* event);
 int event_mod_ready_rd(const EatEvent_st* event);
 
-static EVENT_PROC msgProcs[] =
+static EVENT_PROC eventProcs[] =
 {
     {EAT_EVENT_TIMER,				event_timer},
     {EAT_EVENT_MDM_READY_RD,        event_mod_ready_rd},
@@ -92,7 +92,6 @@ int event_mod_ready_rd(const EatEvent_st* event)
 	if (buf_ptr != NULL)
 	{
 		socket_init();
-		eat_timer_stop(TIMER_AT_CMD);
 	}
 
 	return 0;
@@ -105,11 +104,11 @@ int event_proc(EatEvent_st* event)
 
     LOG_DEBUG("event: %s", getEventDescription(event->event));
 
-	for (i = 0; i < sizeof(msgProcs) / sizeof(msgProcs[0]); i++)
+	for (i = 0; i < sizeof(eventProcs) / sizeof(eventProcs[0]); i++)
 	{
-		if (msgProcs[i].event == event->event)
+		if (eventProcs[i].event == event->event)
 		{
-			EVENT_FUNC pfn = msgProcs[i].pfn;
+			EVENT_FUNC pfn = eventProcs[i].pfn;
 			if (pfn)
 			{
 				return pfn(event);
@@ -131,18 +130,18 @@ int event_timer(const EatEvent_st* event)
         case TIMER_WATCHDOG:
             LOG_INFO("TIMER_WATCHDOG expire!");
             feedWatchdog();
-            eat_timer_start(event->data.timer.timer_id, 50000);
+            eat_timer_start(event->data.timer.timer_id, setting.watchdog_timer_period);
             break;
 
         case TIMER_AT_CMD:
             LOG_INFO("TIMER_AT_CMD expire!");
             eat_modem_write("AT+CGATT?\n", 10);
-            eat_timer_start(event->data.timer.timer_id, 5000);
+            eat_timer_start(event->data.timer.timer_id, setting.at_cmd_timer_period);
             break;
 
         case TIMER_GPS_SEND:
             LOG_INFO("TIMER_GPS_SEND expire!");
-            eat_timer_start(event->data.timer.timer_id, setting.gps_timer_period);
+            eat_timer_start(event->data.timer.timer_id, setting.gps_send_timer_period);
             client_loop();
             break;
 
@@ -166,7 +165,7 @@ int event_threadMsg(const EatEvent_st* event)
 
             if (msgLen < sizeof(LOCAL_GPS)  || !gps)
             {
-                LOG_ERROR("msg from THREAD_GPS error");
+                LOG_ERROR("msg from THREAD_GPS error!");
                 break;
             }
 
@@ -176,8 +175,7 @@ int event_threadMsg(const EatEvent_st* event)
             {
                 data.gps.latitude = gps->gps.latitude;
                 data.gps.longitude = gps->gps.longitude;
-                LOG_DEBUG("receive thread command CMD_GPS_UPDATE: lat(%f), lng(%f)", gps->gps.latitude, gps->gps.longitude);
-
+                LOG_DEBUG("receive thread command CMD_GPS_UPDATE: lat(%f), lng(%f).", gps->gps.latitude, gps->gps.longitude);
             }
             else    //update local cell info
             {
@@ -185,13 +183,13 @@ int event_threadMsg(const EatEvent_st* event)
                 data.cgi.mnc = gps->cellInfo.mnc;
                 data.cgi.cellNo = gps->cellInfo.cellNo;
                 memcpy(data.cells, gps->cellInfo.cell, sizeof(CELL) * gps->cellInfo.cellNo);
-                LOG_DEBUG("receive thread command CMD_GPS_UPDATE: cellid(%x), lac(%d)", data.cells[0].cellid, data.cells[0].lac);
+                LOG_DEBUG("receive thread command CMD_GPS_UPDATE: cellid(%x), lac(%d).", data.cells[0].cellid, data.cells[0].lac);
             }
             break;
         }
 
         case CMD_THREAD_SMS:
-            LOG_DEBUG("receive thread command CMD_SMS");
+            LOG_DEBUG("receive thread command CMD_SMS.");
             break;
 
         case CMD_THREAD_VIBRATE:
@@ -201,15 +199,15 @@ int event_threadMsg(const EatEvent_st* event)
 
             if (msgLen != 1)
             {
-                LOG_ERROR("msg length error");
+                LOG_ERROR("msg length error: msgLen(%d)!", msgLen);
                 break;
             }
-            LOG_DEBUG("receive thread command CMD_VIBRATE: alarmType(%d)", *alarm_type);
+            LOG_DEBUG("receive thread command CMD_VIBRATE: alarmType(%d).", *alarm_type);
 
             socket_msg = alloc_msg(CMD_ALARM, sizeof(MSG_ALARM_REQ));
             if (!socket_msg)
             {
-                LOG_ERROR("alloc message failed.");
+                LOG_ERROR("alloc message failed!");
                 break;
             }
 
@@ -226,16 +224,16 @@ int event_threadMsg(const EatEvent_st* event)
 
             if (msgLen < sizeof(SEEK_INFO)  || !seek)
             {
-                LOG_ERROR("msg from THREAD_SEEK error");
+                LOG_ERROR("msg from THREAD_SEEK error!");
                 break;
             }
 
-            LOG_DEBUG("receive thread command CMD_SEEK: value(%f)", seek->value);
+            LOG_DEBUG("receive thread command CMD_SEEK: value(%f).", seek->value);
 
             seek_msg = alloc_msg(CMD_SEEK, sizeof(MSG_SEEK_REQ));
             if (!seek_msg)
             {
-                LOG_ERROR("alloc message failed.");
+                LOG_ERROR("alloc message failed!");
                 break;
             }
 
@@ -246,7 +244,7 @@ int event_threadMsg(const EatEvent_st* event)
         }
 
         default:
-            LOG_ERROR("receive unknown thread command:%d", msg->cmd);
+            LOG_ERROR("receive unknown thread command:%d!", msg->cmd);
             break;
     }
 

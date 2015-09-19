@@ -5,7 +5,6 @@
  *      Author: jk
  */
 #include <stdio.h>
-
 #include <eat_interface.h>
 #include <eat_socket.h>
 
@@ -15,6 +14,8 @@
 #include "client.h"
 #include "msg.h"
 #include "data.h"
+#include "timer.h"
+
 
 static s8 socket_id = 0;
 
@@ -26,10 +27,9 @@ SOC_READ    = 0x01,   Notify for read
 SOC_WRITE   = 0x02,   Notify for write
 SOC_ACCEPT  = 0x04,   Notify for accept
 SOC_CONNECT = 0x08,   Notify for connect
-SOC_CLOSE   = 0x10,    Notify for close
-SOC_ACKED   = 0x20   Notify for acked
+SOC_CLOSE   = 0x10,   Notify for close
+SOC_ACKED   = 0x20,   Notify for acked
 */
-
 static char* getEventDescription(soc_event_enum event)
 {
 	switch (event)
@@ -59,7 +59,6 @@ CBM_GPRS_AUTO_DISC_TIMEOUT  = 0x20,  gprs auto disconnection timeout
 CBM_NWK_NEG_QOS_MODIFY      = 0x040,  negotiated network qos modify notification
 CBM_WIFI_STA_INFO_MODIFY
 */
-
 static char* getStateDescription(cbm_bearer_state_enum state)
 {
 	switch (state)
@@ -80,8 +79,6 @@ static char* getStateDescription(cbm_bearer_state_enum state)
 		}
 	}
 }
-
-
 
 void hostname_notify_cb(u32 request_id,eat_bool result,u8 ip_addr[4])
 {
@@ -146,15 +143,14 @@ void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
 	s8 val = EAT_TRUE;
 	sockaddr_struct address={SOC_SOCK_STREAM};
 
-	LOG_INFO("BEAR_NOTIFY: %s", getStateDescription(state));
+	LOG_INFO("bear_notify state: %s", getStateDescription(state));
 
 	if (state & CBM_ACTIVATED)
 	{
 		LOG_INFO("local ip: %d.%d.%d.%d", ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3]);
 
         eat_soc_notify_register(soc_notify_cb);
-
-        socket_id = eat_soc_create(SOC_SOCK_STREAM,0);
+        socket_id = eat_soc_create(SOC_SOCK_STREAM, 0);
         if (socket_id < 0)
         {
     		LOG_ERROR("eat_soc_create return error :%d", socket_id);
@@ -227,7 +223,7 @@ void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
         		return;
         	}
         }
-        address.port =  setting.port;                /* TCP server port */
+        address.port = setting.port;                /* TCP server port */
 
 
         rc = eat_soc_connect(socket_id, &address);
@@ -237,7 +233,7 @@ void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
         }
         else if (rc == SOC_WOULDBLOCK)
         {
-        	LOG_INFO("Connection is in progressing");
+        	LOG_INFO("Connection is in progressing...");
         }
         else
         {
@@ -255,18 +251,30 @@ void socket_init(void)
         rc = eat_gprs_bearer_hold();
         if (rc != CBM_OK)
         {
-            LOG_ERROR("hold bearer failed");
+            LOG_ERROR("hold bearer failed!");
+
+            eat_timer_start(TIMER_AT_CMD, setting.at_cmd_timer_period);
+            LOG_INFO("reset TIMER_AT_CMD, open bearer again.");
+        }
+        else
+        {
+            eat_timer_stop(TIMER_AT_CMD);
         }
     }
     else if (rc == CBM_WOULDBLOCK)
     {
-        LOG_ERROR("opening bearer...");
+        LOG_INFO("opening bearer...");
+        eat_timer_stop(TIMER_AT_CMD);
     }
     else
     {
-        LOG_ERROR("open bearer failed");
-        //TODO: reboot
+        LOG_ERROR("open bearer failed!");
+
+        eat_timer_start(TIMER_AT_CMD, setting.at_cmd_timer_period);
+        LOG_INFO("reset TIMER_AT_CMD, open bearer again.");
     }
+
+    return;
 }
 
 s32 socket_sendData(void* data, s32 len)

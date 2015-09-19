@@ -102,7 +102,6 @@ void app_func_ext1(void *data)
     };
 
     eat_uart_set_at_port(EAT_UART_USB);// UART1 is as AT PORT
-
 	eat_uart_set_debug(EAT_UART_1);
     eat_uart_set_debug_config(EAT_UART_DEBUG_MODE_UART, &cfg);
 }
@@ -115,7 +114,7 @@ void app_main(void *data)
     APP_InitRegions();//Init app RAM
     APP_init_clib(); //C library initialize, second step
 
-    LOG_INFO(" app_main ENTRY: version:%s, SIMCOM(version:%s,buildno=%s,buildtime=%s", VERSION_STR, eat_get_version(), eat_get_buildno(), eat_get_buildtime());
+    LOG_INFO("app_main ENTRY: version:%s, SIMCOM(version:%s, buildno=%s, buildtime=%s.", VERSION_STR, eat_get_version(), eat_get_buildno(), eat_get_buildtime());
 
     rc = eat_mem_init(s_memPool, EAT_MEM_MAX_SIZE);
     if (!rc)
@@ -123,12 +122,12 @@ void app_main(void *data)
     	LOG_ERROR("eat memory initial error:%d!", rc);
         return;
     }
-  //  SETTING_save();
+    //setting_save();
     setting_initial();
     startWatchdog();
-    eat_timer_start(TIMER_WATCHDOG, 50000);
-    eat_timer_start(TIMER_AT_CMD, 5000);
-    eat_timer_start(TIMER_GPS_SEND, setting.gps_timer_period);
+    eat_timer_start(TIMER_WATCHDOG, setting.watchdog_timer_period);
+    eat_timer_start(TIMER_AT_CMD, setting.at_cmd_timer_period);
+    eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
 
     while(EAT_TRUE)
     {

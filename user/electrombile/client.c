@@ -144,7 +144,8 @@ void client_loop(void)
                     return;
                 }
 
-                msg->gps = data.gps;
+                msg->gps.longitude = data.gps.longitude;
+                msg->gps.latitude = data.gps.latitude;
 
                 LOG_DEBUG("send GPS message");
                 print_hex((const char*)msg, sizeof(MSG_GPS));
@@ -162,10 +163,14 @@ void client_loop(void)
                     return;
                 }
 
-                memcpy(cgi, &(data.cgi), sizeof(CGI));
+                cgi->mcc = htons(data.cgi.mcc);
+                cgi->mnc = htons(data.cgi.mnc);
+                cgi->cellNo = data.cgi.cellNo;
                 for (i = 0; i < data.cgi.cellNo; i++)
                 {
-                    memcpy(cell + i, data.cells + i, sizeof(CELL));
+                    cell[i].lac = htons(data.cells[i].lac);
+                    cell[i].cellid = htons(data.cells[i].cellid);
+                    cell[i].rxl= htons(data.cells[i].rxl);
                 }
 
                 LOG_DEBUG("send CELL message");
