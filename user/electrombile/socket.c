@@ -117,14 +117,27 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
             break;
 
         case SOC_CONNECT:
-            LOG_DEBUG("result of CONNECT:%d", result);
-            set_socket_state(EAT_TRUE);
+            if(result)
+            {
+                LOG_INFO("SOC_CONNECT success.");
+                set_socket_state(EAT_TRUE);
+            }
+            else
+            {
+                LOG_ERROR("SOC_CONNECT failed: error(%d).", result);
+
+                eat_sleep(5000);//wait 5 seconds, then reconnect
+                socket_init();
+            }
+
             break;
 
         case SOC_CLOSE:
             eat_soc_close(s);
             set_socket_state(EAT_FALSE);
             set_client_state(EAT_FALSE);
+
+            eat_timer_start(TIMER_AT_CMD, setting.at_cmd_timer_period);//restart the AT timer again
             break;
 
         case SOC_ACKED:
@@ -154,7 +167,7 @@ void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
         if (socket_id < 0)
         {
     		LOG_ERROR("eat_soc_create return error :%d", socket_id);
-    		//TODO: error handle
+    		eat_reset_module();//TODO: error handle
     		return;
         }
         else
@@ -166,7 +179,7 @@ void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
         if (rc != SOC_SUCCESS)
         {
         	LOG_ERROR("eat_soc_setsockopt set SOC_NBIO failed: %d", rc);
-        	//TODO: error handle
+        	eat_reset_module();//TODO: error handle
         	return;
         }
 
@@ -174,7 +187,7 @@ void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
         if (rc != SOC_SUCCESS)
         {
         	LOG_ERROR("eat_soc_setsockopt set SOC_NODELAY failed: %d", rc);
-        	//TODO: error handle
+        	eat_reset_module();//TODO: error handle
         	return;
         }
 
@@ -183,7 +196,7 @@ void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
         if (rc != SOC_SUCCESS)
         {
         	LOG_ERROR("eat_soc_setsockopt set SOC_ASYNC failed: %d", rc);
-        	//TODO: error handle
+        	eat_reset_module();//TODO: error handle
         	return;
         }
 
