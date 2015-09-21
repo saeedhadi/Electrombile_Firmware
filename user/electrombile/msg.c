@@ -40,6 +40,10 @@ void* alloc_rspMsg(const MSG_HEADER* pMsg)
             msgLen = htons(sizeof(MSG_PING_RSP));
             break;
 
+        case CMD_SEEK:
+        	msgLen = htons(sizeof(MSG_SEEK_RSP));
+        	break;
+
         default:
             return NULL;
     }

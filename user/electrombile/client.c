@@ -30,7 +30,7 @@ static int login_rsp(const void* msg);
 static int ping_rsp(const void* msg);
 static int alarm_rsp(const void* msg);
 static int sms(const void* msg);
-static int seek_rsp(const void* msg);
+static int seek(const void* msg);
 
 
 static MC_MSG_PROC msgProcs[] =
@@ -39,7 +39,7 @@ static MC_MSG_PROC msgProcs[] =
     {CMD_PING,  ping_rsp},
     {CMD_ALARM, alarm_rsp},
     {CMD_SMS,   sms},
-    {CMD_SEEK,  seek_rsp},
+    {CMD_SEEK,  seek},
 };
 
 
@@ -230,9 +230,31 @@ static int sms(const void* msg)
     return 0;
 }
 
-static int seek_rsp(const void* msg)
+static int seek(const void* m)
 {
-    set_seek_state(EAT_TRUE);
+	MSG_SEEK* msg = (MSG_SEEK*)m;
+	MSG_SEEK_RSP* rsp = NULL;
+
+	if (msg->swith == SEEK_ON)
+	{
+		set_seek_state(EAT_TRUE);
+	}
+	else
+	{
+		set_seek_state(EAT_FALSE);
+	}
+
+	rsp = alloc_rspMsg(&msg->header);
+	if (!rsp)
+	{
+		LOG_ERROR("alloc seek rsp message failed");
+		return -1;
+	}
+
+	rsp->result = MSG_SUCCESS;
+
+    socket_sendData(rsp, sizeof(MSG_SEEK_RSP));
+
     return 0;
 }
 

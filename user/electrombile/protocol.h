@@ -26,6 +26,12 @@ enum
     CMD_SEEK    = 0x09,		//打开找车开关，进入找车模式
 };
 
+enum
+{
+	MSG_SUCCESS = 0,
+
+};
+
 enum ALARM_TYPE
 {
 	ALARM_FENCE_OUT,
@@ -145,17 +151,48 @@ typedef struct
     int intensity;
 }MSG_433;
 
-
 /*
  * defend message structure
  */
-typedef MSG_HEADER MSG_DEFEND;
+enum
+{
+	DEFEND_ON = 1,
+	DEFEND_OFF,
+	DEFEND_GET,
+};
+
+typedef struct
+{
+	MSG_HEADER header;
+	char operator;
+}MSG_DEFEND_REQ;
+
+typedef struct
+{
+	MSG_HEADER header;
+	char result;
+}MSG_DEFEND_RSP;
 
 /*
  * switch on the seek mode
  */
-typedef MSG_HEADER MSG_SEEK;
+enum
+{
+	SEEK_OFF,
+	SEEK_ON,
+};
 
+typedef struct
+{
+	MSG_HEADER header;
+	char swith;
+}MSG_SEEK;
+
+typedef struct
+{
+	MSG_HEADER header;
+	char result;
+}MSG_SEEK_RSP;
 
 #pragma pack(pop)
 
