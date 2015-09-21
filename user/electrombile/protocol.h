@@ -32,14 +32,34 @@ enum
 
 };
 
-enum ALARM_TYPE
-{
-	ALARM_FENCE_OUT,
-	ALARM_FENCE_IN,
-	ALARM_VIBRATE,
-};
 
 #pragma pack(push, 1)
+
+/*
+ * Message header definition
+ */
+typedef struct
+{
+    short signature;
+    char cmd;
+    unsigned short seq;
+    unsigned short length;
+}__attribute__((__packed__)) MSG_HEADER;
+
+#define MSG_HEADER_LEN sizeof(MSG_HEADER)
+
+
+/*
+ * Login message structure
+ */
+typedef struct
+{
+    MSG_HEADER header;
+    char IMEI[IMEI_LENGTH + 1];
+}MSG_LOGIN_REQ;
+
+typedef MSG_HEADER MSG_LOGIN_RSP;
+
 
 /*
  * GPS structure
@@ -49,6 +69,18 @@ typedef struct
     float longitude;
     float latitude;
 }GPS;
+
+
+/*
+ * GPS message structure
+ * this message has no response
+ */
+typedef struct
+{
+    MSG_HEADER header;
+    GPS gps;
+}MSG_GPS;
+
 
 /*
  * CELL structure
@@ -68,43 +100,17 @@ typedef struct
 //    CELL cell[];
 }__attribute__((__packed__)) CGI;       //Cell Global Identifier
 
-
-
-
-
 /*
- * Message header definition
+ * CGI message structure
  */
-typedef struct
-{
-    short signature;
-    char cmd;
-    unsigned short seq;
-    unsigned short length;
-}__attribute__((__packed__)) MSG_HEADER;
+ typedef struct
+ {
+     MSG_HEADER header;
+     CGI cgi;
+ }__attribute__((__packed__)) MSG_CGI;
 
-#define MSG_HEADER_LEN sizeof(MSG_HEADER)
 
-/*
- * Login message structure
- */
-typedef struct
-{
-    MSG_HEADER header;
-    char IMEI[IMEI_LENGTH + 1];
-}MSG_LOGIN_REQ;
 
-typedef MSG_HEADER MSG_LOGIN_RSP;
-
-/*
- * GPS message structure
- * this message has no response
- */
-typedef struct
-{
-    MSG_HEADER header;
-    GPS gps;
-}MSG_GPS;
 
 /*
  * heart-beat message structure
@@ -116,6 +122,15 @@ typedef struct
 }MSG_PING_REQ;
 
 typedef MSG_HEADER MSG_PING_RSP;
+
+
+
+enum ALARM_TYPE
+{
+	ALARM_FENCE_OUT,
+	ALARM_FENCE_IN,
+	ALARM_VIBRATE,
+};
 
 /*
  * alarm message structure
