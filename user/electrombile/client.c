@@ -15,6 +15,7 @@
 #include "log.h"
 #include "uart.h"
 #include "data.h"
+#include "setting.h"
 
 
 typedef int (*MSG_PROC)(const void* msg);
@@ -29,14 +30,16 @@ static int login_rsp(const void* msg);
 static int ping_rsp(const void* msg);
 static int alarm_rsp(const void* msg);
 static int sms(const void* msg);
+static int seek_rsp(const void* msg);
 
 
 static MC_MSG_PROC msgProcs[] =
 {
-        {CMD_LOGIN, login_rsp},
-        {CMD_PING,  ping_rsp},
-        {CMD_ALARM, alarm_rsp},
-        {CMD_SMS,   sms},
+    {CMD_LOGIN, login_rsp},
+    {CMD_PING,  ping_rsp},
+    {CMD_ALARM, alarm_rsp},
+    {CMD_SMS,   sms},
+    {CMD_SEEK,  seek_rsp},
 };
 
 
@@ -183,13 +186,14 @@ void client_loop(void)
             MSG_LOGIN_REQ* msg = alloc_msg(CMD_LOGIN, sizeof(MSG_LOGIN_REQ));
             u8 imei[IMEI_LENGTH + 1] = {0};
 
-            eat_get_imei(imei, IMEI_LENGTH);
-
             if (!msg)
             {
                 LOG_ERROR("alloc message failed");
                 return;
             }
+
+            eat_get_imei(imei, IMEI_LENGTH);
+            imei[IMEI_LENGTH] = '0';
 
             memcpy(msg->IMEI, imei, IMEI_LENGTH + 1);
 
@@ -216,6 +220,8 @@ static int ping_rsp(const void* msg)
 
 static int alarm_rsp(const void* msg)
 {
+    set_vibration_state(EAT_TRUE);
+
     return 0;
 }
 
@@ -223,3 +229,10 @@ static int sms(const void* msg)
 {
     return 0;
 }
+
+static int seek_rsp(const void* msg)
+{
+    set_seek_state(EAT_TRUE);
+    return 0;
+}
+

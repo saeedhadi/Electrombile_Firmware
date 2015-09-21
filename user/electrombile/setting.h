@@ -42,6 +42,8 @@ typedef struct
 
 extern SETTING setting;
 
+eat_bool vibration_fixed(void);
+void set_vibration_state(eat_bool fixed);
 eat_bool setting_initial(void);
 eat_bool setting_save(void);
 #endif /* USER_ELECTROMBILE_SETTING_H_ */

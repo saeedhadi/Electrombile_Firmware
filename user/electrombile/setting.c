@@ -37,6 +37,18 @@ SETTING setting =
     EAT_FALSE,                          //isVibrateFixed
 };
 
+eat_bool vibration_fixed(void)
+{
+    return setting.isVibrateFixed;
+}
+
+void set_vibration_state(eat_bool fixed)
+{
+    setting.isVibrateFixed = fixed;
+}
+
+
+
 /*
  * read setting from flash
  */

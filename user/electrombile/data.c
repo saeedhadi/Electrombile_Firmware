@@ -38,3 +38,14 @@ void set_client_state(eat_bool logined)
     data.logined = logined;
 }
 
+eat_bool seek_fixed(void)
+{
+    return data.isSeekFixed;
+}
+
+void set_seek_state(eat_bool fixed)
+{
+    data.isSeekFixed = fixed;
+}
+
+

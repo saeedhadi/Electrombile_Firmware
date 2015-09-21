@@ -24,17 +24,18 @@ static void seek_timer_handler(void);
 static eat_bool seek_getValue(float* value);
 static eat_bool seek_sendMsg2Main(MSG_THREAD* msg, u8 len);
 static eat_bool seek_sendValue(float value);
-static float adcdata0;
+static float adcdata0 = 0;
 
 //ADC callback function
 void adc_cb_proc(EatAdc_st* adc)
-{    
+{
     if(adc->pin == EAT_ADC0)
     {
-        adcdata0= adc->v;
+        adcdata0 = adc->v;
         LOG_DEBUG("adcdata0= %f",adcdata0);
     }
 }
+
 void app_seek_thread(void *data)
 {
     EatEvent_st event;
@@ -75,22 +76,21 @@ static void seek_timer_handler(void)
     int ret = EAT_FALSE;
     float value = 0;
 
-    data.isSeekFixed = EAT_TRUE; //²âÊÔÓÃ£¬¼ÇµÃdel
-    if(EAT_TRUE == data.isSeekFixed)
+    if(EAT_TRUE == seek_fixed())
     {
         LOG_DEBUG("seek fixed.");
 
         ret = seek_getValue(&value);
         if(EAT_FALSE == ret)
         {
-            LOG_ERROR("seek seek_getValue fail.");
+            LOG_ERROR("seek seek_getValue failed.");
             return;
         }
 
         ret = seek_sendValue(value);
         if(EAT_FALSE == ret)
         {
-            LOG_ERROR("seek seek_sendValue fail.");
+            LOG_ERROR("seek seek_sendValue failed.");
             return;
         }
     }
@@ -101,8 +101,16 @@ static void seek_timer_handler(void)
 static eat_bool seek_getValue(float* value)
 {
     eat_adc_get(EAT_ADC0, 0, adc_cb_proc);
-    *value = adcdata0;
-    return EAT_TRUE;
+
+    if(0 == adcdata0)
+    {
+        return EAT_FALSE;
+    }
+    else
+    {
+        *value = adcdata0;
+        return EAT_TRUE;
+    }
 }
 
 static eat_bool seek_sendMsg2Main(MSG_THREAD* msg, u8 len)
@@ -125,7 +133,7 @@ static eat_bool seek_sendValue(float value)
     msg->length = sizeof(SEEK_INFO);
 
     seek = (SEEK_INFO*)msg->data;
-    seek->value = value;
+    seek->intensity = value;
 
     LOG_DEBUG("send seek: value(%f)", value);
     return seek_sendMsg2Main(msg, msgLen);

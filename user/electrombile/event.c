@@ -228,7 +228,7 @@ int event_threadMsg(const EatEvent_st* event)
                 break;
             }
 
-            LOG_DEBUG("receive thread command CMD_SEEK: value(%f).", seek->value);
+            LOG_DEBUG("receive thread command CMD_SEEK: value(%f).", seek->intensity);
 
             seek_msg = alloc_msg(CMD_SEEK, sizeof(MSG_433));
             if (!seek_msg)
@@ -238,7 +238,7 @@ int event_threadMsg(const EatEvent_st* event)
             }
 
             LOG_DEBUG("send seek value message.");
-            seek_msg->intensity= seek->value;
+            seek_msg->intensity = htons((int)seek->intensity);
             socket_sendData(seek_msg, sizeof(MSG_433));
             break;
         }

@@ -30,9 +30,10 @@ extern LOCAL_DATA data;
 
 eat_bool socket_conneted(void);
 eat_bool client_logined(void);
+eat_bool seek_fixed(void);
 
 void set_socket_state(eat_bool connected);
 void set_client_state(eat_bool logined);
-
+void set_seek_state(eat_bool fixed);
 
 #endif /* USER_ELECTROMBILE_DATA_H_ */
