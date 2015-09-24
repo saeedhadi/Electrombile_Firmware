@@ -231,7 +231,7 @@ int event_threadMsg(const EatEvent_st* event)
 
             LOG_DEBUG("receive thread command CMD_SEEK: value(%f).", seek->intensity);
 
-            seek_msg = alloc_msg(CMD_SEEK, sizeof(MSG_433));
+            seek_msg = alloc_msg(CMD_433, sizeof(MSG_433));
             if (!seek_msg)
             {
                 LOG_ERROR("alloc message failed!");

@@ -221,7 +221,34 @@ static int ping_rsp(const void* msg)
 
 static int alarm_rsp(const void* msg)
 {
-    set_vibration_state(EAT_TRUE);
+    MSG_ALARM_REQ* req = (MSG_ALARM_REQ*)msg;
+    MSG_ALARM_RSP* rsp = NULL;
+
+    switch(req->alarmType)
+    {
+        case ALARM_VIBRATE:
+            set_vibration_state(EAT_TRUE);
+            LOG_DEBUG("set vibration alarm on.");
+            break;
+
+        case ALARM_FENCE_OUT:
+            break;
+
+        case ALARM_FENCE_IN:
+            break;
+
+        default:
+            break;
+    }
+
+    rsp = alloc_rspMsg(&req->header);
+	if (!rsp)
+	{
+		LOG_ERROR("alloc alarm rsp message failed");
+		return -1;
+	}
+
+    socket_sendData(rsp, sizeof(MSG_ALARM_RSP));
 
     return 0;
 }
@@ -231,21 +258,23 @@ static int sms(const void* msg)
     return 0;
 }
 
-static int seek(const void* m)
+static int seek(const void* msg)
 {
-	MSG_SEEK* msg = (MSG_SEEK*)m;
+	MSG_SEEK_REQ* req = (MSG_SEEK_REQ*)msg;
 	MSG_SEEK_RSP* rsp = NULL;
 
-	if (msg->swith == SEEK_ON)
+	if (req->operator == SEEK_ON)
 	{
 		set_seek_state(EAT_TRUE);
+        LOG_DEBUG("set seek on.");
 	}
 	else
 	{
 		set_seek_state(EAT_FALSE);
+        LOG_DEBUG("set seek off.");
 	}
 
-	rsp = alloc_rspMsg(&msg->header);
+	rsp = alloc_rspMsg(&req->header);
 	if (!rsp)
 	{
 		LOG_ERROR("alloc seek rsp message failed");

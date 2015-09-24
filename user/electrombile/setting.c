@@ -31,7 +31,7 @@ SETTING setting =
 	30 * 1000,                          //gps_timer_period
 	30 * 1000,                          //gps_send_timer_period
 	1000,                               //vibration_timer_period
-	30 * 1000,                          //seek_timer_period
+	2000,                               //seek_timer_period
 
     //Switch configuration
     EAT_FALSE,                          //isVibrateFixed

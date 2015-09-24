@@ -52,7 +52,7 @@ void app_seek_thread(void *data)
                 switch (event.data.timer.timer_id)
                 {
                     case TIMER_SEEK:
-                    	LOG_INFO("TIMER_SEEK expire!");
+                    	//LOG_INFO("TIMER_SEEK expire!");
                         seek_timer_handler();
                         eat_timer_start(event.data.timer.timer_id, setting.seek_timer_period);
                         break;

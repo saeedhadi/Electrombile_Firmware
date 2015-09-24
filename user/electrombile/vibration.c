@@ -104,7 +104,7 @@ static void vibration_timer_handler(void)
 
     if(EAT_TRUE == vibration_fixed())
     {
-        LOG_INFO("vibration is already fixed.");
+        //LOG_INFO("vibration is already fixed.");
 
         write_buffer[0] = MMA8X5X_OUT_X_MSB;
         ret = eat_i2c_read(EAT_I2C_OWNER_0, &write_buffer[0], 1, read_buffer, MMA8X5X_BUF_SIZE);

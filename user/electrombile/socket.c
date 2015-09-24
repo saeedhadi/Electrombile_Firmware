@@ -151,7 +151,7 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
             }
             else
             {
-                LOG_ERROR("SOC_CONNECT failed, restart TIMER_AT_CMD: result(%d).", result);
+                LOG_ERROR("SOC_CONNECT failed, the server is OFF.");
                 eat_timer_start(TIMER_AT_CMD, setting.at_cmd_timer_period);//restart the AT timer again
             }
 
