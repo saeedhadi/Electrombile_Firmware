@@ -120,15 +120,21 @@ static eat_bool gps_getGps(float* latitude, float* longitude)
     LOG_DEBUG("EAT_NMEA_OUTPUT_SIMCOM:%s", gps_info_buf);
 
     n = sscanf(gps_info_buf + sizeof("$GPGGA"), "%*f,%f,%*c,%f,%*c,%d", latitude, longitude, &isGpsFixed);
+    if(*longitude >0.01&&*latitude>0.01)
+    {
+        isGpsFixed = EAT_TRUE;
+    }
     *longitude -= ((int)*longitude/100) *40;  //Âú×ãdd*60+mm.mm
     *latitude -= ((int)*latitude/100) *40;
-    *longitude *=30000;
-    *latitude *=30000;
+    *longitude /=60;
+    *latitude /=60;
+    
     if (n != 3)
     {
         LOG_ERROR("Parse gps info failed");
+        isGpsFixed = EAT_FALSE;
     }
-
+    
     return isGpsFixed;
 }
 
