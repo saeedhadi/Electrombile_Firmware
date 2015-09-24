@@ -134,6 +134,7 @@ int client_proc(const void* m, int msgLen)
 void client_loop(void)
 {
     int i = 0;  //loop iterator
+
     if (socket_conneted())
     {
         if (client_logined())
@@ -184,7 +185,7 @@ void client_loop(void)
         else
         {
             MSG_LOGIN_REQ* msg = alloc_msg(CMD_LOGIN, sizeof(MSG_LOGIN_REQ));
-            u8 imei[IMEI_LENGTH + 1] = {0};
+            u8 imei[IMEI_LENGTH] = {0};
 
             if (!msg)
             {
@@ -193,11 +194,11 @@ void client_loop(void)
             }
 
             eat_get_imei(imei, IMEI_LENGTH);
-            imei[IMEI_LENGTH] = '0';
+            imei[IMEI_LENGTH-1] = '0';
 
-            memcpy(msg->IMEI, imei, IMEI_LENGTH + 1);
+            memcpy(msg->IMEI, imei, IMEI_LENGTH);
 
-            LOG_DEBUG("send login message");
+            LOG_DEBUG("send login message.");
             print_hex((const char*)msg, sizeof(MSG_LOGIN_REQ));
             socket_sendData(msg, sizeof(MSG_LOGIN_REQ));
         }

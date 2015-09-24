@@ -21,7 +21,7 @@ SETTING setting =
     //Server configuration
 	ADDR_TYPE_DOMAIN,                   //addr_type
 	{
-			"server.xiaoan110.com",     //domain or ipaddr
+			"www.xiaoan110.com",        //domain or ipaddr
 	},
 	9877,                               //port
 

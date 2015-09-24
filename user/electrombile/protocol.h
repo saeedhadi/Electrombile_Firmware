@@ -1,7 +1,7 @@
 /*
  * protocol.h
  *
- *  Created on: 2015楠烇拷6閺堬拷29閺冿拷
+ *  Created on: 2015?ê6??29è?
  *      Author: jk
  */
 
@@ -9,32 +9,31 @@
 #define _PROTOCOL_H_
 
 #define START_FLAG (0xAA55)
-#define IMEI_LENGTH 15
+#define IMEI_LENGTH 16
 #define MAX_CELL_NUM 7
 #define TEL_NO_LENGTH 11
 
+//#include "macro.h"
+
 enum
 {
-    CMD_LOGIN   = 0x01,		//登录
-    CMD_GPS     = 0x02,		//GPS数据上报
-    CMD_CELL    = 0x03,		//基站信息上报
-    CMD_PING    = 0x04,		//心跳包
-    CMD_ALARM   = 0x05,		//告警
-    CMD_SMS     = 0x06,		//服务器下发的短信回应
-    CMD_433     = 0x07,		//找车模式下，采集到的433模块信号强度
-	CMD_DEFEND  = 0x08,		//打开布防开关
-    CMD_SEEK    = 0x09,		//打开找车开关，进入找车模式
+    CMD_LOGIN   = 0x01,
+    CMD_GPS     = 0x02,
+    CMD_CELL    = 0x03,
+    CMD_PING    = 0x04,
+    CMD_ALARM   = 0x05,
+    CMD_SMS     = 0x06,
+    CMD_433     = 0x07,
+    CMD_DEFEND  = 0x08,
+    CMD_SEEK    = 0x09,
 };
 
 enum
 {
-	MSG_SUCCESS = 0,
-
+    MSG_SUCCESS = 0,
 };
-
 
 #pragma pack(push, 1)
-
 /*
  * Message header definition
  */
@@ -48,18 +47,16 @@ typedef struct
 
 #define MSG_HEADER_LEN sizeof(MSG_HEADER)
 
-
 /*
  * Login message structure
  */
 typedef struct
 {
     MSG_HEADER header;
-    char IMEI[IMEI_LENGTH + 1];
-}MSG_LOGIN_REQ;
+    char IMEI[IMEI_LENGTH];
+}__attribute__((__packed__)) MSG_LOGIN_REQ;
 
 typedef MSG_HEADER MSG_LOGIN_RSP;
-
 
 /*
  * GPS structure
@@ -68,19 +65,16 @@ typedef struct
 {
     float longitude;
     float latitude;
-}GPS;
-
+}__attribute__((__packed__)) GPS;
 
 /*
  * GPS message structure
- * this message has no response
  */
 typedef struct
 {
     MSG_HEADER header;
     GPS gps;
-}MSG_GPS;
-
+}__attribute__((__packed__)) MSG_GPS;
 
 /*
  * CELL structure
@@ -97,7 +91,7 @@ typedef struct
     short mcc;  //mobile country code
     short mnc;  //mobile network code
     char  cellNo;// cell count
-//    CELL cell[];
+    //CELL cell[];
 }__attribute__((__packed__)) CGI;       //Cell Global Identifier
 
 /*
@@ -109,37 +103,32 @@ typedef struct
      CGI cgi;
  }__attribute__((__packed__)) MSG_CGI;
 
-
-
-
 /*
- * heart-beat message structure
+ * heartbeat message structure
  */
 typedef struct
 {
     MSG_HEADER header;
-    short status;   //TODO: to define the status bits
-}MSG_PING_REQ;
+    short statue;   //TODO: to define the status bits
+}__attribute__((__packed__)) MSG_PING_REQ;
 
 typedef MSG_HEADER MSG_PING_RSP;
-
-
-
-enum ALARM_TYPE
-{
-	ALARM_FENCE_OUT,
-	ALARM_FENCE_IN,
-	ALARM_VIBRATE,
-};
 
 /*
  * alarm message structure
  */
+enum ALARM_TYPE
+{
+    ALARM_FENCE_OUT,
+    ALARM_FENCE_IN,
+    ALARM_VIBRATE,
+};
+
 typedef struct
 {
     MSG_HEADER header;
     unsigned char alarmType;
-}MSG_ALARM_REQ;
+}__attribute__((__packed__)) MSG_ALARM_REQ;
 
 typedef MSG_HEADER MSG_ALARM_RSP;
 
@@ -152,7 +141,7 @@ typedef struct
     char telphone[TEL_NO_LENGTH + 1];
     char smsLen;
     char sms[];
-}MSG_SMS_REQ;
+}__attribute__((__packed__)) MSG_SMS_REQ;
 
 typedef MSG_SMS_REQ MSG_SMS_RSP;
 
@@ -164,50 +153,50 @@ typedef struct
 {
     MSG_HEADER header;
     int intensity;
-}MSG_433;
+}__attribute__((__packed__)) MSG_433;
 
 /*
  * defend message structure
  */
-enum
+ enum DEFEND_TYPE
 {
-	DEFEND_ON = 1,
-	DEFEND_OFF,
-	DEFEND_GET,
+    DEFEND_ON   = 0x01,
+    DEFEND_OFF  = 0x02,
+    DEFEND_GET  = 0x03,
 };
 
 typedef struct
 {
-	MSG_HEADER header;
-	char operator;
-}MSG_DEFEND_REQ;
+    MSG_HEADER header;
+    unsigned char operator;
+}__attribute__((__packed__)) MSG_DEFEND_REQ;
 
 typedef struct
 {
-	MSG_HEADER header;
-	char result;
-}MSG_DEFEND_RSP;
+    MSG_HEADER header;
+    unsigned char result;
+}__attribute__((__packed__)) MSG_DEFEND_RSP;
 
 /*
  * switch on the seek mode
  */
-enum
+ enum SEEK_TYPE
 {
-	SEEK_OFF,
-	SEEK_ON,
+    SEEK_OFF    = 0x01,
+    SEEK_ON     = 0x02,
 };
 
 typedef struct
 {
-	MSG_HEADER header;
-	char swith;
-}MSG_SEEK;
+    MSG_HEADER header;
+    unsigned char operator;
+}__attribute__((__packed__)) MSG_SEEK_REQ;
 
 typedef struct
 {
-	MSG_HEADER header;
-	char result;
-}MSG_SEEK_RSP;
+    MSG_HEADER header;
+    unsigned char result;
+}__attribute__((__packed__)) MSG_SEEK_RSP;
 
 #pragma pack(pop)
 

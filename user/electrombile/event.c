@@ -74,6 +74,7 @@ static char* getEventDescription(EatEvent_enum event)
         }
     }
 }
+
 int event_mod_ready_rd(const EatEvent_st* event)
 {
 	u8 buf[256] = {0};
@@ -81,13 +82,13 @@ int event_mod_ready_rd(const EatEvent_st* event)
 	u8* buf_ptr = NULL;
 
 	len = eat_modem_read(buf, 256);
-	LOG_DEBUG("modem recv: %s", buf);
-
 	if (!len)
 	{
-	    LOG_ERROR("modem receive nothing");
+	    LOG_ERROR("modem received nothing.");
 	    return -1;
 	}
+    LOG_DEBUG("modem recv: %s", buf);
+
 	buf_ptr = (u8*) strstr((const char *) buf, "+CGATT: 1");
 	if (buf_ptr != NULL)
 	{
