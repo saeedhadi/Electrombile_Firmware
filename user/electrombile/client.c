@@ -279,7 +279,7 @@ static int defend(const void* msg)
 		break;
 
 	case DEFEND_GET:
-		result = vibration_fixed();
+		result = vibration_fixed() ? DEFEND_ON : DEFEND_OFF;
 		break;
 	default:
 		LOG_ERROR("unknown operator %d", req->operator);
