@@ -33,11 +33,11 @@ void* alloc_rspMsg(const MSG_HEADER* pMsg)
     switch (pMsg->cmd)
     {
         case CMD_DEFEND:
-            msgLen = htons(sizeof(MSG_DEFEND_RSP) - sizeof(MSG_HEADER));
+            msgLen = sizeof(MSG_DEFEND_RSP);
             break;
 
         case CMD_SEEK:
-            msgLen = htons(sizeof(MSG_SEEK_RSP) - sizeof(MSG_HEADER));
+            msgLen = sizeof(MSG_SEEK_RSP);
             break;
 
         default:
