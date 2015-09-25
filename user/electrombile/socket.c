@@ -275,10 +275,6 @@ void socket_setup(void)
 
 void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
 {
-	s8 rc = 0;
-	s8 val = EAT_TRUE;
-	sockaddr_struct address={SOC_SOCK_STREAM};
-
 	LOG_INFO("bear_notify state: %s", getStateDescription(state));
 
 	switch (state)

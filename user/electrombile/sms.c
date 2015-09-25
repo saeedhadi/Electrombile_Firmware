@@ -71,7 +71,7 @@ static void recv_server_proc(EatSmsReadCnf_st  smsReadCnfContent)
         char*  ptr;
         u8 n=0;
         u8 type;
-        char *buf[5] = NULL;
+        char *buf[5] = {NULL};
         u16 port;            
         if(ptr = strstr(p,"get"))//get cmd
         {
@@ -124,6 +124,10 @@ static void recv_server_proc(EatSmsReadCnf_st  smsReadCnfContent)
                     buf[3] = NULL;                        
                 }
                 setting.addr_type = ADDR_TYPE_IP;
+                setting.addr.ipaddr[0] = addr[0];
+                setting.addr.ipaddr[1] = addr[1];
+                setting.addr.ipaddr[2] = addr[2];
+                setting.addr.ipaddr[3] = addr[3];
                 setting.port = port;//.≤ªƒ‹”√                    
                 LOG_DEBUG("setting.addr.type=%d,%d:%d:%d:%d,port=%d",setting.addr_type,setting.addr.ipaddr[0],setting.addr.ipaddr[1],setting.addr.ipaddr[2],setting.addr.ipaddr[3],setting.port);
             }
