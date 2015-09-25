@@ -198,11 +198,6 @@ int event_threadMsg(const EatEvent_st* event)
             unsigned char* alarm_type = (unsigned char*)msg->data;
             MSG_ALARM_REQ* socket_msg;
 
-            if (msgLen != 1)
-            {
-                LOG_ERROR("msg length error: msgLen(%d)!", msgLen);
-                break;
-            }
             LOG_DEBUG("receive thread command CMD_VIBRATE: alarmType(%d).", *alarm_type);
 
             socket_msg = alloc_msg(CMD_ALARM, sizeof(MSG_ALARM_REQ));
