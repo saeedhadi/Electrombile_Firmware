@@ -30,6 +30,7 @@ static int login_rsp(const void* msg);
 static int ping_rsp(const void* msg);
 static int alarm_rsp(const void* msg);
 static int sms(const void* msg);
+static int defend(const void* msg);
 static int seek(const void* msg);
 
 
@@ -39,6 +40,7 @@ static MC_MSG_PROC msgProcs[] =
     {CMD_PING,  ping_rsp},
     {CMD_ALARM, alarm_rsp},
     {CMD_SMS,   sms},
+	{CMD_DEFEND, defend},
     {CMD_SEEK,  seek},
 };
 
@@ -255,6 +257,48 @@ static int alarm_rsp(const void* msg)
 
 static int sms(const void* msg)
 {
+    return 0;
+}
+
+static int defend(const void* msg)
+{
+	MSG_DEFEND_REQ* req = (MSG_DEFEND_REQ*)msg;
+	MSG_DEFEND_RSP* rsp = NULL;
+	unsigned char result = MSG_SUCCESS;
+
+	switch (req->operator)
+	{
+	case DEFEND_ON:
+		LOG_DEBUG("set defend switch on.");
+		set_vibration_state(EAT_TRUE);
+		break;
+
+	case DEFEND_OFF:
+		LOG_DEBUG("set defend switch off.");
+		set_vibration_state(EAT_FALSE);
+		break;
+
+	case DEFEND_GET:
+		result = vibration_fixed();
+		break;
+	default:
+		LOG_ERROR("unknown operator %d", req->operator);
+//		break;
+		return 0;
+	}
+
+
+	rsp = alloc_rspMsg(&req->header);
+	if (!rsp)
+	{
+		LOG_ERROR("alloc defend rsp message failed");
+		return -1;
+	}
+
+	rsp->result = result;
+
+    socket_sendData(rsp, sizeof(MSG_DEFEND_REQ));
+
     return 0;
 }
 
