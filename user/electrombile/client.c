@@ -32,7 +32,7 @@ static int alarm_rsp(const void* msg);
 static int sms(const void* msg);
 static int defend(const void* msg);
 static int seek(const void* msg);
-
+static int location(const void* msg);
 
 static MC_MSG_PROC msgProcs[] =
 {
@@ -42,6 +42,7 @@ static MC_MSG_PROC msgProcs[] =
     {CMD_SMS,   sms},
 	{CMD_DEFEND, defend},
     {CMD_SEEK,  seek},
+	{CMD_LOCATION, location},
 };
 
 
@@ -334,3 +335,9 @@ static int seek(const void* msg)
     return 0;
 }
 
+static int location(const void* msg)
+{
+	//TODO: send the current location to server: GPS or CELL
+
+	return 0;
+}
