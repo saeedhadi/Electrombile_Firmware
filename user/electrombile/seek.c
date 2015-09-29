@@ -21,10 +21,10 @@
 #define EAT_ADC0 23
 #define EAT_ADC1 24
 static void seek_timer_handler(void);
-static eat_bool seek_getValue(float* value);
+static eat_bool seek_getValue(int* value);
 static eat_bool seek_sendMsg2Main(MSG_THREAD* msg, u8 len);
-static eat_bool seek_sendValue(float value);
-static float adcdata0 = 0;
+static eat_bool seek_sendValue(int value);
+static int adcdata0 = 0;
 
 //ADC callback function
 void adc_cb_proc(EatAdc_st* adc)
@@ -74,7 +74,7 @@ void app_seek_thread(void *data)
 static void seek_timer_handler(void)
 {
     int ret = EAT_FALSE;
-    float value = 0;
+    int value = 0;
 
     if(EAT_TRUE == seek_fixed())
     {
@@ -98,7 +98,7 @@ static void seek_timer_handler(void)
     return;
 }
 
-static eat_bool seek_getValue(float* value)
+static eat_bool seek_getValue(int* value)
 {
     eat_adc_get(EAT_ADC0, 0, adc_cb_proc);
 
@@ -118,7 +118,7 @@ static eat_bool seek_sendMsg2Main(MSG_THREAD* msg, u8 len)
     return sendMsg(THREAD_SEEK, THREAD_MAIN, msg, len);
 }
 
-static eat_bool seek_sendValue(float value)
+static eat_bool seek_sendValue(int value)
 {
     u8 msgLen = sizeof(MSG_THREAD) + sizeof(SEEK_INFO);
     MSG_THREAD* msg = allocMsg(msgLen);
