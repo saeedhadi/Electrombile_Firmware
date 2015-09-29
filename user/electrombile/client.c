@@ -295,6 +295,7 @@ static int defend(const void* msg)
 		return -1;
 	}
 
+	rsp->token = req->token;
 	rsp->result = result;
 
     socket_sendData(rsp, sizeof(MSG_DEFEND_REQ));
@@ -325,6 +326,7 @@ static int seek(const void* msg)
 		return -1;
 	}
 
+	rsp->token = req->token;
 	rsp->result = MSG_SUCCESS;
 
     socket_sendData(rsp, sizeof(MSG_SEEK_RSP));
