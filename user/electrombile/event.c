@@ -239,7 +239,7 @@ int event_threadMsg(const EatEvent_st* event)
             }
 
             LOG_DEBUG("send seek value message.");
-            seek_msg->intensity = htons((int)seek->intensity);
+            seek_msg->intensity = htonl((int)seek->intensity);
             socket_sendData(seek_msg, sizeof(MSG_433));
             break;
         }
