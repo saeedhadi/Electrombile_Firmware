@@ -101,13 +101,15 @@ typedef enum {
 /* audio out path */
 typedef enum {
     EAT_AUDIO_PATH_SPK1, /* out from 22/23PIN SPK1P/SPK1N */ 
-    EAT_AUDIO_PATH_SPK2 /*  our from 24/25PIN SPK2P/SPK2N */ 
+    EAT_AUDIO_PATH_SPK2  /*  out from 24/25PIN SPK2P/SPK2N */ 
 } EatAudioPath_enum;
 
 /* the format of audio string */
 typedef enum {
     EAT_AUDIO_FORMAT_MIDI, /* sound data of midi format*/
-    EAT_AUDIO_FORMAT_WAV /* sound data of wav format*/
+    EAT_AUDIO_FORMAT_WAV, /* sound data of wav format*/    
+    EAT_AUDIO_FORMAT_AMR,  /* sound data of amr format*/    
+    EAT_AUDIO_FORMAT_MP3  /* sound data of MP3 format*/
 } EatAudioFormat_enum;
 
 /* the data struct of tone id  */
@@ -118,6 +120,13 @@ typedef struct {
     unsigned int off_duration;     /* Tone off duation, in ms unit, 0 for end of playing */
     unsigned char next_operation;   /* Index of the next tone                             */
 } EatAudioToneData_st;
+
+typedef enum
+{
+    EAT_AUDIO_PLAY_LOCAL,   
+    EAT_AUDIO_PLAY_REMOTE,  
+    EAT_AUDIO_PLAY_BOTH   
+}eat_audio_play_mode;
 
 /* the audio max volume */
 #define EAT_AUDIO_VOL_MAX_LEVEL 15
@@ -130,6 +139,48 @@ typedef struct {
     EatAudioToneData_st tone[EAT_AUDIO_TONE_MAX];
 } EatAudioToneTable_st;
 
+#define MED_AUDIO_SUCCESS               0
+
+#define MED_EAT_PARA_ERR                -1      
+
+#define MED_AUDIO_FAIL                  -9001
+#define MED_AUDIO_BUSY                  -9002
+#define MED_AUDIO_DISC_FULL             -9003
+#define MED_AUDIO_OPEN_FILE_FAIL        -9004
+#define MED_AUDIO_END_OF_FILE           -9005
+#define MED_AUDIO_TERMINATED            -9006   
+#define MED_AUDIO_BAD_FORMAT            -9007  
+#define MED_AUDIO_INVALID_FORMAT        -9008   
+#define MED_AUDIO_ERROR                 -9009
+#define MED_AUDIO_NO_DISC               -9010
+#define MED_AUDIO_NO_SPACE              -9011   
+#define MED_AUDIO_INVALID_HANDLE        -9012   
+#define MED_AUDIO_NO_HANDLE             -9013   
+#define MED_AUDIO_RESUME                -9014   
+#define MED_AUDIO_BLOCKED               -9015  
+#define MED_AUDIO_MEM_INSUFFICIENT      -9016
+#define MED_AUDIO_BUFFER_INSUFFICIENT   -9017
+#define MED_AUDIO_FILE_EXIST            -9018   
+#define MED_AUDIO_WRITE_PROTECTION      -9019
+#define MED_AUDIO_PARAM_ERROR           -9020
+#define MED_AUDIO_UNSUPPORTED_CHANNEL   -9021
+#define MED_AUDIO_UNSUPPORTED_FREQ      -9022
+#define MED_AUDIO_UNSUPPORTED_TYPE      -9023
+#define MED_AUDIO_UNSUPPORTED_OPERATION -9024
+#define MED_AUDIO_PARSER_ERROR          -9025
+
+#define MED_AUDIO_AUDIO_ERROR           -9027
+#define MED_AUDIO_MP4_NO_AUDIO_TRACK    -9032
+#define MED_AUDIO_STOP_FM_RECORD        -9065   
+#define MED_AUDIO_UNSUPPORTED_SPEED     -9066
+#define MED_AUDIO_DECODER_NOT_SUPPORT   -9101
+#define MED_AUDIO_DEMO_END              -9116
+#define MED_AUDIO_HFP_SCO_CONNECTED     -9200  
+#define MED_AUDIO_DRM_PROHIBIT          -9201   
+#define MED_AUDIO_DRM_TIMEOUT           -9202  
+
+typedef s32 eat_med_result;
+typedef void (*eat_med_callback) (eat_med_result result);
 
 /*****************************************************************************
 * Function:  eat_audio_play_tone_id
@@ -251,4 +302,71 @@ extern eat_bool (* const eat_audio_stop_data)(void);
  
 extern eat_bool (* const eat_audio_set_custom_tone)(const EatAudioToneTable_st * tone);
 
+/*****************************************************************************
+ * Function :   eat_audio_play_file
+ * Description
+ *    Start to play audio file.
+ * Parameters
+ *   filename[in]  File full name, unicode format.The max len is 128 bytes.
+ *   repeat  [in]  EAT_TRUE:repeat EAT_FALSE:once
+ *   handler [in]  Callback function.Please refer to the attention.
+ *                 It will be called,if playback finishes or 
+ *                 is interrupted by stop event.
+ *                 if play sucessful,handler will get MED_AUDIO_END_OF_FILE or MED_AUDIO_SUCCESS(in call);
+ *   volume  [in]  0~100
+ *   outputpath  [in]  the output device of the sound.
+ *             1. EAT_AUDIO_PATH_SPK1: the sound in from the SPK1(SPK1P/SPK1N )
+ *             2. EAT_AUDIO_PATH_SPK2: the sound in from the SPK2(SPK2P/SPK2N )
+ * Returns
+ *     MED_AUDIO_SUCCESS if sucessful. 
+ * attention
+ *   1.The callback function parameter:
+ *       MED_AUDIO_END_OF_FILE: play normal finish.
+ *       MED_AUDIO_SUCCESS: play normal finish(in call)
+ *       MED_AUDIO_TERMINATED: Be interrupted by other events, include execute "eat_audio_stop_file".
+ *   2.Auto stop playing,if CALL event occurs.
+ *   3.The max file fullname len is 128 bytes.
+ *   4.If handler is NULL,will receive  EAT_EVENT_AUD_PLAY_FINISH_IND(not in call) or EAT_EVENT_SND_PLAY_FINISH_IND(in call) message when play finished.
+ *****************************************************************************/
+extern eat_med_result (*const eat_audio_play_file)(unsigned short* filename, 
+        eat_bool repeat, 
+        eat_med_callback handler, 
+        unsigned char volume,
+        EatAudioPath_enum outputpath );
+/*****************************************************************************
+ * Function :  eat_audio_stop_file
+ * Description
+ *    Stop audio file playing.
+ * Parameters
+ *    void
+ * Returns
+ *     EAT_TRUE if sucessful. 
+ *****************************************************************************/
+extern eat_bool (*const eat_audio_stop_file)(void);
+
+/*****************************************************************************
+ * Function :  eat_audio_set_play_mode_in_call
+ * Description
+ *    Set audio play mode,takes effect only in call. if not in call, only play locally no matter what the mode is. Setting takes effect before play.
+ * Parameters
+ *    simcom_audio_play_mode:
+ *      SIMCOM_AUDIO_PLAY_LOCAL,  
+ *      SIMCOM_AUDIO_PLAY_REMOTE,  
+ *      SIMCOM_AUDIO_PLAY_BOTH,
+ * Returns
+ *     EAT_TRUE if sucessful. 
+ *****************************************************************************/
+extern eat_bool (*const eat_audio_set_play_mode_in_call)(eat_audio_play_mode mode);
+
+/*****************************************************************************
+ * Function :  eat_audio_set_play_mode_in_call
+ * Description
+ *    Get audio play mode
+ * Parameters
+ *    void
+ * Returns
+ *     Current play mode: 
+ *     simcom_audio_play_mode 
+ *****************************************************************************/
+extern eat_audio_play_mode (*const eat_audio_get_play_mode_in_call)(void);
 #endif

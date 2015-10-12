@@ -315,6 +315,7 @@ extern s8 (* const eat_soc_create)(socket_type_enum type, u8 protocol);
  * =====================================================================================
  */
 extern void (*const eat_soc_notify_register)(eat_soc_notify call_back);
+    
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name: eat_soc_connet

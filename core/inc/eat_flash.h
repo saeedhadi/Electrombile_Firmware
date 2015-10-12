@@ -33,6 +33,20 @@ extern eat_bool (* const eat_flash_erase)(const void *address, unsigned int size
 extern eat_bool (* const eat_flash_write)(const void *address, const void *data, unsigned int len);
 
 /*****************************************************************************
+ * Function :eat_flash_read
+ * Description:This function is used to read data from flash.
+ * Parameters :
+ * 	buffer: [IN] Destination address.
+ *	address: [IN]  Source address
+ *	len: [IN]  Specifies the number of bytes to read.
+ * Returns:
+ *  	buffer address.
+ * NOTE
+ *     Nothing 
+ *****************************************************************************/
+extern void *(* const eat_flash_read)(void *buffer, const void *address, unsigned int len);
+
+/*****************************************************************************
  * Function :eat_get_flash_block_size
  * Description:This function is used to get flash block size.
  * Parameters :
@@ -92,5 +106,59 @@ extern unsigned long (* const eat_get_app_base_addr)(void) ;
  *     Nothing 
  *****************************************************************************/
 extern unsigned long (* const eat_get_app_space)(void) ;
+
+#ifdef __SIMCOM_EAT_MULTI_APP__
+/*****************************************************************************
+ * Function :eat_flash_erase_ext
+ * Description:This function is used to erase the flash.
+ * Parameters :
+ * 	address: [IN] the start flash offset address of erase.
+ *	size: [IN]  the size of erase
+ * Returns:
+ *  	TRUE or FALSE  	
+ * NOTE
+ *    1. The address is offset address 
+ *    2. The (address+len) must be less than the value of eat_get_app_space_ext
+ *****************************************************************************/
+extern eat_bool (*const eat_flash_erase_ext)(const void *address, unsigned int size);
+/*****************************************************************************
+ * Function :eat_flash_write_ext
+ * Description:This function is used to write data to flash.
+ * Parameters :
+ * 	address: [IN] the start flash offset address for writing.
+ *	data: [IN]  Specifies the address of the data to be written.
+ *	len: [IN]  Specifies the number of bytes to write.
+ * Returns:
+ *  	TRUE or FALSE  	
+ * NOTE
+ *    1. The address is offset address 
+ *    2. The (address+len) must be less than the value of eat_get_app_space_ext
+ *****************************************************************************/
+extern eat_bool (*const eat_flash_write_ext)(const void *address, const void *data, unsigned int len);
+/*****************************************************************************
+ * Function :eat_flash_read_ext
+ * Description:This function is used to read data from flash.
+ * Parameters :
+ * 	address: [IN] the start flash offset address for reading.
+ *	data: [IN]  Specifies the space of the data reading from flash.
+ *	len: [IN]  Specifies the number of bytes to read.
+ * Returns:
+ *  	TRUE or FALSE  	
+ * NOTE
+ *    1. The address is offset address 
+ *    2. The (address+len) must be less than the value of eat_get_app_space_ext
+ *****************************************************************************/
+extern eat_bool (*const eat_flash_read_ext)(const void *address, void *data, unsigned int len);
+/*****************************************************************************
+ * Function :eat_get_app_space
+ * Description:This function is used to get app space value.
+ * Parameters :
+ * Returns:
+ *   Nothing 
+ * NOTE
+ *     The space is only first ROM space in multi-app version.
+ *****************************************************************************/
+extern unsigned long (*const eat_get_app_space_ext)(void);
+#endif //#ifdef __SIMCOM_EAT_MULTI_APP__
 
 #endif

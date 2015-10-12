@@ -371,5 +371,19 @@ extern int (* const  eat_fs_FindNext)(FS_HANDLE FileHandle, EAT_FS_DOSDirEntry *
  *****************************************************************************/
 extern int (* const  eat_fs_FindClose)(FS_HANDLE FileHandle);
 
+/*****************************************************************************
+ * Function :eat_fs_XDelete
+ * Description: The function provides a facility to delete a file or folder recursively
+ * Parameters :
+ * 	FullPath : [IN]  Source path to be deleted
+ * 	Flag : [IN] FS_FILE_TYPE, FS_DIR_TYPE, FS_RECURSIVE_TYPE
+ * Returns:
+ *  	Successful  : EAT_FS_NO_ERROR
+ *  	Failed      : Please refer to eat_fs_error_enum.
+ * NOTE
+ *     Nothing 
+ *****************************************************************************/
+extern int (* const  eat_fs_XDelete)(const WCHAR * FullPath, UINT Flag);
+
 #endif
 

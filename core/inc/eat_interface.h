@@ -21,6 +21,7 @@
 #include "eat_sim.h"
 #include "eat_other.h"
 #include "eat_network.h"
+#include "eat_socket.h"
 
 #define EAT_USER_MSG_MAX_SIZE 64 
 
@@ -157,7 +158,9 @@ typedef enum   {
     EAT_EVENT_SIM_APDU_DATA_IND,
     EAT_EVENT_SIM_RESET_REQ,
 #endif
-    EAT_EVENT_SMS_SEND_CNF,
+    EAT_EVENT_SMS_SEND_CNF,   
+    EAT_EVENT_AUD_PLAY_FINISH_IND, /*Play finish not in call*/
+    EAT_EVENT_SND_PLAY_FINISH_IND, /*Play finish  in call*/
     EAT_EVENT_NUM
 } EatEvent_enum; /* EVENT type */
 
@@ -243,6 +246,12 @@ typedef struct
     void (*func_ext7)(void *data);
 } EatEntry_st;
 
+/*The module enum*/
+typedef enum 
+{
+    EAT_MODULE_MODEM,
+    EAT_MODULE_UART
+}EatEventEn_enum; 
 
 /*****************************************************************************
 * Function :eat_get_event
@@ -257,6 +266,9 @@ typedef struct
 *      xxx
 *****************************************************************************/
 extern unsigned char (* const eat_get_event)(EatEvent_st *event);
+#ifdef __SIMCOM_EAT_MULTI_APP__
+extern unsigned char (* const eat_get_event_ext)(EatEvent_st *event);
+#endif
 
 /* 在Catcher上trace信息*/
 extern void (* const eat_trace)(char *fmt,...);
@@ -330,6 +342,7 @@ extern const char * (*const eat_get_buildtime)();
 *      xxx
 *****************************************************************************/
 extern const char * (*const eat_get_buildno)();
+
 /*****************************************************************************
 * Function : eat_get_chipid
 * Description:
@@ -511,5 +524,32 @@ extern int (* const eat_sem_query)(EatSemId_st sem_id);
 *      xxx
 *****************************************************************************/
 extern void (* const eat_power_down)(void);
+
+/*****************************************************************************
+* Function : eat_event_en
+* Description:
+*            Set the EVENT notifying enable or disable
+* Parameters:
+*    module : EatEventEn_enum, the moudle that will be set
+*    en     : eat_bool, enable or disable EVENT notifying
+*    param  : void*, extra parameter
+*             For example, if the module is UART, the param is EAT_UART_x.
+*             If the module is Modem, the param is NULL
+* Returns:
+*      void
+*****************************************************************************/
+extern void (*const eat_event_en)(EatEventEn_enum module, eat_bool en, void* param);
+
+/*****************************************************************************
+* Function : eat_query_event_en
+* Description:
+* Parameters:
+*   module : EatEventEn_enum
+*   param  :
+* Returns:
+*  eat_bool: EAT_TRUE The EVENT notifying is enable
+*            EAT_FALSE The EVENT notifying is disable
+*****************************************************************************/
+extern eat_bool (*const eat_query_event_en)(EatEventEn_enum module, void* param);
 
 #endif

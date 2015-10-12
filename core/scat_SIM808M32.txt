@@ -1,6 +1,6 @@
-APP  0x102F0000 0x00080000
+APP  0x90309000 0x000B0000
 {
-  APPCFG 0x102F0000
+  APPCFG +0
   { 
       * (APP_CFG)
   }
@@ -15,7 +15,7 @@ APP  0x102F0000 0x00080000
     *.o*    (+RO)
   }
 
-  APP_RAM   0xF0360000 0x00080000
+  APP_RAM   0xF0380000 0x00070000
   {
     main.o  (+RW,+ZI)
     *.o     (+RW,+ZI)
