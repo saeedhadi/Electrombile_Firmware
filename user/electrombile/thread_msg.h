@@ -17,6 +17,7 @@ enum CMD
     CMD_THREAD_SMS,
     CMD_THREAD_VIBRATE,
     CMD_THREAD_SEEK,
+    CMD_THREAD_LOCATION,
 };
 
 #pragma pack(push,1)

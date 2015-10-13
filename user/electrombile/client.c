@@ -32,7 +32,7 @@ static int alarm_rsp(const void* msg);
 static int sms(const void* msg);
 static int defend(const void* msg);
 static int seek(const void* msg);
-static int location(const void* msg);
+static int location(const void* msgLocation);
 
 static MC_MSG_PROC msgProcs[] =
 {
@@ -335,9 +335,17 @@ static int seek(const void* msg)
     return 0;
 }
 
-static int location(const void* msg)
+static int location(const void* msgLocation)
 {
-	//TODO: send the current location to server: GPS or CELL
+    u8 msgLen = sizeof(MSG_THREAD);
+    MSG_THREAD* msg = allocMsg(msgLen);
+
+    msg->cmd = CMD_THREAD_LOCATION;
+    msg->length = 0;
+
+    LOG_DEBUG("send CMD_THREAD_LOCATION to THREAD_GPS.");
+	sendMsg(THREAD_MAIN, THREAD_GPS, msg, msgLen);
 
 	return 0;
 }
+

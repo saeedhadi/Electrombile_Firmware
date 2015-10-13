@@ -28,6 +28,7 @@ static void seek_timer_handler(void);
 static eat_bool seek_getValue(int* value);
 static eat_bool seek_sendMsg2Main(MSG_THREAD* msg, u8 len);
 static eat_bool seek_sendValue(int value);
+
 static int adcdata0 = 0;
 
 //ADC callback function

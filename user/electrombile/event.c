@@ -190,8 +190,10 @@ int event_threadMsg(const EatEvent_st* event)
         }
 
         case CMD_THREAD_SMS:
+        {
             LOG_DEBUG("receive thread command CMD_SMS.");
             break;
+        }
 
         case CMD_THREAD_VIBRATE:
         {
@@ -241,6 +243,63 @@ int event_threadMsg(const EatEvent_st* event)
             LOG_DEBUG("send seek value message.");
             seek_msg->intensity = htonl((int)seek->intensity);
             socket_sendData(seek_msg, sizeof(MSG_433));
+            break;
+        }
+
+        case CMD_THREAD_LOCATION:
+        {
+            LOCAL_GPS* gps = (LOCAL_GPS*) msg->data;
+
+            if (msgLen < sizeof(LOCAL_GPS)  || !gps)
+            {
+                LOG_ERROR("msg from THREAD_GPS error!");
+                break;
+            }
+
+            if (gps->isGpsFixed)    //update the local GPS data
+            {
+                MSG_GPS* msg = alloc_msg(CMD_GPS, sizeof(MSG_GPS));
+                if (!msg)
+                {
+                    LOG_ERROR("alloc message failed!");
+                    return;
+                }
+
+                msg->gps.longitude = gps->gps.longitude;
+                msg->gps.latitude = gps->gps.latitude;
+
+                LOG_DEBUG("send GPS message.");
+                print_hex((const char*)msg, sizeof(MSG_GPS));
+                socket_sendData(msg, sizeof(MSG_GPS));
+            }
+            else    //update local cell info
+            {
+                size_t msgLen = sizeof(MSG_HEADER) + sizeof(CGI) + sizeof(CELL) * gps->cellInfo.cellNo;
+                MSG_HEADER* msg = alloc_msg(CMD_CELL, msgLen);
+                CGI* cgi = (CGI*)(msg + 1);
+                CELL* cell = (CELL*)(cgi + 1);
+                int i = 0;
+
+                if (!msg)
+                {
+                    LOG_ERROR("alloc message failed!");
+                    return;
+                }
+
+                cgi->mcc = htons(gps->cellInfo.mcc);
+                cgi->mnc = htons(gps->cellInfo.mnc);
+                cgi->cellNo = gps->cellInfo.cellNo;
+                for (i = 0; i < gps->cellInfo.cellNo; i++)
+                {
+                    cell[i].lac = htons(gps->cellInfo.cell[i].lac);
+                    cell[i].cellid = htons(gps->cellInfo.cell[i].cellid);
+                    cell[i].rxl= htons(gps->cellInfo.cell[i].rxl);
+                }
+
+                LOG_DEBUG("send CELL message.");
+                print_hex((const char*)msg, msgLen);
+                socket_sendData(msg, msgLen);
+            }
             break;
         }
 
