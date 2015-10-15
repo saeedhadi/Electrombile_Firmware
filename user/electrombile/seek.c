@@ -20,10 +20,15 @@
 
 #define EAT_ADC0 23
 #define EAT_ADC1 24
+
+#define SEEK_INTENSITY_MIN 400
+#define SEEK_INTENSITY_MAX 2000
+
 static void seek_timer_handler(void);
 static eat_bool seek_getValue(int* value);
 static eat_bool seek_sendMsg2Main(MSG_THREAD* msg, u8 len);
 static eat_bool seek_sendValue(int value);
+
 static int adcdata0 = 0;
 
 //ADC callback function
@@ -32,7 +37,7 @@ void adc_cb_proc(EatAdc_st* adc)
     if(adc->pin == EAT_ADC0)
     {
         adcdata0 = adc->v;
-        LOG_DEBUG("adcdata0= %f",adcdata0);
+        LOG_DEBUG("adcdata0=%d",adcdata0);
     }
 }
 
@@ -106,11 +111,20 @@ static eat_bool seek_getValue(int* value)
     {
         return EAT_FALSE;
     }
+    else if(SEEK_INTENSITY_MIN > adcdata0)
+    {
+        *value = SEEK_INTENSITY_MIN;
+    }
+    else if(SEEK_INTENSITY_MAX < adcdata0)
+    {
+        *value = SEEK_INTENSITY_MAX;
+    }
     else
     {
         *value = adcdata0;
-        return EAT_TRUE;
     }
+
+    return EAT_TRUE;
 }
 
 static eat_bool seek_sendMsg2Main(MSG_THREAD* msg, u8 len)

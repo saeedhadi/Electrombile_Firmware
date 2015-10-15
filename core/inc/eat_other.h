@@ -36,4 +36,32 @@ extern eat_bool (*const eat_get_cbc)(EAT_CBC_ST *bmt);
 *    len: len >=15
 *****************************************************************************/
 extern u8 *(*const eat_get_imei)(u8* imei, u16 len );
+
+/*****************************************************************************
+* Function : eat_get_imsi
+* Description: Get IMSI string.
+* Parameters:
+*     imsi[]  [OUT] store IMSI string
+*     len     [IN] length of imsi[]
+* Returns:
+*     if succeed    return the pointer of IMSI string.
+*     otherwise     return NULL.
+* NOTE:
+*    len: len >=17[length of imsi(15 or 16)+ 1('\0')]
+*****************************************************************************/
+extern u8   *(*const eat_get_imsi)(u8 * imsi_string,u8 len);
+
+/*****************************************************************************
+* Function : eat_get_task_id
+* Description: Get task id.
+* Parameters:
+*     void
+* Returns:
+*     if succeed    return enum value for user task(EAT_USER_0-EAT_USER_8).
+*     otherwise     return 0xff.
+* NOTE:
+*     NONE
+*****************************************************************************/
+extern u8 (*const eat_get_task_id)(void);
+
 #endif

@@ -265,5 +265,19 @@ extern unsigned short (* const eat_uart_get_free_space)(EatUart_enum uart);
 *****************************************************************************/
 extern unsigned int (* const eat_data_mode_read)(unsigned char *data, unsigned int len);
 
+
+/*****************************************************************************
+* Function :   eat_uart_control_by_app
+* Description: eat app control uart DTR,RI,DCD pin.
+* Parameters :
+*     EAT_TRUE  : enable eat app control uart function,default value.
+*     EAT_FALSE   : disable eat app control uart function.
+* Returns:
+*     Void
+* NOTE:
+*     This function must be called in function that specified by func_ext1 in structure EatEntry_st.
+*****************************************************************************/
+extern void (* const eat_uart_control_by_app)(eat_bool enable);
+
 #endif
 

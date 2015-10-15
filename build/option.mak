@@ -65,6 +65,9 @@ endif
 
 ifneq ("$(findstring L16,$(PROJ))","")
 SRC_SCAT_FILE = scat_SIM8xxL16.txt
+  ifeq ($(strip $(FEA_APP_MULTI_APP_INDEX_APP_OPT)),-D__EAT_SECOND_APP__)
+    SRC_SCAT_FILE = scat_SIM8xxL16_SECOND.txt
+  endif
 HARDWARE_PLATFORM = SIM800H
 endif
 
@@ -78,9 +81,19 @@ SRC_SCAT_FILE = scat_SIM808M32.txt
 HARDWARE_PLATFORM = SIM808
 endif
 
+ifneq ("$(findstring 800C24,$(PROJ))","")
+SRC_SCAT_FILE = scat_SIM800C24.txt
+HARDWARE_PLATFORM = SIM800C
+endif
+
+ifneq ("$(findstring 800C32,$(PROJ))","")
+SRC_SCAT_FILE = scat_SIM800C32.txt
+HARDWARE_PLATFORM = SIM800C
+endif
+
 #CORE提供的SYM文件名
 #ifeq ($(strip $(HARDWARE_PLATFORM)),SIM800H)
-    SRC_CORE_SYM_FILE = $(PROJ)_EAT_PCB01_gprs_MT6260_S00_limit.sym
+    SRC_CORE_SYM_FILE = $(PROJ)_EAT_PCB01_gprs_MT6261_S00_limit.sym
 #    SRC_CORE_SYM_FILE = $(PROJ)_EAT_PCB01_gprs_MT6260_S00.sym
     CORE_BIN_DIR = $(CORE_DIR)/$(PROJ)_EMBEDDEDAT
     CORE_BIN_CFG_FILE = $(PROJ)_EAT.cfg

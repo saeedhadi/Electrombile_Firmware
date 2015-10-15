@@ -18,3 +18,4 @@ eat_bool sendMsg(EatUser_enum from, EatUser_enum to, void* msg, u8 len)
 {
     return eat_send_msg_to_user(from, to, EAT_TRUE, len, EAT_NULL, &msg);
 }
+
