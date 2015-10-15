@@ -39,7 +39,7 @@ extern unsigned short (* const eat_modem_read)(unsigned char *data, unsigned sho
 /*****************************************************************************
 * Function :   eat_modem_set_poweron_urc_dir
 * Description: Set URC's(Unsolicited Result Code) destination when power on.
-*              if don't set ,the default dest task is EAT_USER_0.
+*              if don't set ,the default destination is EAT_USER_0.
 * Parameters :
 *     task_id: [IN], the task id, EatUser_enum type.
 * Returns:

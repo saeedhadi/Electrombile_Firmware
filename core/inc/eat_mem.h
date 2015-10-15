@@ -21,7 +21,9 @@
 *   space will be tied up at the same time can not be used
 *****************************************************************************/
 extern eat_bool (* const eat_mem_init)(void *mem_addr, unsigned int size);
-
+#ifdef __SIMCOM_EAT_MULTI_APP__
+extern eat_bool (* const eat_mem_init_ext)(void *mem_addr, unsigned int size);
+#endif
 
 /*****************************************************************************
 * Function : eat_mem_alloc
@@ -36,6 +38,9 @@ extern eat_bool (* const eat_mem_init)(void *mem_addr, unsigned int size);
 *      call this function after eat_mem_init()
 *****************************************************************************/
 extern void * (* const eat_mem_alloc)(unsigned int size);
+#ifdef __SIMCOM_EAT_MULTI_APP__
+extern void * (* const eat_mem_alloc_ext)(unsigned int size);
+#endif
 
 /*****************************************************************************
 * Function :eat_mem_free
@@ -49,6 +54,8 @@ extern void * (* const eat_mem_alloc)(unsigned int size);
 *      call this function after eat_mem_alloc()
 *****************************************************************************/
 extern void * (* const eat_mem_free)(void *mem_addr);
-
+#ifdef __SIMCOM_EAT_MULTI_APP__
+extern void * (* const eat_mem_free_ext)(void *mem_addr);
+#endif
 
 #endif

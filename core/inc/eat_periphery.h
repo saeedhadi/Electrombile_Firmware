@@ -105,9 +105,9 @@ typedef enum {
     EAT_PIN25_COL1 = 25,      /* GPIO, KEY_COL */
     EAT_PIN26_PWM = 26,       /* GPIO, PWM, EINT */
     EAT_PIN27_GPIO2 = 27,     /* GPIO, LSA0 */
-    EAT_PIN28_GPIO3 = 28,     /* GPIO, LSCK */
+    EAT_PIN28_GPIO3 = 28,     /* GPIO, SPI_CLK */
     EAT_PIN29_PCM_CLK = 29,   /* GPIO, LSRSTB, PCMCLK */
-    EAT_PIN30_PCM_OUT = 30,   /* GPIO, LSDI, PCMOUT */
+    EAT_PIN30_PCM_OUT = 30,   /* GPIO, SPI_MISO, PCMOUT */
     EAT_PIN31_RXD = 31,       /* UART1 */
     EAT_PIN32_TXD = 32,       /* UART1 */
     EAT_PIN33_CTS = 33,       /* GPIO, U1CTS, U2TXD */
@@ -119,8 +119,8 @@ typedef enum {
     EAT_PIN62_ROW0 = 62,      /* GPIO, KEY_ROW */
     EAT_PIN63_ROW4 = 63,      /* GPIO, KEY_ROW, EINT */
     EAT_PIN64_NETLIGHT = 64,  /* GPIO */
-    EAT_PIN65_PCM_SYNC = 65,  /* GPIO, LSCE, PCMSYNC */
-    EAT_PIN66_PCM_IN = 66,    /* GPIO ,LSDA, PCMIN*/
+    EAT_PIN65_PCM_SYNC = 65,  /* GPIO, SPI_CS, PCMSYNC */
+    EAT_PIN66_PCM_IN = 66,    /* GPIO ,SPI_MOSI, PCMIN*/
     EAT_PIN68_UART1_RI = 68,  /* GPIO, U2CTS */
     EAT_PIN69_UART1_DTR = 69, /* GPIO, EINT, PWM */
     EAT_PIN70_UART1_DCD = 70, /* GPIO, U2RTS */   
@@ -135,15 +135,15 @@ typedef enum {
     EAT_PIN3_DTR = 3,         /* GPIO, EINT */
     EAT_PIN4_RI = 4,          /* GPIO, U2CTS */ 
     EAT_PIN5_DCD = 5,         /* GPIO, U2RTS */  
-    EAT_PIN6_PCM_OUT = 6,     /* GPIO, LSDI, PCMOUT */
-    EAT_PIN7_CTS = 7,         /* GPIO, U2RXD */
-    EAT_PIN8_RTS = 8,         /* GPIO, U2TXD */
+    EAT_PIN6_PCM_OUT = 6,     /* GPIO, SPI_MISO, PCMOUT */
+    EAT_PIN7_CTS = 7,         /* GPIO, U2RXD,U1CTS */
+    EAT_PIN8_RTS = 8,         /* GPIO, U2TXD,U1RTS */
     EAT_PIN9_TXD = 9,         /* UART1 */
     EAT_PIN10_RXD = 10,       /* UART1 */
-    EAT_PIN11_GPIO17 = 11,    /* GPIO, LSCK */
-    EAT_PIN12_PCM_IN = 12,    /* GPIO, LSDA, PCMIN */ 
+    EAT_PIN11_GPIO17 = 11,    /* GPIO, SPI_CLK */
+    EAT_PIN12_PCM_IN = 12,    /* GPIO, SPI_MOSI, PCMIN */ 
     EAT_PIN13_GPIO19 = 13,    /* GPIO, LSA0 */ 
-    EAT_PIN14_PCM_SYNC = 14,  /* GPIO, LSCE, PCMSYNC */ 
+    EAT_PIN14_PCM_SYNC = 14,  /* GPIO, SPI_CS, PCMSYNC */ 
     EAT_PIN15_VDD_EXT = 15,   /* VDD_EXT */
     EAT_PIN25_ADC= 25,        /* ADC */
     EAT_PIN34_SIM_PRE=34,     /* GPIO, EINT, PCMRST */ 
@@ -171,6 +171,8 @@ typedef enum {
 //SIM808
 typedef enum {
     EAT_PIN9_DTR = 9,        /* GPIO, EINT */
+    EAT_PIN10_RI = 10,        /* GPIO, EINT */
+    EAT_PIN11_DCD = 11,        /* GPIO, EINT */
     EAT_PIN12_CTS = 12,      /* GPIO */  
     EAT_PIN13_RTS = 13,      /* GPIO */
     EAT_PIN14_TXD = 14,      /* UART1 */
@@ -181,13 +183,13 @@ typedef enum {
     EAT_PIN38_SDA = 38,      /* GPIO, SDA */ 
     EAT_PIN39_SCL = 39,      /* GPIO, SCL */ 
     EAT_PIN41_PWM2 = 41,     /* GPIO, PWM, EINT */ 
-    EAT_PIN42_PWM1 = 42,     /* GPIO, PWM, EINT */
-    EAT_PIN43_GPIO5 = 43,    /* GPIO, LSA0 */
-    EAT_PIN44_GPIO6 = 44,    /* GPIO, LSCK */ 
-    EAT_PIN45_PCM_SYNC = 45, /* GPIO, LSCE, PCMSYNC */
+    EAT_PIN42_PWM1 = 42,     /* GPIO, PWM, EINT */    
+    EAT_PIN43_GPIO19 = 43,    /* GPIO, LSA0 */
+    EAT_PIN44_GPIO17 = 44,    /* GPIO, SPI_CLK */ 
+    EAT_PIN45_PCM_SYNC = 45, /* GPIO, SPI_CS, PCMSYNC */
     EAT_PIN46_PCM_CLK = 46,  /* GPIO, PCMCLK */
-    EAT_PIN47_PCM_IN = 47,   /* GPIO, LSDA, PCMIN */ 
-    EAT_PIN48_PCM_OUT = 48,  /* GPIO, LSDI, PCMOUT */
+    EAT_PIN47_PCM_IN = 47,   /* GPIO, SPI_MOSI, PCMIN */ 
+    EAT_PIN48_PCM_OUT = 48,  /* GPIO, SPI_MISO, PCMOUT */
     EAT_PIN49_STATUS = 49,   /* GPIO */ 
     EAT_PIN50_NETLIGHT = 50, /* GPIO */
     EAT_PIN55_ROW3 = 55,     /* GPIO, KEY_ROW */
@@ -198,8 +200,28 @@ typedef enum {
     EAT_PIN60_COL2 = 60,     /* GPIO, KEY_COL */
     EAT_PIN61_COL1 = 61,     /* GPIO, KEY_COL */
     EAT_PIN62_COL0 = 62,     /* GPIO, KEY_COL */
-    EAT_PIN_NUM = 69
+    EAT_PIN_NUM = 63
 } EatPinName_enum;
+
+#elif defined(__SIMCOM_PROJ_SIM800C__)
+typedef enum {
+    EAT_PIN1_UART1_TXD  = 1,  /* UART1_TXD */
+    EAT_PIN2_UART1_RXD  = 2,  /* UART1_RXD */
+    EAT_PIN3_UART1_RTS  = 3,  /* GPIO, UART1_RTS */
+    EAT_PIN4_UART1_CTS  = 4,  /* GPIO, EINT, UART1_CTS */
+    EAT_PIN5_UART1_DCD  = 5,  /* GPIO, UART1_DCD */
+    EAT_PIN6_UART1_DTR  = 6,  /* GPIO, EINT, UART1_DTR */ 
+    EAT_PIN7_UART1_RI   = 7,  /* GPIO, EINT, UART1_RI */
+    EAT_PIN14_SIM_DET   = 14, /* GPIO, EINT, SIM_DET */
+    EAT_PIN22_UART2_TXD = 22, /* UART2_TXD */
+    EAT_PIN23_UART2_RXD = 23, /* UART2_RXD */
+    EAT_PIN38_ADC       = 38, /* ADC */
+    EAT_PIN41_NETLIGHT  = 41, /* GPIO*/
+    EAT_PIN42_STATUS    = 42, /* GPIO*/
+    EAT_PIN_NUM         = 43
+} EatPinName_enum;
+
+
 #endif 
 
 /* This enumerate all the Key Value ! */
@@ -241,6 +263,11 @@ typedef enum {
     EAT_KEY_C5R3,
     EAT_KEY_C5R4,
     EAT_KEY_C5R5,
+    EAT_KEY_POWER,
+    EAT_KEY_NUM
+} EatKey_enum; 
+#elif defined(__SIMCOM_PROJ_SIM800C__)
+typedef enum {
     EAT_KEY_POWER,
     EAT_KEY_NUM
 } EatKey_enum; 
@@ -569,7 +596,7 @@ extern eat_bool (* const eat_spi_init)(EatSpiClk_enum clk, EatSpiWire_enum wire,
 * Function :  eat_spi_write
 * Description: Writes data or command to the spi.
 * Parameters :
-*     data  unsigned char* [OUT] The data buffer point,wan to write to spi.
+*     data  unsigned char* [IN] The data buffer point,wan to write to spi.
 *     len  unsigned char  [IN] The length of the data want to write.
 *     is_command eat_bool [IN] The type want to write,is_command:1 command,is_command:0 data.
 * Returns:
@@ -584,8 +611,8 @@ extern eat_bool (* const eat_spi_write)(const unsigned char *data, unsigned char
 * Function :  eat_spi_read
 * Description: Reads data from the spi.
 * Parameters:
-*     data  unsigned char* [IN] The buffer point,the data read from spi will save in this buffer.
-*     len  unsigned char  [OUT] The length of the data want to read.
+*     data  unsigned char* [OUT] The buffer point,the data read from spi will save in this buffer.
+*     len  unsigned char  [IN] The length of the data want to read.
 * Returns:
 *     The length of the data having read.
 * NOTE:
@@ -597,10 +624,10 @@ extern unsigned char  (* const eat_spi_read)(unsigned char *data, unsigned char 
 * Function :  eat_spi_write_read
 * Description: Writes data to spi ,then reads data from the spi.
 * Parameters:
-*     wdata  unsigned char* [OUT] The data buffer point,wan to write to spi..
-*     wlen    unsigned char   [OUT] The length of the data want to write.
-*     rdata   unsigned char* [IN] The buffer point,the data read from spi will save in this buffer.
-*     rlen     unsigned char   [OUT] The length of the data want to read.
+*     wdata  unsigned char* [IN] The data buffer point,wan to write to spi..
+*     wlen    unsigned char   [IN] The length of the data want to write.
+*     rdata   unsigned char* [OUT] The buffer point,the data read from spi will save in this buffer.
+*     rlen     unsigned char   [IN] The length of the data want to read.
 * Returns:
 *     The length of the data having read.
 * NOTE:
@@ -608,7 +635,8 @@ extern unsigned char  (* const eat_spi_read)(unsigned char *data, unsigned char 
 *****************************************************************************/
 extern unsigned char (* const eat_spi_write_read)(const unsigned char *wdata, unsigned char wlen, unsigned char* rdata, unsigned char rlen);
 
-
+#ifndef __SIMCOM_PROJ_SIM808__
+#ifndef __SIMCOM_PROJ_SIM800__
 /*****************************************************************************
 * Function :  eat_lcd_light_sw
 * Description: Controls the lcd backlight turn on or turn off.
@@ -621,7 +649,7 @@ extern unsigned char (* const eat_spi_write_read)(const unsigned char *wdata, un
 *     If lcd backlight on,it will disable system sleep.
 *****************************************************************************/
 extern void (* const eat_lcd_light_sw)(eat_bool sw, EatBLStep_enum step);
-
+#endif //800
 /*****************************************************************************
 * Function :  eat_kpled_sw
 * Description:  Controls the keypad led turn on or turn off.
@@ -633,7 +661,7 @@ extern void (* const eat_lcd_light_sw)(eat_bool sw, EatBLStep_enum step);
 *     If keypad led on,it will disable system sleep.
 *****************************************************************************/
 extern void (* const eat_kpled_sw)(eat_bool sw);
-
+#endif //808
 
 /*****************************************************************************
 * Function :  eat_adc_callback_func
@@ -667,6 +695,22 @@ typedef void (*eat_adc_callback_func)(EatAdc_st *adc);
 *     Nothing
 *****************************************************************************/
 extern eat_bool (* const eat_adc_get)(EatPinName_enum pin, unsigned int period, eat_adc_callback_func callback);
+
+/*****************************************************************************
+* Function : eat_get_adc_sync
+* Description: Get adc value directly.
+* Parameters:
+*     pin      [IN] The pin want to read ADC,available pin is listed in the enum EatPinName_enum
+*                   above.
+*     voltage  [OUT] store adc value,unit is mv.
+* Returns:
+*     if succeed    return EAT_TURE;
+*     otherwise     return EAT_FALSE.
+* NOTE:
+*     It takes about 10 milliseconds.
+*     Voltage range:[0-2800]mv.
+*****************************************************************************/
+extern eat_bool  (*const eat_get_adc_sync)(EatPinName_enum pin,u32 *voltage);
 
 /*****************************************************************************
 * Function :  eat_pwm_start
@@ -834,7 +878,6 @@ extern eat_bool (*const eat_usb_eint_register)(eat_usb_eint_callback_func callba
 *     Nothing
 *****************************************************************************/
 extern eat_bool (*const eat_get_usb_status)(void);
-
 /*****************************************************************************
 * Function : eat_set_keep_vddext_before_powdown
 * Description: keep vddext bdfore power down.
@@ -845,5 +888,34 @@ extern eat_bool (*const eat_get_usb_status)(void);
 * NOTE:
 *****************************************************************************/
 extern void (*const eat_set_keep_vddext_before_powdown)(eat_bool vddext_flag);
+
+/*****************************************************************************
+* Function : eat_get_module_temp_sync
+* Description: Get module temperature directly.
+* Parameters:
+*     temp  [OUT] store the value of temperature
+* Returns:
+*     if succeed    return EAT_TRUE.
+*     otherwise     return EAT_FALSE.
+* NOTE:
+*     It takes about 10 milliseconds.The value of temp is multiplied by 1000(eg 1 degrees 
+*     celsius return 1000).
+*****************************************************************************/
+extern eat_bool (*const eat_get_module_temp_sync)(s32 *temp);
+
+typedef void (*eat_temp_callback_func)(s32 *tmp);  
+/*****************************************************************************
+* Function : eat_get_module_temp_asyn
+* Description: Get module temperature.
+* Parameters:
+*     callback  [IN] The callback function.if not NULL,will call the callback function 
+*                    when read the value.if NULL, will return false.
+* Returns:
+*     if succeed    return EAT_TRUE.
+*     otherwise     return EAT_FALSE.
+* NOTE:
+*     value of tmp(temperature) is multiplied by 1000(eg 1 degrees celsius return 1000).
+*****************************************************************************/
+extern eat_bool (*const eat_get_module_temp_asyn)(eat_temp_callback_func callback);
 
 #endif

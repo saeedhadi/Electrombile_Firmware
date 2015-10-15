@@ -10,7 +10,6 @@
 #include <stdio.h>
 
 #include <eat_interface.h>
-#include <eat_gps.h>
 #include <eat_modem.h>
 
 #include "gps.h"
@@ -39,11 +38,7 @@ static void geo_fence_proc_cb(char *msg_buf, u8 len);
 void app_gps_thread(void *data)
 {
     EatEvent_st event;
-    eat_gps_power_req(EAT_TRUE);
 
-    LOG_INFO("gps current sleep mode %d", eat_gps_sleep_read());
-
-    eat_gps_register_msg_proc_callback(geo_fence_proc_cb);
     eat_timer_start(TIMER_GPS, setting.gps_timer_period);
     eat_modem_write("AT+CENG=3,1\r",12);
     while(EAT_TRUE)
@@ -130,7 +125,8 @@ static eat_bool gps_getGps(float* latitude, float* longitude)
      * $GPGGA,003634.000,8960.0000,N,00000.0000,E,0,0,,137.0,M,13.0,M,,
      * header     utc    Lat       N/S     Lng  E/W (Position Fix Indicator)  (Satellites Used)
      */
-    eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_GPGGA, gps_info_buf,NMEA_BUFF_SIZE);
+    //eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_GPGGA, gps_info_buf,NMEA_BUFF_SIZE);
+    //TODO: The above statement should be replace with AT command, since the EAT API is disabled for this version: 1418B01SIM808M32_BT_EAT_115200
     LOG_DEBUG("EAT_NMEA_OUTPUT_SIMCOM:%s", gps_info_buf);
 
     n = sscanf(gps_info_buf + sizeof("$GPGGA"), "%*f,%f,%*c,%f,%*c,%d", latitude, longitude, &isGpsFixed);

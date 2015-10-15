@@ -45,6 +45,9 @@
 #define FS_CREATE_ALWAYS        0x00020000L 
 #define FS_OPEN_NO_DIR          0x00000400L 
 
+#define FS_FILE_TYPE             0x00000004     
+#define FS_DIR_TYPE              0x00000008     
+#define FS_RECURSIVE_TYPE        0x00000010     
 
 /*-------------------- Type Define --------------------*/
 
