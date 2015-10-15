@@ -10,6 +10,7 @@
 #include <stdio.h>
 
 #include <eat_interface.h>
+//#include <eat_gps.h>
 #include <eat_modem.h>
 
 #include "gps.h"
@@ -38,7 +39,11 @@ static void geo_fence_proc_cb(char *msg_buf, u8 len);
 void app_gps_thread(void *data)
 {
     EatEvent_st event;
+    //eat_gps_power_req(EAT_TRUE);
 
+    //LOG_INFO("gps current sleep mode %d", eat_gps_sleep_read());
+
+    //eat_gps_register_msg_proc_callback(geo_fence_proc_cb);
     eat_timer_start(TIMER_GPS, setting.gps_timer_period);
     eat_modem_write("AT+CENG=3,1\r",12);
     while(EAT_TRUE)
@@ -66,8 +71,8 @@ void app_gps_thread(void *data)
                 break;
 
             case EAT_EVENT_USER_MSG:
-                MSG_THREAD* msg = (MSG_THREAD*) event->data.user_msg.data_p;
-                u8 msgLen = event->data.user_msg.len;
+                MSG_THREAD* msg = (MSG_THREAD*) event.data.user_msg.data_p;
+                u8 msgLen = event.data.user_msg.len;
 
                 switch (msg->cmd)
                 {

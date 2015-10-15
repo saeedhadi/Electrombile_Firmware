@@ -269,7 +269,7 @@ int event_threadMsg(const EatEvent_st* event)
                 msg->gps.latitude = gps->gps.latitude;
 
                 LOG_DEBUG("send GPS message.");
-                print_hex((const char*)msg, sizeof(MSG_GPS));
+                //print_hex((const char*)msg, sizeof(MSG_GPS));
                 socket_sendData(msg, sizeof(MSG_GPS));
             }
             else    //update local cell info
@@ -297,7 +297,7 @@ int event_threadMsg(const EatEvent_st* event)
                 }
 
                 LOG_DEBUG("send CELL message.");
-                print_hex((const char*)msg, msgLen);
+                //print_hex((const char*)msg, msgLen);
                 socket_sendData(msg, msgLen);
             }
             break;

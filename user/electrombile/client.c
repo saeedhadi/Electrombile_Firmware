@@ -4,6 +4,7 @@
  *  Created on: 2015Äê7ÔÂ9ÈÕ
  *      Author: jk
  */
+
 #include <stdio.h>
 #include <string.h>
 
@@ -16,6 +17,8 @@
 #include "uart.h"
 #include "data.h"
 #include "setting.h"
+#include "thread.h"
+#include "thread_msg.h"
 
 
 typedef int (*MSG_PROC)(const void* msg);
