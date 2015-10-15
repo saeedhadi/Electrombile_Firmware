@@ -39,6 +39,9 @@ static void geo_fence_proc_cb(char *msg_buf, u8 len);
 void app_gps_thread(void *data)
 {
     EatEvent_st event;
+	MSG_THREAD* msg;
+	u8 msgLen;
+	
     //eat_gps_power_req(EAT_TRUE);
 
     //LOG_INFO("gps current sleep mode %d", eat_gps_sleep_read());
@@ -71,8 +74,8 @@ void app_gps_thread(void *data)
                 break;
 
             case EAT_EVENT_USER_MSG:
-                MSG_THREAD* msg = (MSG_THREAD*) event.data.user_msg.data_p;
-                u8 msgLen = event.data.user_msg.len;
+                msg = (MSG_THREAD*) event.data.user_msg.data_p;
+                msgLen = event.data.user_msg.len;
 
                 switch (msg->cmd)
                 {
