@@ -55,16 +55,74 @@ void app_vibration_thread(void *data)
         return;
 	}
 	LOG_INFO("vibration eat_i2c_open success.");
+       write_buffer[0] = MMA8X5X_CTRL_REG4;
+	write_buffer[1] = 0x20;
+       ret = eat_i2c_write(EAT_I2C_OWNER_0, write_buffer, 2);
+       if(EAT_DEV_STATUS_OK != ret)
+	{
+		LOG_ERROR("vibration start MMA8X5X_CTRL_REG4 fail :ret=%d.", ret);
+              return;
+	}
+	LOG_INFO("vibration start MMA8X5X_CTRL_REG4 success.");
+       write_buffer[0] = MMA8X5X_CTRL_REG5;
+	write_buffer[1] = 0x20;
+	ret = eat_i2c_write(EAT_I2C_OWNER_0, write_buffer, 2);
+       if(EAT_DEV_STATUS_OK != ret)
+	{
+		LOG_ERROR("vibration start MMA8X5X_CTRL_REG5 fail :ret=%d.", ret);
+              return;
+	}
+	LOG_INFO("vibration start MMA8X5X_CTRL_REG5 success.");
+       write_buffer[0] =  MMA8X5X_TRANSIENT_CFG;
+	write_buffer[1] = 0x1e;
+	ret = eat_i2c_write(EAT_I2C_OWNER_0, write_buffer, 2);
+       if(EAT_DEV_STATUS_OK != ret)
+	{
+		LOG_ERROR("vibration start MMA8X5X_FF_MT_CFG fail :ret=%d.", ret);
+              return;
+	}
+	LOG_INFO("vibration start MMA8X5X_FF_MT_CFG success.");
+       write_buffer[0] =  MMA8X5X_TRANSIENT_THS;
+	write_buffer[1] = 0x1;   
+	ret = eat_i2c_write(EAT_I2C_OWNER_0, write_buffer, 2);
+       if(EAT_DEV_STATUS_OK != ret)
+	{
+		LOG_ERROR("vibration start MMA8X5X_FF_MT_THS fail :ret=%d.", ret);
+              return;
+	}
+	LOG_INFO("vibration start MMA8X5X_FF_MT_THS success.");
+    
+       write_buffer[0] =  MMA8X5X_HP_FILTER_CUTOFF;
+	write_buffer[1] = 0x3;   
+	ret = eat_i2c_write(EAT_I2C_OWNER_0, write_buffer, 2);
+       if(EAT_DEV_STATUS_OK != ret)
+	{
+		LOG_ERROR("vibration start MMA8X5X_FF_MT_THS fail :ret=%d.", ret);
+              return;
+	}
+	LOG_INFO("vibration start MMA8X5X_FF_MT_THS success.");
 
-	write_buffer[0] = MMA8X5X_CTRL_REG1;
+    
+       write_buffer[0] =  MMA8X5X_TRANSIENT_COUNT;
+	write_buffer[1] = 0x40;   
+	ret = eat_i2c_write(EAT_I2C_OWNER_0, write_buffer, 2);
+       if(EAT_DEV_STATUS_OK != ret)
+	{
+		LOG_ERROR("vibration start MMA8X5X_FF_MT_COUNT fail :ret=%d.", ret);
+              return;
+	}
+	LOG_INFO("vibration start MMA8X5X_FF_MT_COUNT success.");
+    	write_buffer[0] = MMA8X5X_CTRL_REG1;
 	write_buffer[1] = 0x01;
 	ret = eat_i2c_write(EAT_I2C_OWNER_0, write_buffer, 2);
 	if(EAT_DEV_STATUS_OK != ret)
 	{
-		LOG_ERROR("vibration start sample fail :ret=%d.", ret);
+		LOG_ERROR("vibration start MMA8X5X_CTRL_REG1 fail :ret=%d.", ret);
         return;
 	}
-	LOG_INFO("vibration start sample success.");
+	LOG_INFO("vibration start MMA8X5X_CTRL_REG1 success.");
+
+  
 
 	eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
 
@@ -105,37 +163,21 @@ static void vibration_timer_handler(void)
     if(EAT_TRUE == vibration_fixed())
     {
         //LOG_INFO("vibration is already fixed.");
-
-        write_buffer[0] = MMA8X5X_OUT_X_MSB;
-        ret = eat_i2c_read(EAT_I2C_OWNER_0, &write_buffer[0], 1, read_buffer, MMA8X5X_BUF_SIZE);
+        write_buffer[0] = MMA8X5X_TRANSIENT_CFG;
+        ret = eat_i2c_read(EAT_I2C_OWNER_0, &write_buffer[0], 1, read_buffer, 4);  
+        LOG_DEBUG("MMA8X5X_FF_MT_CFG=%x, %x, %x, %x", read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3]);
+       
         if (ret != 0)
         {
-    		LOG_ERROR("i2c test eat_i2c_read 0AH fail :ret=%d", ret);
+    	     LOG_ERROR("i2c test eat_i2c_read 0AH fail :ret=%d", ret);
             return;
         }
         else
         {
-            //LOG_DEBUG("read_length=%d", sizeof(read_buffer));
-
-            datax[vibration_data_i] = ((read_buffer[0] << 8) & 0xff00) | read_buffer[1];
-            datay[vibration_data_i] = ((read_buffer[2] << 8) & 0xff00) | read_buffer[3];
-            dataz[vibration_data_i] = ((read_buffer[4] << 8) & 0xff00) | read_buffer[5];
-            data_x2y2z2[vibration_data_i] = datax[vibration_data_i] * datax[vibration_data_i]
-                                          + datay[vibration_data_i] * datay[vibration_data_i]
-                                          + dataz[vibration_data_i] * dataz[vibration_data_i];
-            delta = abs(data_x2y2z2[vibration_data_i] - 282305280);
-
-            //LOG_DEBUG("\rdatax=%d, datay=%d, dataz=%d, ", datax[vibration_data_i], datay[vibration_data_i], dataz[vibration_data_i]);
-            //LOG_DEBUG("\rdata_x2y2z2=%d, delta=%d", data_x2y2z2[vibration_data_i], delta);
-
-            if (delta > VIBRATION_TRESHOLD)
+            if(read_buffer[1]&0x40)
             {
                 vibration_sendAlarm();
             }
-
-            vibration_data_i++;
-            if (vibration_data_i == 10)
-                vibration_data_i = 0;
         }
     }
     else
