@@ -28,13 +28,13 @@ static void eat_check_sms_pdu_string(u16 length, u8 *bytes, u8 *str)
 {
     u16 i = 0;
     u16 j = 0;
-  
+
     if((str == NULL) || (bytes == NULL))
     {
         eat_trace("eat_check_sms_pdu_string() failed");
-        return;    
+        return;
     }
-    
+
     while (i < length)
     {
         j += sprintf((char*)str + j, "%02x", bytes[i]);
@@ -72,7 +72,7 @@ static void recv_server_proc(EatSmsReadCnf_st  smsReadCnfContent)
         u8 n=0;
         u8 type;
         char *buf[5] = {NULL};
-        u16 port;            
+        u16 port;
         if(ptr = strstr(p,"get"))//get cmd
         {
             if (setting.addr_type == ADDR_TYPE_IP)
@@ -84,10 +84,10 @@ static void recv_server_proc(EatSmsReadCnf_st  smsReadCnfContent)
                 sprintf(ack_message,"server,%s,%d",setting.addr.domain,setting.port);
             }
             eat_send_text_sms(smsReadCnfContent.number,ack_message);
-        }            
+        }
         if(ptr = strstr(p,"set"))//set cmd
         {
-            
+
             LOG_DEBUG("%s",p);
             buf[n] = strtok(p,",");
             for(n=1;n<5;n++)
@@ -111,8 +111,8 @@ static void recv_server_proc(EatSmsReadCnf_st  smsReadCnfContent)
                 LOG_DEBUG("setting.addr.type=%d,domain=%s,port=%d",setting.addr_type,setting.addr.domain,setting.port);
             }
             else
-            {                 
-                int addr[4];                 
+            {
+                int addr[4];
                 for(n=0;n<4;n++)
                 {
                     ptr= strtok(buf[3],".");
@@ -121,14 +121,14 @@ static void recv_server_proc(EatSmsReadCnf_st  smsReadCnfContent)
                         return;
                     }
                     addr[n] = atoi(ptr);
-                    buf[3] = NULL;                        
+                    buf[3] = NULL;
                 }
                 setting.addr_type = ADDR_TYPE_IP;
                 setting.addr.ipaddr[0] = addr[0];
                 setting.addr.ipaddr[1] = addr[1];
                 setting.addr.ipaddr[2] = addr[2];
                 setting.addr.ipaddr[3] = addr[3];
-                setting.port = port;//.不能用                    
+                setting.port = port;//.不能用
                 LOG_DEBUG("setting.addr.type=%d,%d:%d:%d:%d,port=%d",setting.addr_type,setting.addr.ipaddr[0],setting.addr.ipaddr[1],setting.addr.ipaddr[2],setting.addr.ipaddr[3],setting.port);
             }
              if(!setting_save())
@@ -138,10 +138,10 @@ static void recv_server_proc(EatSmsReadCnf_st  smsReadCnfContent)
                     加重连todo
 
              **************************************************************/
-             
-             
+
+
         }
-                
+
  }
 static void eat_sms_read_cb(EatSmsReadCnf_st  smsReadCnfContent)
 {
@@ -150,11 +150,11 @@ static void eat_sms_read_cb(EatSmsReadCnf_st  smsReadCnfContent)
     char*  ptr;
     eat_get_sms_format(&format);
     if(1 == format)//TEXT模式
-    {       
+    {
         if(ptr=strstr(p,"server"))//服务器命令
         {
             recv_server_proc(smsReadCnfContent);
-            
+
         }
         if(ptr=strstr(p,"timer"))
         {
@@ -191,7 +191,7 @@ void app_sms_thread(void *data)
 {
     EatEvent_st event;
 
-    LOG_DEBUG("SMS thread start");
+    LOG_DEBUG("SMS thread start.");
     eat_set_sms_operation_mode(EAT_TRUE);
     eat_sms_register_new_message_callback(eat_sms_new_message_cb);
     eat_sms_register_flash_message_callback(eat_sms_flash_message_cb);

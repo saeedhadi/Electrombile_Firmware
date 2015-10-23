@@ -26,6 +26,7 @@
 #define LOG_ERROR(fmt, ...)
 #endif
 
+void log_hex(const char* data, int length);
 
 
 #endif /* USER_ELECTROMBILE_LOG_H_ */

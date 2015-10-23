@@ -19,6 +19,7 @@
 #include "msg.h"
 #include "data.h"
 #include "client.h"
+#include "tool.h"
 
 typedef int (*EVENT_FUNC)(const EatEvent_st* event);
 typedef struct
@@ -103,7 +104,7 @@ int event_proc(EatEvent_st* event)
 {
 	int i = 0;
 
-    LOG_DEBUG("event: %s", getEventDescription(event->event));
+    LOG_DEBUG("event: %s.", getEventDescription(event->event));
 
 	for (i = 0; i < sizeof(eventProcs) / sizeof(eventProcs[0]); i++)
 	{
@@ -129,25 +130,25 @@ int event_timer(const EatEvent_st* event)
     switch (event->data.timer.timer_id)
     {
         case TIMER_WATCHDOG:
-            LOG_INFO("TIMER_WATCHDOG expire!");
+            LOG_INFO("TIMER_WATCHDOG expire.");
             feedWatchdog();
             eat_timer_start(event->data.timer.timer_id, setting.watchdog_timer_period);
             break;
 
         case TIMER_AT_CMD:
-            LOG_INFO("TIMER_AT_CMD expire!");
-            eat_modem_write("AT+CGATT?\n", 10);
+            LOG_INFO("TIMER_AT_CMD expire.");
+            tool_modem_write("AT+CGATT?\n");
             eat_timer_start(event->data.timer.timer_id, setting.at_cmd_timer_period);
             break;
 
         case TIMER_GPS_SEND:
-            LOG_INFO("TIMER_GPS_SEND expire!");
+            LOG_INFO("TIMER_GPS_SEND expire.");
             eat_timer_start(event->data.timer.timer_id, setting.gps_send_timer_period);
             client_loop();
             break;
 
         default:
-            LOG_ERROR ("timer(%d) not processed", event->data.timer.timer_id);
+            LOG_ERROR ("timer(%d) not processed!", event->data.timer.timer_id);
             break;
     }
     return 0;
@@ -269,7 +270,7 @@ int event_threadMsg(const EatEvent_st* event)
                 msg->gps.latitude = gps->gps.latitude;
 
                 LOG_DEBUG("send GPS message.");
-                //print_hex((const char*)msg, sizeof(MSG_GPS));
+                log_hex((const char*)msg, sizeof(MSG_GPS));
                 socket_sendData(msg, sizeof(MSG_GPS));
             }
             else    //update local cell info
@@ -297,7 +298,7 @@ int event_threadMsg(const EatEvent_st* event)
                 }
 
                 LOG_DEBUG("send CELL message.");
-                //print_hex((const char*)msg, msgLen);
+                log_hex((const char*)msg, msgLen);
                 socket_sendData(msg, msgLen);
             }
             break;

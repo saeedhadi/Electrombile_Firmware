@@ -48,61 +48,12 @@ static MC_MSG_PROC msgProcs[] =
 	{CMD_LOCATION, location},
 };
 
-
-static void print_hex(const char* data, int length)
-{
-    int i = 0, j = 0;
-
-    print("    ");
-    for (i  = 0; i < 16; i++)
-    {
-        print("%X  ", i);
-    }
-    print("    ");
-    for (i = 0; i < 16; i++)
-    {
-        print("%X", i);
-    }
-
-    print("\r\n");
-
-    for (i = 0; i < length; i += 16)
-    {
-        print("%02d  ", i / 16 + 1);
-        for (j = i; j < i + 16 && j < length; j++)
-        {
-            print("%02x ", data[j] & 0xff);
-        }
-        if (j == length && length % 16)
-        {
-            for (j = 0; j < (16 - length % 16); j++)
-            {
-                print("   ");
-            }
-        }
-        print("    ");
-        for (j = i; j < i + 16 && j < length; j++)
-        {
-            if (data[j] < 32)
-            {
-                print(".");
-            }
-            else
-            {
-                print("%c", data[j] & 0xff);
-            }
-        }
-
-        print("\r\n");
-    }
-}
-
 int client_proc(const void* m, int msgLen)
 {
     MSG_HEADER* msg = (MSG_HEADER*)m;
     size_t i = 0;
 
-    print_hex(m, msgLen);
+    log_hex(m, msgLen);
 
     if (msgLen < sizeof(MSG_HEADER))
     {
@@ -158,7 +109,7 @@ void client_loop(void)
                 msg->gps.latitude = data.gps.latitude;
 
                 LOG_DEBUG("send GPS message");
-                print_hex((const char*)msg, sizeof(MSG_GPS));
+                log_hex((const char*)msg, sizeof(MSG_GPS));
                 socket_sendData(msg, sizeof(MSG_GPS));
             }
             else
@@ -184,7 +135,7 @@ void client_loop(void)
                 }
 
                 LOG_DEBUG("send CELL message");
-                print_hex((const char*)msg, msgLen);
+                log_hex((const char*)msg, msgLen);
                 socket_sendData(msg, msgLen);
             }
         }
@@ -205,7 +156,7 @@ void client_loop(void)
             memcpy(msg->IMEI, imei, IMEI_LENGTH);
 
             LOG_DEBUG("send login message.");
-            print_hex((const char*)msg, sizeof(MSG_LOGIN_REQ));
+            log_hex((const char*)msg, sizeof(MSG_LOGIN_REQ));
             socket_sendData(msg, sizeof(MSG_LOGIN_REQ));
         }
 
