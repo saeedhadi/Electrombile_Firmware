@@ -198,7 +198,7 @@ static eat_bool gps_getCells(short* mcc, short* mnc, char* cellNo, CELL cells[])
         p = strchr(p + 1, '+');
         if (p)
         {
-            n = sscanf(p + sizeof("+CENG: 0,"), "%d,%d,%d,%x,%*d,%d", &_mcc, &_mnc, &lac, &cellid, &rxl);
+            n = sscanf(p + sizeof("+CENG: 0,"), "%d,%d,%x,%x,%*d,%d", &_mcc, &_mnc, &lac, &cellid, &rxl);
             if (n != 5)
             {
                 continue;
