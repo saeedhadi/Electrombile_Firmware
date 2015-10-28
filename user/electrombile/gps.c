@@ -31,7 +31,7 @@ static float longitude = 0.0;
 static eat_bool isCellGet = EAT_FALSE;
 static short mcc = 0;  //mobile country code
 static short mnc = 0;  //mobile network code
-static char  cellNo;   // cell count
+static char  cellNo = 0;   // cell count
 static CELL  cells[7] = {0};
 
 static void gps_timer_handler(u8 cmd);
@@ -85,6 +85,7 @@ void app_gps_thread(void *data)
                 switch (msg->cmd)
                 {
                     case CMD_THREAD_LOCATION:
+                        LOG_DEBUG("gps get CMD_THREAD_LOCATION.");
                         gps_timer_handler(CMD_THREAD_LOCATION);
                         break;
                     default:
@@ -281,7 +282,7 @@ static void gps_at_read_handler(void)
             {
                 buf_p1 = tool_StrstrAndReturnEndPoint(buf_p1, "+CENG: ");
 
-                count = sscanf(buf_p1, "%d,\"%d,%d,%d,%x,%*d,%d\"", &cellCount, &_mcc, &_mnc, &lac, &cellid, &rxl);
+                count = sscanf(buf_p1, "%d,\"%d,%d,%x,%x,%*d,%d\"", &cellCount, &_mcc, &_mnc, &lac, &cellid, &rxl);
                 if(6 != count)
                 {
                     continue;

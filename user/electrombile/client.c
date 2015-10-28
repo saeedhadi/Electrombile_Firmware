@@ -111,8 +111,10 @@ void client_loop(void)
                 LOG_DEBUG("send GPS message");
                 log_hex((const char*)msg, sizeof(MSG_GPS));
                 socket_sendData(msg, sizeof(MSG_GPS));
+
+                data.isGpsFixed = EAT_FALSE;
             }
-            else
+            else if(data.isCellGet)
             {
                 size_t msgLen = sizeof(MSG_HEADER) + sizeof(CGI) + sizeof(CELL) * data.cgi.cellNo;
                 MSG_HEADER* msg = alloc_msg(CMD_CELL, msgLen);
@@ -137,6 +139,8 @@ void client_loop(void)
                 LOG_DEBUG("send CELL message");
                 log_hex((const char*)msg, msgLen);
                 socket_sendData(msg, msgLen);
+
+                data.isCellGet = EAT_FALSE;
             }
         }
         else

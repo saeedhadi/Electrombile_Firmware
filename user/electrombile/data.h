@@ -20,6 +20,7 @@ typedef struct
     eat_bool isSeekFixed;
 
     eat_bool isGpsFixed;
+    eat_bool isCellGet;
     GPS gps;
     CGI cgi;
     CELL cells[MAX_CELL_NUM];

@@ -29,6 +29,21 @@ typedef struct
 	u16 port;
 
 	//Timer configuration
+    u32 gps_send_timer_period;
+}STORAGE;
+
+typedef struct
+{
+	//Server configuration
+	ADDR_TYPE addr_type;
+	union
+	{
+		s8 domain[MAX_DOMAIN_NAME_LEN];
+		u8 ipaddr[4];
+	}addr;
+	u16 port;
+
+	//Timer configuration
 	u32 watchdog_timer_period;
     u32 at_cmd_timer_period;
 	u32 gps_timer_period;
@@ -45,5 +60,7 @@ extern SETTING setting;
 eat_bool vibration_fixed(void);
 void set_vibration_state(eat_bool fixed);
 eat_bool setting_initial(void);
-eat_bool setting_save(void);
+void setting_reset(void);
+eat_bool storage_save(void);
+
 #endif /* USER_ELECTROMBILE_SETTING_H_ */

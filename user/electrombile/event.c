@@ -171,16 +171,17 @@ int event_threadMsg(const EatEvent_st* event)
                 break;
             }
 
-            data.isGpsFixed = gps->isGpsFixed;
 
             if (gps->isGpsFixed)    //update the local GPS data
             {
+                data.isGpsFixed = EAT_TRUE;
                 data.gps.latitude = gps->gps.latitude;
                 data.gps.longitude = gps->gps.longitude;
                 LOG_DEBUG("receive thread command CMD_GPS_UPDATE: lat(%f), lng(%f).", gps->gps.latitude, gps->gps.longitude);
             }
             else    //update local cell info
             {
+                data.isCellGet = EAT_TRUE;
                 data.cgi.mcc = gps->cellInfo.mcc;
                 data.cgi.mnc = gps->cellInfo.mnc;
                 data.cgi.cellNo = gps->cellInfo.cellNo;
