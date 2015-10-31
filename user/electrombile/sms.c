@@ -4,187 +4,258 @@
  *  Created on: 2015/6/24
  *      Author: jk
  */
-
- /*
-    server,set,1,www.sky200.com,32001
-    server,get
-
-
- */
-
-#include "sms.h"
-#include "log.h"
-#include "thread.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>  //strtok()必须加载这个头函数
+
 #include "eat_modem.h"
 #include "eat_interface.h"
 #include "eat_uart.h"
 #include "eat_sms.h"
 #include "setting.h"
-#include <stdlib.h>  //strtok()必须加载这个头函数
-
-static void eat_check_sms_pdu_string(u16 length, u8 *bytes, u8 *str)
-{
-    u16 i = 0;
-    u16 j = 0;
-
-    if((str == NULL) || (bytes == NULL))
-    {
-        eat_trace("eat_check_sms_pdu_string() failed");
-        return;
-    }
-
-    while (i < length)
-    {
-        j += sprintf((char*)str + j, "%02x", bytes[i]);
-        i++;
-    }
-    str[j] = 0;
-    //EatToUpper(str);
-}
+#include "sms.h"
+#include "log.h"
+#include "thread.h"
+#include "tool.h"
+#include "version.h"
+#include "timer.h"
 
 static eat_sms_flash_message_cb(EatSmsReadCnf_st smsFlashMessage)
 {
-    u8 format =0;
+    u8 format = 0;
 
+    LOG_DEBUG("flash message.");
     eat_get_sms_format(&format);
     if(1 == format)//TEXT模式
     {
-        eat_trace("eat_sms_read_cb, msg=%s",smsFlashMessage.data);
-        eat_trace("eat_sms_read_cb, datetime=%s",smsFlashMessage.datetime);
-        eat_trace("eat_sms_read_cb, name=%s",smsFlashMessage.name);
-        eat_trace("eat_sms_read_cb, status=%d",smsFlashMessage.status);
-        eat_trace("eat_sms_read_cb, len=%d",smsFlashMessage.len);
-        eat_trace("eat_sms_read_cb, number=%s",smsFlashMessage.number);
+        LOG_DEBUG("recv TEXT sms.");
+        LOG_DEBUG("msg=%s.",smsFlashMessage.data);
+        LOG_DEBUG("datetime=%s.",smsFlashMessage.datetime);
+        LOG_DEBUG("name=%s.",smsFlashMessage.name);
+        LOG_DEBUG("status=%d.",smsFlashMessage.status);
+        LOG_DEBUG("len=%d.",smsFlashMessage.len);
+        LOG_DEBUG("number=%s.",smsFlashMessage.number);
     }
     else//PDU模式
     {
-        eat_trace("eat_sms_read_cb, msg=%s",smsFlashMessage.data);
-        eat_trace("eat_sms_read_cb, len=%d",smsFlashMessage.len);
+        LOG_DEBUG("recv PDU sms.");
+        LOG_DEBUG("msg=%s",smsFlashMessage.data);
+        LOG_DEBUG("len=%d",smsFlashMessage.len);
     }
 }
-static void recv_server_proc(EatSmsReadCnf_st  smsReadCnfContent)
+
+static void sms_version_proc(u8 *p, u8 *number)
 {
-        char *p = smsReadCnfContent.data;
-        char ack_message[64]={0};
-        char*  ptr;
-        u8 n=0;
-        u8 type;
-        char *buf[5] = {NULL};
-        u16 port;
-        if(ptr = strstr(p,"get"))//get cmd
+    unsigned char *ptr1;
+    char ack_message[64]={0};
+
+    ptr1 = tool_StrstrAndReturnEndPoint(p, "VERSION?");
+    if(NULL != ptr1)
+    {
+        sprintf(ack_message, "VER:%s\r\nCORE:%s", VERSION_STR, eat_get_version());
+        eat_send_text_sms(number, ack_message);
+    }
+
+    return;
+}
+
+static void sms_server_proc(u8 *p, u8 *number)
+{
+    unsigned char *ptr1;
+    char ack_message[64] = {0};
+    char domainORip[MAX_DOMAIN_NAME_LEN] = {0};
+    u8 ip[4] = {0};
+    u16 port = 0;
+    int count = 0;
+
+    ptr1 = tool_StrstrAndReturnEndPoint(p, "SERVER?");
+    if(NULL != ptr1)
+    {
+        if(setting.addr_type == ADDR_TYPE_IP)
         {
-            if (setting.addr_type == ADDR_TYPE_IP)
+            sprintf(ack_message, "SERVER %d.%d.%d.%d:%d",setting.addr.ipaddr[0],setting.addr.ipaddr[1],setting.addr.ipaddr[2],setting.addr.ipaddr[3],setting.port);
+        }
+        else if(setting.addr_type == ADDR_TYPE_DOMAIN)
+        {
+            sprintf(ack_message, "SERVER %s:%d",setting.addr.domain,setting.port);
+        }
+        eat_send_text_sms(number, ack_message);
+    }
+
+    ptr1 = tool_StrstrAndReturnEndPoint(p, "SERVER ");
+    if(NULL != ptr1)
+    {
+        count = sscanf(ptr1, "%s:%d", domainORip, &port);
+        if(2 == count)
+        {
+            count = sscanf(domainORip, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
+            if(4 == count)
             {
-                sprintf(ack_message,"server,%d.%d.%d.%d,%d",setting.addr.ipaddr[0],setting.addr.ipaddr[1],setting.addr.ipaddr[2],setting.addr.ipaddr[3],setting.port);
+                //validity check
+                if(ip[0] >= 0 && ip[0] <= 255 && ip[1] >= 0 && ip[1] <= 255 && \
+                   ip[2] >= 0 && ip[2] <= 255 && ip[3] >= 0 && ip[3] <= 255)
+                {
+                    //domainORip is ip
+                    setting.addr_type = ADDR_TYPE_IP;
+                    setting.addr.ipaddr[0] = ip[0];
+                    setting.addr.ipaddr[1] = ip[1];
+                    setting.addr.ipaddr[2] = ip[2];
+                    setting.addr.ipaddr[3] = ip[3];
+                    setting.port = port;
+                    convert_setting_to_storage();
+                    storage_save();
+
+                    //return ok
+                    sprintf(ack_message, "%s:%d OK", domainORip, port);
+                }
+                else
+                {
+                    //return error
+                    sprintf(ack_message, "%s:%d ERROR", domainORip, port);
+                }
             }
             else
             {
-                sprintf(ack_message,"server,%s,%d",setting.addr.domain,setting.port);
-            }
-            eat_send_text_sms(smsReadCnfContent.number,ack_message);
-        }
-        if(ptr = strstr(p,"set"))//set cmd
-        {
-
-            LOG_DEBUG("%s",p);
-            buf[n] = strtok(p,",");
-            for(n=1;n<5;n++)
-            {
-                buf[n] = strtok(NULL,",");
-                LOG_DEBUG("%s",buf[n]);
-                if(NULL==buf[n])
+                //validity check
+                count = sscanf(domainORip, "%[.a-zA-Z0-9]", domainORip);
+                if(1 == count)
                 {
-                    return;
+                    //domainORip is domain
+                    setting.addr_type = ADDR_TYPE_DOMAIN;
+                    strcpy(setting.addr.domain, domainORip);
+                    setting.port = port;
+                    convert_setting_to_storage();
+                    storage_save();
+
+                    //return ok
+                    sprintf(ack_message, "%s:%d OK", domainORip, port);
+                }
+                else
+                {
+                    //return error
+                    sprintf(ack_message, "%s:%d ERROR", domainORip, port);
                 }
             }
-            type = atoi(buf[2]);
-            port = atoi(buf[4]);
-            if(type==1)
+        }
+        else
+        {
+            sprintf(ack_message, "%s ERROR", ptr1);
+        }
+
+        eat_send_text_sms(number, ack_message);
+    }
+
+    return;
+}
+
+static void sms_timer_proc(u8 *p, u8 *number)
+{
+    unsigned char *ptr1;
+    char ack_message[64] = {0};
+    u32 timer_period = 0;
+    int count = 0;
+
+    ptr1 = tool_StrstrAndReturnEndPoint(p, "TIMER?");
+    if(NULL != ptr1)
+    {
+        sprintf(ack_message, "TIMER:%d", (setting.gps_send_timer_period / 1000));
+        eat_send_text_sms(number, ack_message);
+    }
+
+    ptr1 = tool_StrstrAndReturnEndPoint(p, "TIMER ");
+    if(NULL != ptr1)
+    {
+        count = sscanf(ptr1, "%d", &timer_period);
+        if(1 == count && timer_period >=0 && timer_period <= 21600)
+        {
+            if(0 == timer_period)
             {
-                setting.addr_type = ADDR_TYPE_DOMAIN;
-                setting.port = port;
-                LOG_DEBUG("buf3=%s,len=%d",buf[3],strlen(buf[3]));
-                memset(setting.addr.domain,0,MAX_DOMAIN_NAME_LEN);
-                memcpy(setting.addr.domain,buf[3],strlen(buf[3]));
-                LOG_DEBUG("setting.addr.type=%d,domain=%s,port=%d",setting.addr_type,setting.addr.domain,setting.port);
+                eat_timer_stop(TIMER_GPS_SEND);
+
+                sprintf(ack_message, "SET TIMER to 0 OK");
+            }
+            else if(timer_period <= 10)
+            {
+                setting.gps_send_timer_period = 10000;
+                convert_setting_to_storage();
+                storage_save();
+
+                eat_timer_stop(TIMER_GPS_SEND);
+                eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
+
+                sprintf(ack_message, "SET TIMER to 10 OK");
             }
             else
             {
-                int addr[4];
-                for(n=0;n<4;n++)
-                {
-                    ptr= strtok(buf[3],".");
-                    if(NULL==ptr)
-                    {
-                        return;
-                    }
-                    addr[n] = atoi(ptr);
-                    buf[3] = NULL;
-                }
-                setting.addr_type = ADDR_TYPE_IP;
-                setting.addr.ipaddr[0] = addr[0];
-                setting.addr.ipaddr[1] = addr[1];
-                setting.addr.ipaddr[2] = addr[2];
-                setting.addr.ipaddr[3] = addr[3];
-                setting.port = port;//.不能用
-                LOG_DEBUG("setting.addr.type=%d,%d:%d:%d:%d,port=%d",setting.addr_type,setting.addr.ipaddr[0],setting.addr.ipaddr[1],setting.addr.ipaddr[2],setting.addr.ipaddr[3],setting.port);
+                setting.gps_send_timer_period = timer_period * 1000;
+                convert_setting_to_storage();
+                storage_save();
+
+                eat_timer_stop(TIMER_GPS_SEND);
+                eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
+
+                sprintf(ack_message, "SET TIMER to %d OK", timer_period);
             }
-             if(!setting_save())
-                return;
-             eat_send_text_sms(smsReadCnfContent.number,"set server ok");
-             /*************************************************************
-                    加重连todo
-
-             **************************************************************/
-
-
+        }
+        else
+        {
+            sprintf(ack_message, "SET TIMER to %s ERROR", ptr1);
         }
 
- }
-static void eat_sms_read_cb(EatSmsReadCnf_st  smsReadCnfContent)
+        eat_send_text_sms(number, ack_message);
+    }
+
+    return;
+}
+
+static void eat_sms_read_cb(EatSmsReadCnf_st smsReadCnfContent)
 {
     u8 format =0;
-    char *p = smsReadCnfContent.data;
-    char*  ptr;
+    unsigned char *p = smsReadCnfContent.data;
+    unsigned char *ptr1;
+    unsigned char *ptr2;
+    char ack_message[64]={0};
+    int count = 0;
+    u8 ipaddr[4] = {0};
+    int port = 0;
+    s8 domain[MAX_DOMAIN_NAME_LEN];
+    u32 timer_period = 0;
+
+    LOG_DEBUG("new message.");
     eat_get_sms_format(&format);
     if(1 == format)//TEXT模式
     {
-        if(ptr=strstr(p,"server"))//服务器命令
-        {
-            recv_server_proc(smsReadCnfContent);
+        LOG_DEBUG("recv TEXT sms.");
 
-        }
-        if(ptr=strstr(p,"timer"))
-        {
-            //TO DO
-        }
+        sms_version_proc(p, smsReadCnfContent.number);
+        sms_server_proc(p, smsReadCnfContent.number);
+        sms_timer_proc(p, smsReadCnfContent.number);
     }
     else//PDU模式
     {
-        LOG_INFO("recv pdu sms");
+        LOG_DEBUG("recv PDU sms.");
     }
 }
 
 static void eat_sms_delete_cb(eat_bool result)
 {
-    eat_trace("eat_sms_delete_cb, result=%d",result);
+    LOG_DEBUG("result=%d.", result);
 }
 
 static void eat_sms_send_cb(eat_bool result)
 {
-    eat_trace("eat_sms_send_cb, result=%d",result);
+    LOG_DEBUG("result=%d.", result);
 }
 
 static eat_sms_new_message_cb(EatSmsNewMessageInd_st smsNewMessage)
 {
-     eat_read_sms(smsNewMessage.index,eat_sms_read_cb);
+    LOG_DEBUG("smsNewMessage.index=%d.", smsNewMessage.index);
+    eat_read_sms(smsNewMessage.index, eat_sms_read_cb);
 }
 
 static void eat_sms_ready_cb(eat_bool result)
 {
-    eat_trace("eat_sms_ready_cb, result=%d",result);
+    LOG_DEBUG("result=%d.", result);
 }
 
 void app_sms_thread(void *data)
@@ -192,12 +263,19 @@ void app_sms_thread(void *data)
     EatEvent_st event;
 
     LOG_DEBUG("SMS thread start.");
-    eat_set_sms_operation_mode(EAT_TRUE);
+
+
+    eat_set_sms_operation_mode(EAT_TRUE);//set sms operation as API mode
+    eat_set_sms_format(EAT_TRUE);//set sms format as TEXT mode
+    //eat_set_sms_cnmi(0,0,0,0,0);//set sms cnmi parameter
+    //eat_set_sms_sc("+8613800290500");//set center number
+    //eat_set_sms_storage(EAT_ME, EAT_ME, EAT_ME);//set sms storage type
+
     eat_sms_register_new_message_callback(eat_sms_new_message_cb);
     eat_sms_register_flash_message_callback(eat_sms_flash_message_cb);
     eat_sms_register_send_completed_callback(eat_sms_send_cb);
     eat_sms_register_sms_ready_callback(eat_sms_ready_cb);
-    eat_set_sms_format(1);
+
     while(EAT_TRUE)
     {
         eat_get_event_for_user(TRHEAD_SMS, &event);
@@ -227,3 +305,4 @@ void app_sms_thread(void *data)
         }
     }
 }
+

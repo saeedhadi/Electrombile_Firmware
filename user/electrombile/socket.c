@@ -87,7 +87,7 @@ void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
 
 	if (result == EAT_TRUE)
 	{
-		LOG_DEBUG("hostname notify: %d.%d.%d.%d:%d", ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3], setting.port);
+		LOG_DEBUG("hostname notify:%s -> %d.%d.%d.%d", setting.addr.domain, ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3], setting.port);
 
         address.sock_type = SOC_SOCK_STREAM;
         address.addr_len = 4;
@@ -152,7 +152,9 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
             else
             {
                 LOG_ERROR("SOC_CONNECT failed, the server is OFF.");
-                eat_timer_start(TIMER_AT_CMD, setting.at_cmd_timer_period);//restart the AT timer again
+                eat_soc_close(s);
+
+                eat_timer_start(TIMER_SOCKET, setting.socket_timer_period);
             }
 
             break;
@@ -162,7 +164,7 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
             set_socket_state(EAT_FALSE);
             set_client_state(EAT_FALSE);
 
-            eat_timer_start(TIMER_AT_CMD, setting.at_cmd_timer_period);//restart the AT timer again
+            eat_timer_start(TIMER_SOCKET, setting.socket_timer_period);
             break;
 
         case SOC_ACKED:
@@ -186,7 +188,7 @@ void socket_setup(void)
     if (socket_id < 0)
     {
     	LOG_ERROR("eat_soc_create return error :%d", socket_id);
-    	eat_reset_module();//TODO: error handle
+    	eat_reset_module();
     	return;
     }
     else
@@ -198,7 +200,7 @@ void socket_setup(void)
     if (rc != SOC_SUCCESS)
     {
     	LOG_ERROR("eat_soc_setsockopt set SOC_NBIO failed: %d", rc);
-    	eat_reset_module();//TODO: error handle
+    	eat_reset_module();
     	return;
     }
 
@@ -206,7 +208,7 @@ void socket_setup(void)
     if (rc != SOC_SUCCESS)
     {
     	LOG_ERROR("eat_soc_setsockopt set SOC_NODELAY failed: %d", rc);
-    	eat_reset_module();//TODO: error handle
+    	eat_reset_module();
     	return;
     }
 
@@ -215,7 +217,7 @@ void socket_setup(void)
     if (rc != SOC_SUCCESS)
     {
     	LOG_ERROR("eat_soc_setsockopt set SOC_ASYNC failed: %d", rc);
-    	eat_reset_module();//TODO: error handle
+    	eat_reset_module();
     	return;
     }
 
@@ -275,7 +277,7 @@ void socket_setup(void)
 
 void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
 {
-	LOG_INFO("bear_notify state: %s", getStateDescription(state));
+	LOG_INFO("bear_notify state: %s.", getStateDescription(state));
 
 	switch (state)
 	{

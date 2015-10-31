@@ -147,6 +147,11 @@ int event_timer(const EatEvent_st* event)
             client_loop();
             break;
 
+        case TIMER_SOCKET:
+            LOG_INFO("TIMER_SOCKET expire.");
+            socket_init();
+            break;
+
         default:
             LOG_ERROR ("timer(%d) not processed!", event->data.timer.timer_id);
             break;

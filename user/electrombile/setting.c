@@ -52,6 +52,7 @@ eat_bool setting_initial(void)
             LOG_INFO("creat file success, fh=%d.", fh_open);
             eat_fs_Close(fh_open);
 
+            convert_setting_to_storage();
             storage_save();
             ret = EAT_TRUE;
         }
@@ -67,12 +68,15 @@ eat_bool setting_initial(void)
         fh_read = eat_fs_Read(fh_open, &storage, sizeof(STORAGE), &readLen);
         if (EAT_FS_NO_ERROR == fh_read)
         {
-            LOG_DEBUG("eat_fs_Read():Read File Pointer Success");
+            LOG_DEBUG("read file success.");
             ret = EAT_TRUE;
+
+            LOG_DEBUG("storage.gps_send_timer_period=%d", storage.gps_send_timer_period);
+            convert_storage_to_setting();
         }
         else
         {
-            LOG_ERROR("eat_fs_Read() Fail,and Return Error: %d,Readlen is %d", fh_read, readLen);
+            LOG_ERROR("read file fail, and Return Error: %d, Readlen is %d.", fh_read, readLen);
         }
 
         eat_fs_Close(fh_open);
@@ -110,6 +114,7 @@ void setting_reset(void)
     setting.gps_send_timer_period = 30 * 1000;
     setting.vibration_timer_period = 1000;
     setting.seek_timer_period = 2000;
+    setting.socket_timer_period = 60000;
 
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;
@@ -119,7 +124,7 @@ void setting_reset(void)
 
 eat_bool storage_save(void)
 {
-    FS_HANDLE fh_open, fh_write;
+    FS_HANDLE fh_open, fh_write, fh_commit;
     UINT writedLen;
     eat_bool ret = EAT_FALSE;
 
@@ -131,14 +136,24 @@ eat_bool storage_save(void)
         LOG_INFO("open file success, fh=%d.", fh_open);
 
         fh_write = eat_fs_Write(fh_open, &storage, sizeof(STORAGE), &writedLen);
-        if (EAT_FS_NO_ERROR == fh_write)
+        if(EAT_FS_NO_ERROR == fh_write && sizeof(STORAGE) == writedLen)
         {
-            LOG_DEBUG("write file success for saving storage.");
-            ret = EAT_TRUE;
+            LOG_DEBUG("write file success.");
+
+            fh_commit = eat_fs_Commit(fh_open);
+            if(EAT_FS_NO_ERROR == fh_commit)
+            {
+                LOG_DEBUG("commit file success.");
+                ret = EAT_TRUE;
+            }
+            else
+            {
+                LOG_ERROR("commit file failed, and Return Error is %d.", fh_commit);
+            }
         }
         else
         {
-            LOG_ERROR("write file failed, and Return Error is %d, Readlen is %d.", fh_write, writedLen);
+            LOG_ERROR("write file failed, and Return Error is %d, writedLen is %d.", fh_write, writedLen);
         }
 
         eat_fs_Close(fh_open);
@@ -149,6 +164,48 @@ eat_bool storage_save(void)
     }
 
     return ret;
+}
+
+void convert_storage_to_setting(void)
+{
+    if(ADDR_TYPE_DOMAIN == storage.addr_type)
+    {
+        setting.addr_type = ADDR_TYPE_DOMAIN;
+        strcpy(setting.addr.domain, storage.addr.domain);
+    }
+    else if(ADDR_TYPE_IP == storage.addr_type)
+    {
+        setting.addr_type = ADDR_TYPE_IP;
+        setting.addr.ipaddr[0] = storage.addr.ipaddr[0];
+        setting.addr.ipaddr[1] = storage.addr.ipaddr[1];
+        setting.addr.ipaddr[2] = storage.addr.ipaddr[2];
+        setting.addr.ipaddr[3] = storage.addr.ipaddr[3];
+    }
+    setting.port = storage.port;
+    setting.gps_send_timer_period = storage.gps_send_timer_period;
+
+    return;
+}
+
+void convert_setting_to_storage(void)
+{
+    if(ADDR_TYPE_DOMAIN == setting.addr_type)
+    {
+        storage.addr_type = ADDR_TYPE_DOMAIN;
+        strcpy(storage.addr.domain, setting.addr.domain);
+    }
+    else if(ADDR_TYPE_IP == setting.addr_type)
+    {
+        storage.addr_type = ADDR_TYPE_IP;
+        storage.addr.ipaddr[0] = setting.addr.ipaddr[0];
+        storage.addr.ipaddr[1] = setting.addr.ipaddr[1];
+        storage.addr.ipaddr[2] = setting.addr.ipaddr[2];
+        storage.addr.ipaddr[3] = setting.addr.ipaddr[3];
+    }
+    storage.port = setting.port;
+    storage.gps_send_timer_period = setting.gps_send_timer_period;
+
+    return;
 }
 
 

@@ -65,7 +65,6 @@ int event_uart_ready_rd(const EatEvent_st* event)
         return 0;
     }
 
-
     if (strstr(buf, "rtc"))
     {
         EatRtc_st rtc = {0};

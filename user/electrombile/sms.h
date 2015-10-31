@@ -12,5 +12,4 @@
 void app_sms_thread(void *data);
 
 
-
 #endif /* USER_ELECTROMBILE_SMS_H_ */

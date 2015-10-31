@@ -50,6 +50,7 @@ typedef struct
     u32 gps_send_timer_period;
 	u32 vibration_timer_period;
     u32 seek_timer_period;
+    u32 socket_timer_period;
 
     //Switch configuration
     eat_bool isVibrateFixed;
@@ -62,5 +63,7 @@ void set_vibration_state(eat_bool fixed);
 eat_bool setting_initial(void);
 void setting_reset(void);
 eat_bool storage_save(void);
+void convert_storage_to_setting(void);
+void convert_setting_to_storage(void);
 
 #endif /* USER_ELECTROMBILE_SETTING_H_ */
