@@ -19,6 +19,7 @@
 #include "tool.h"
 #include "version.h"
 #include "timer.h"
+#include "socket.h"
 
 static eat_sms_flash_message_cb(EatSmsReadCnf_st smsFlashMessage)
 {
@@ -64,6 +65,7 @@ static void sms_server_proc(u8 *p, u8 *number)
     unsigned char *ptr1;
     char ack_message[64] = {0};
     char domainORip[MAX_DOMAIN_NAME_LEN] = {0};
+    char domain[MAX_DOMAIN_NAME_LEN] = {0};
     u8 ip[4] = {0};
     u16 port = 0;
     int count = 0;
@@ -85,7 +87,7 @@ static void sms_server_proc(u8 *p, u8 *number)
     ptr1 = tool_StrstrAndReturnEndPoint(p, "SERVER ");
     if(NULL != ptr1)
     {
-        count = sscanf(ptr1, "%s:%d", domainORip, &port);
+        count = sscanf(ptr1, "%[^:]:%d", domainORip, &port);
         if(2 == count)
         {
             count = sscanf(domainORip, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
@@ -105,6 +107,9 @@ static void sms_server_proc(u8 *p, u8 *number)
                     convert_setting_to_storage();
                     storage_save();
 
+                    socket_close();
+                    socket_setup();
+
                     //return ok
                     sprintf(ack_message, "%s:%d OK", domainORip, port);
                 }
@@ -116,8 +121,9 @@ static void sms_server_proc(u8 *p, u8 *number)
             }
             else
             {
+                LOG_DEBUG("count=%d, domainORip=%s", count, domainORip);
                 //validity check
-                count = sscanf(domainORip, "%[.a-zA-Z0-9]", domainORip);
+                count = sscanf(domainORip, "%[.a-zA-Z0-9]", domain);
                 if(1 == count)
                 {
                     //domainORip is domain
@@ -127,18 +133,24 @@ static void sms_server_proc(u8 *p, u8 *number)
                     convert_setting_to_storage();
                     storage_save();
 
+                    socket_close();
+                    socket_setup();
+
                     //return ok
-                    sprintf(ack_message, "%s:%d OK", domainORip, port);
+                    sprintf(ack_message, "%s:%d OK", domain, port);
                 }
                 else
                 {
                     //return error
                     sprintf(ack_message, "%s:%d ERROR", domainORip, port);
                 }
+
+                LOG_DEBUG("count=%d, domainORip=%s, domain=%s", count, domainORip, domain);
             }
         }
         else
         {
+            LOG_DEBUG("count=%d, domainORip=%s, port=%d", count, domainORip, port);
             sprintf(ack_message, "%s ERROR", ptr1);
         }
 

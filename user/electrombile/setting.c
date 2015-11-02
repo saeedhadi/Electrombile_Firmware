@@ -94,10 +94,10 @@ void setting_reset(void)
     LOG_INFO("setting reset.");
 
     /* Server configuration */
-    #if 1
+    #if 0
     setting.addr_type = ADDR_TYPE_DOMAIN;
     strcpy(setting.addr.domain, "www.xiaoan110.com");
-    #elif
+    #else
     setting.addr_type = ADDR_TYPE_IP;
     setting.addr.ipaddr[0] = 121;
     setting.addr.ipaddr[1] = 40;

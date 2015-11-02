@@ -16,6 +16,12 @@
 #include "data.h"
 #include "timer.h"
 
+static char* getEventDescription(soc_event_enum event);
+static char* getStateDescription(cbm_bearer_state_enum state);
+static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4]);
+static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size);
+static void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4]);
+
 
 static s8 socket_id = 0;
 
@@ -80,7 +86,7 @@ static char* getStateDescription(cbm_bearer_state_enum state)
 	}
 }
 
-void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
+static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
 {
     sockaddr_struct address={SOC_SOCK_STREAM};
     s8 rc = SOC_SUCCESS;
@@ -104,7 +110,7 @@ void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
         }
         else if (rc == SOC_WOULDBLOCK)
         {
-         	LOG_INFO("Connection is in progressing...");
+         	LOG_INFO("Connection is in progressing...%d...", socket_id);
         }
         else
         {
@@ -115,22 +121,23 @@ void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
     return;
 }
 
-void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
+static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
 {
     u8 buffer[128] = {0};
     s32 rc = 0;
 
-    LOG_DEBUG("SOCKET notify:socketid(%d), event(%s)", s, getEventDescription(event));
+    LOG_DEBUG("SOCKET notify:s(%d), socketid(%d), event(%s)", s, socket_id, getEventDescription(event));
 
     switch (event)
     {
         case SOC_READ:
-            socket_id = s;		//TODO: according to the demo, but why?
+            //socket_id = s;		//TODO: according to the demo, but why?
+            //LOG_DEBUG("SOC_READ with socket_id = %d.", socket_id);
 
             rc = eat_soc_recv(socket_id, buffer, 128);
             if (rc == SOC_WOULDBLOCK)
             {
-                LOG_ERROR("read data from socket block");
+                LOG_ERROR("read data from socket block!");
             }
             else if (rc > 0)
             {
@@ -138,7 +145,7 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
             }
             else
             {
-                LOG_ERROR("eat_soc_recv error:rc=%d", rc);
+                LOG_ERROR("eat_soc_recv error:rc=%d!", rc);
             }
 
             break;
@@ -152,7 +159,7 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
             else
             {
                 LOG_ERROR("SOC_CONNECT failed, the server is OFF.");
-                eat_soc_close(s);
+                eat_soc_close(socket_id);
 
                 eat_timer_start(TIMER_SOCKET, setting.socket_timer_period);
             }
@@ -160,7 +167,7 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
             break;
 
         case SOC_CLOSE:
-            eat_soc_close(s);
+            eat_soc_close(socket_id);
             set_socket_state(EAT_FALSE);
             set_client_state(EAT_FALSE);
 
@@ -176,6 +183,64 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
     }
 
 }
+
+static void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
+{
+	LOG_INFO("bear_notify state: %s.", getStateDescription(state));
+
+	switch (state)
+	{
+        case CBM_ACTIVATED:
+		    socket_setup();
+            break;
+        case CBM_GPRS_AUTO_DISC_TIMEOUT:
+            eat_reset_module();
+            break;
+        default:
+            break;
+	}
+}
+
+void socket_init(void)
+{
+    s8 rc = eat_gprs_bearer_open("CMNET", NULL, NULL, bear_notify_cb);
+    if (rc == CBM_WOULDBLOCK)
+    {
+        LOG_INFO("opening bearer...");
+        eat_timer_stop(TIMER_AT_CMD);
+    }
+    else if (rc == CBM_OK)
+    {
+        LOG_INFO("open bearer success.");
+
+        rc = eat_gprs_bearer_hold();
+        if (rc == CBM_OK)
+        {
+            LOG_INFO("hold bearer success.");
+            eat_timer_stop(TIMER_AT_CMD);
+
+            LOG_INFO("setup socket again.");
+            socket_setup();
+        }
+        else
+        {
+            LOG_ERROR("hold bearer failed!");
+
+            eat_timer_start(TIMER_AT_CMD, setting.at_cmd_timer_period);
+            LOG_INFO("reset TIMER_AT_CMD, open bearer again.");
+        }
+    }
+    else
+    {
+        LOG_ERROR("open bearer failed!");
+
+        eat_timer_start(TIMER_AT_CMD, setting.at_cmd_timer_period);
+        LOG_INFO("reset TIMER_AT_CMD, open bearer again.");
+    }
+
+    return;
+}
+
 
 void socket_setup(void)
 {
@@ -193,7 +258,7 @@ void socket_setup(void)
     }
     else
     {
-    	LOG_DEBUG("socket id = %d", socket_id);
+    	LOG_DEBUG("eat_soc_create ok, socket_id = %d.", socket_id);
     }
 
     rc = eat_soc_setsockopt(socket_id, SOC_NBIO, &val, sizeof(val));
@@ -274,60 +339,10 @@ void socket_setup(void)
     }
 }
 
-
-void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
+void socket_close(void)
 {
-	LOG_INFO("bear_notify state: %s.", getStateDescription(state));
-
-	switch (state)
-	{
-        case CBM_ACTIVATED:
-		    socket_setup();
-            break;
-        case CBM_GPRS_AUTO_DISC_TIMEOUT:
-            eat_reset_module();
-            break;
-        default:
-            break;
-	}
-}
-
-void socket_init(void)
-{
-    s8 rc = eat_gprs_bearer_open("CMNET", NULL, NULL, bear_notify_cb);
-    if (rc == CBM_WOULDBLOCK)
-    {
-        LOG_INFO("opening bearer...");
-        eat_timer_stop(TIMER_AT_CMD);
-    }
-    else if (rc == CBM_OK)
-    {
-        LOG_INFO("open bearer success.");
-
-        rc = eat_gprs_bearer_hold();
-        if (rc == CBM_OK)
-        {
-            LOG_INFO("hold bearer success.");
-
-            eat_timer_stop(TIMER_AT_CMD);
-            socket_setup();
-            LOG_INFO("setup socket again.");
-        }
-        else
-        {
-            LOG_ERROR("hold bearer failed!");
-
-            eat_timer_start(TIMER_AT_CMD, setting.at_cmd_timer_period);
-            LOG_INFO("reset TIMER_AT_CMD, open bearer again.");
-        }
-    }
-    else
-    {
-        LOG_ERROR("open bearer failed!");
-
-        eat_timer_start(TIMER_AT_CMD, setting.at_cmd_timer_period);
-        LOG_INFO("reset TIMER_AT_CMD, open bearer again.");
-    }
+    LOG_INFO("close the socket(%d).", socket_id);
+    eat_soc_close(socket_id);
 
     return;
 }
