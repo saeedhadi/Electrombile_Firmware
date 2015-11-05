@@ -294,6 +294,8 @@ void socket_setup(void)
         address.addr[1] = setting.addr.ipaddr[1];
         address.addr[2] = setting.addr.ipaddr[2];
         address.addr[3] = setting.addr.ipaddr[3];
+
+        LOG_DEBUG("ip: %d.%d.%d.%d:%d.", address.addr[0], address.addr[1], address.addr[2], address.addr[3], setting.port);
     }
     else
     {
@@ -314,7 +316,7 @@ void socket_setup(void)
             address.addr[2] = ipaddr[2];
             address.addr[3] = ipaddr[3];
 
-            LOG_DEBUG("host:%s -> %d.%d.%d.%d", setting.addr.domain, ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3]);
+            LOG_DEBUG("host:%s -> %d.%d.%d.%d:%d.", setting.addr.domain, ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3], setting.port);
     	}
     	else
     	{
@@ -327,7 +329,7 @@ void socket_setup(void)
     rc = eat_soc_connect(socket_id, &address);
     if(rc >= 0)
     {
-    	LOG_INFO("socket id of new connection is :%d", rc);
+    	LOG_INFO("socket id of new connection is :%d.", rc);
     }
     else if (rc == SOC_WOULDBLOCK)
     {
@@ -335,7 +337,7 @@ void socket_setup(void)
     }
     else
     {
-     	LOG_ERROR("Connect return error:%d", rc);
+     	LOG_ERROR("Connect return error:%d!", rc);
     }
 }
 

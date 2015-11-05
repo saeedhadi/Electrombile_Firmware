@@ -62,6 +62,7 @@ eat_bool vibration_fixed(void);
 void set_vibration_state(eat_bool fixed);
 eat_bool setting_initial(void);
 void setting_reset(void);
+eat_bool storage_check(void);
 eat_bool storage_save(void);
 void convert_storage_to_setting(void);
 void convert_setting_to_storage(void);

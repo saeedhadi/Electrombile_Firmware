@@ -21,6 +21,8 @@
 #include "timer.h"
 #include "socket.h"
 
+static eat_bool ResetFlag = EAT_FALSE;
+
 static eat_sms_flash_message_cb(EatSmsReadCnf_st smsFlashMessage)
 {
     u8 format = 0;
@@ -66,8 +68,8 @@ static void sms_server_proc(u8 *p, u8 *number)
     char ack_message[64] = {0};
     char domainORip[MAX_DOMAIN_NAME_LEN] = {0};
     char domain[MAX_DOMAIN_NAME_LEN] = {0};
-    u8 ip[4] = {0};
-    u16 port = 0;
+    u32 ip[4] = {0};
+    u32 port = 0;
     int count = 0;
 
     ptr1 = tool_StrstrAndReturnEndPoint(p, "SERVER?");
@@ -87,70 +89,65 @@ static void sms_server_proc(u8 *p, u8 *number)
     ptr1 = tool_StrstrAndReturnEndPoint(p, "SERVER ");
     if(NULL != ptr1)
     {
-        count = sscanf(ptr1, "%[^:]:%d", domainORip, &port);
+        count = sscanf(ptr1, "%[^:]:%u", domainORip, &port);
         if(2 == count)
         {
-            count = sscanf(domainORip, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
+            count = sscanf(domainORip, "%u.%u.%u.%u", &ip[0], &ip[1], &ip[2], &ip[3]);
             if(4 == count)
             {
                 //validity check
-                if(ip[0] >= 0 && ip[0] <= 255 && ip[1] >= 0 && ip[1] <= 255 && \
-                   ip[2] >= 0 && ip[2] <= 255 && ip[3] >= 0 && ip[3] <= 255)
+                if(ip[0] <= 255 && ip[1] <= 255 && ip[2] <= 255 && ip[3] <= 255)
                 {
                     //domainORip is ip
                     setting.addr_type = ADDR_TYPE_IP;
-                    setting.addr.ipaddr[0] = ip[0];
-                    setting.addr.ipaddr[1] = ip[1];
-                    setting.addr.ipaddr[2] = ip[2];
-                    setting.addr.ipaddr[3] = ip[3];
-                    setting.port = port;
+                    setting.addr.ipaddr[0] = (u8)ip[0];
+                    setting.addr.ipaddr[1] = (u8)ip[1];
+                    setting.addr.ipaddr[2] = (u8)ip[2];
+                    setting.addr.ipaddr[3] = (u8)ip[3];
+                    setting.port = (u16)port;
                     convert_setting_to_storage();
                     storage_save();
 
-                    socket_close();
-                    socket_setup();
+                    //eat_reset_module();//TO DO
+                    ResetFlag = EAT_TRUE;
 
                     //return ok
-                    sprintf(ack_message, "%s:%d OK", domainORip, port);
+                    sprintf(ack_message, "%s:%u OK", domainORip, port);
                 }
                 else
                 {
                     //return error
-                    sprintf(ack_message, "%s:%d ERROR", domainORip, port);
+                    sprintf(ack_message, "%s:%u ERROR", domainORip, port);
                 }
             }
             else
             {
-                LOG_DEBUG("count=%d, domainORip=%s", count, domainORip);
-                //validity check
-                count = sscanf(domainORip, "%[.a-zA-Z0-9]", domain);
+                //validity check; a-zA-Z0-9 not work
+                count = sscanf(domainORip, "%[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.]", domain);
                 if(1 == count)
                 {
                     //domainORip is domain
                     setting.addr_type = ADDR_TYPE_DOMAIN;
                     strcpy(setting.addr.domain, domainORip);
-                    setting.port = port;
+                    setting.port = (u16)port;
                     convert_setting_to_storage();
                     storage_save();
 
-                    socket_close();
-                    socket_setup();
+                    //eat_reset_module();//TO DO
+                    ResetFlag = EAT_TRUE;
 
                     //return ok
-                    sprintf(ack_message, "%s:%d OK", domain, port);
+                    sprintf(ack_message, "%s:%u OK", domain, port);
                 }
                 else
                 {
                     //return error
-                    sprintf(ack_message, "%s:%d ERROR", domainORip, port);
+                    sprintf(ack_message, "%s:%u ERROR", domainORip, port);
                 }
-
-                LOG_DEBUG("count=%d, domainORip=%s, domain=%s", count, domainORip, domain);
             }
         }
         else
         {
-            LOG_DEBUG("count=%d, domainORip=%s, port=%d", count, domainORip, port);
             sprintf(ack_message, "%s ERROR", ptr1);
         }
 
@@ -170,15 +167,15 @@ static void sms_timer_proc(u8 *p, u8 *number)
     ptr1 = tool_StrstrAndReturnEndPoint(p, "TIMER?");
     if(NULL != ptr1)
     {
-        sprintf(ack_message, "TIMER:%d", (setting.gps_send_timer_period / 1000));
+        sprintf(ack_message, "TIMER:%u", (setting.gps_send_timer_period / 1000));
         eat_send_text_sms(number, ack_message);
     }
 
     ptr1 = tool_StrstrAndReturnEndPoint(p, "TIMER ");
     if(NULL != ptr1)
     {
-        count = sscanf(ptr1, "%d", &timer_period);
-        if(1 == count && timer_period >=0 && timer_period <= 21600)
+        count = sscanf(ptr1, "%u", &timer_period);
+        if(1 == count)
         {
             if(0 == timer_period)
             {
@@ -196,6 +193,17 @@ static void sms_timer_proc(u8 *p, u8 *number)
                 eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
 
                 sprintf(ack_message, "SET TIMER to 10 OK");
+            }
+            else if(timer_period >= 21600)
+            {
+                setting.gps_send_timer_period = 21600 * 1000;
+                convert_setting_to_storage();
+                storage_save();
+
+                eat_timer_stop(TIMER_GPS_SEND);
+                eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
+
+                sprintf(ack_message, "SET TIMER to 21600 OK");
             }
             else
             {
@@ -222,7 +230,7 @@ static void sms_timer_proc(u8 *p, u8 *number)
 
 static void eat_sms_read_cb(EatSmsReadCnf_st smsReadCnfContent)
 {
-    u8 format =0;
+    u8 format = 0;
     unsigned char *p = smsReadCnfContent.data;
     unsigned char *ptr1;
     unsigned char *ptr2;
@@ -257,6 +265,12 @@ static void eat_sms_delete_cb(eat_bool result)
 static void eat_sms_send_cb(eat_bool result)
 {
     LOG_DEBUG("result=%d.", result);
+
+    if(EAT_TRUE == ResetFlag)
+    {
+        ResetFlag = EAT_FALSE;
+        eat_reset_module();
+    }
 }
 
 static eat_sms_new_message_cb(EatSmsNewMessageInd_st smsNewMessage)
@@ -275,7 +289,6 @@ void app_sms_thread(void *data)
     EatEvent_st event;
 
     LOG_DEBUG("SMS thread start.");
-
 
     eat_set_sms_operation_mode(EAT_TRUE);//set sms operation as API mode
     eat_set_sms_format(EAT_TRUE);//set sms format as TEXT mode
@@ -306,11 +319,11 @@ void app_sms_thread(void *data)
                 break;
 
             case EAT_EVENT_MDM_READY_WR:
-
                 break;
+
             case EAT_EVENT_USER_MSG:
-
                 break;
+
             default:
                 break;
 

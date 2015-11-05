@@ -38,7 +38,7 @@ eat_bool setting_initial(void)
 
     LOG_INFO("setting initial.");
 
-    eat_fs_Delete(SETITINGFILE_NAME);//TODO, for debug
+    //eat_fs_Delete(SETITINGFILE_NAME);//TODO, for debug
 
     setting_reset();
 
@@ -69,10 +69,18 @@ eat_bool setting_initial(void)
         if (EAT_FS_NO_ERROR == fh_read)
         {
             LOG_DEBUG("read file success.");
-            ret = EAT_TRUE;
 
-            LOG_DEBUG("storage.gps_send_timer_period=%d", storage.gps_send_timer_period);
-            convert_storage_to_setting();
+            if(storage_check())
+            {
+                convert_storage_to_setting();
+            }
+            else
+            {
+                convert_setting_to_storage();
+                storage_save();
+            }
+
+            ret = EAT_TRUE;
         }
         else
         {
@@ -120,6 +128,21 @@ void setting_reset(void)
     setting.isVibrateFixed = EAT_FALSE;
 
     return;
+}
+
+eat_bool storage_check(void)
+{
+    if(storage.gps_send_timer_period < 10 * 1000 || storage.gps_send_timer_period > 21600 * 1000)
+    {
+        return EAT_FALSE;
+    }
+
+    if(storage.port == 0)
+    {
+        return EAT_FALSE;
+    }
+
+    return EAT_TRUE;
 }
 
 eat_bool storage_save(void)
@@ -172,6 +195,8 @@ void convert_storage_to_setting(void)
     {
         setting.addr_type = ADDR_TYPE_DOMAIN;
         strcpy(setting.addr.domain, storage.addr.domain);
+
+        LOG_DEBUG("server domain = %s:%d.", storage.addr.domain, storage.port);
     }
     else if(ADDR_TYPE_IP == storage.addr_type)
     {
@@ -180,9 +205,13 @@ void convert_storage_to_setting(void)
         setting.addr.ipaddr[1] = storage.addr.ipaddr[1];
         setting.addr.ipaddr[2] = storage.addr.ipaddr[2];
         setting.addr.ipaddr[3] = storage.addr.ipaddr[3];
+
+        LOG_DEBUG("server ip = %d.%d.%d.%d:%d.", storage.addr.ipaddr[0], storage.addr.ipaddr[1], storage.addr.ipaddr[2], storage.addr.ipaddr[3], storage.port);
     }
     setting.port = storage.port;
     setting.gps_send_timer_period = storage.gps_send_timer_period;
+
+    LOG_DEBUG("gps_send_timer_period = %d.", storage.gps_send_timer_period);
 
     return;
 }
@@ -193,6 +222,8 @@ void convert_setting_to_storage(void)
     {
         storage.addr_type = ADDR_TYPE_DOMAIN;
         strcpy(storage.addr.domain, setting.addr.domain);
+
+        LOG_DEBUG("server domain = %s:%d.", setting.addr.domain, setting.port);
     }
     else if(ADDR_TYPE_IP == setting.addr_type)
     {
@@ -201,9 +232,13 @@ void convert_setting_to_storage(void)
         storage.addr.ipaddr[1] = setting.addr.ipaddr[1];
         storage.addr.ipaddr[2] = setting.addr.ipaddr[2];
         storage.addr.ipaddr[3] = setting.addr.ipaddr[3];
+
+        LOG_DEBUG("server ip = %d.%d.%d.%d:%d.", setting.addr.ipaddr[0], setting.addr.ipaddr[1], setting.addr.ipaddr[2], setting.addr.ipaddr[3], setting.port);
     }
     storage.port = setting.port;
     storage.gps_send_timer_period = setting.gps_send_timer_period;
+
+    LOG_DEBUG("gps_send_timer_period = %d.", storage.gps_send_timer_period);
 
     return;
 }
