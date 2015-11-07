@@ -65,6 +65,13 @@ enum {
 	MMA8X5X_REG_END,
 };
 
+typedef enum
+{
+    MMA_FULL_SCALE_2G = 0,
+    MMA_FULL_SCALE_4G,
+    MMA_FULL_SCALE_8G,
+}MMA_FULL_SCALE_EN;
+
 void app_vibration_thread(void *data);
 
 

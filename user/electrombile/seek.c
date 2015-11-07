@@ -48,6 +48,8 @@ void app_seek_thread(void *data)
     LOG_INFO("seek thread start.");
     eat_timer_start(TIMER_SEEK, setting.seek_timer_period);
 
+    eat_gpio_setup(EAT_PIN43_GPIO19, EAT_GPIO_DIR_INPUT, EAT_GPIO_LEVEL_LOW);
+
     while(EAT_TRUE)
     {
         eat_get_event_for_user(THREAD_SEEK, &event);
@@ -99,6 +101,9 @@ static void seek_timer_handler(void)
             return;
         }
     }
+
+    //TO DO
+    //LOG_DEBUG("read EAT_PIN43_GPIO19 = %d.", eat_gpio_read(EAT_PIN43_GPIO19));
 
     return;
 }
