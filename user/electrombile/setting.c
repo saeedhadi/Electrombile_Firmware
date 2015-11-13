@@ -102,7 +102,7 @@ void setting_reset(void)
     LOG_INFO("setting reset.");
 
     /* Server configuration */
-    #if 0
+    #if 1
     setting.addr_type = ADDR_TYPE_DOMAIN;
     strcpy(setting.addr.domain, "www.xiaoan110.com");
     #else

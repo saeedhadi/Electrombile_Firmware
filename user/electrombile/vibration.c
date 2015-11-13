@@ -285,19 +285,12 @@ static void vibration_timer_handler(void)
         //ret = eat_i2c_read(EAT_I2C_OWNER_0, write_buffer, 1, read_buffer, 4);
         //LOG_DEBUG("MMA8X5X_FF_MT_CFG=%x, %x, %x, %x", read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3]);
 
-        if (ret != 0)
+  
+        if(mma_read(MMA8X5X_TRANSIENT_SRC) & 0x40)
         {
-    	    LOG_ERROR("i2c test eat_i2c_read 0AH fail :ret=%d", ret);
-            return;
+            vibration_sendAlarm();
         }
-        else
-        {
-            if(mma_read(MMA8X5X_TRANSIENT_SRC) & 0x40)
-            {
-                vibration_sendAlarm();
-            }
-        }
-    }
+  }
     else
     {
         //LOG_INFO("vibration is not fixed.");
