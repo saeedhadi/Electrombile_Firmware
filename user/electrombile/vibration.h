@@ -7,7 +7,6 @@
 #ifndef ELECTROMBILE_FIRMWARE_VIBRATION_H
 #define ELECTROMBILE_FIRMWARE_VIBRATION_H
 
-#define MMA8X5X_BUF_SIZE    6
 /* register enum for mma8x5x registers */
 enum {
 	MMA8X5X_STATUS = 0x00,
@@ -71,6 +70,8 @@ typedef enum
     MMA_FULL_SCALE_4G,
     MMA_FULL_SCALE_8G,
 }MMA_FULL_SCALE_EN;
+
+#define MMA8X5X_BUF_SIZE 6
 
 void app_vibration_thread(void *data);
 

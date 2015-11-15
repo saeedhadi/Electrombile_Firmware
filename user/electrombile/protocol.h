@@ -26,9 +26,9 @@ enum
     CMD_433     = 0x07,
     CMD_DEFEND  = 0x08,
     CMD_SEEK    = 0x09,
-	CMD_LOCATION= 0x10,
-	CMD_SERVER  = 0x11,
-	CMD_TIMER   = 0x12,
+	CMD_LOCATION= 0x0a,
+	CMD_SERVER  = 0x0b,
+	CMD_TIMER   = 0x0c,
 };
 
 enum

@@ -40,85 +40,6 @@ void app_vibration_thread(void *data)
 
 	LOG_INFO("vibration thread start.");
 
-    /*
-	ret = eat_i2c_open(EAT_I2C_OWNER_0, 0x1D, 100);
-	if(EAT_DEV_STATUS_OK != ret)
-	{
-	    LOG_ERROR("vibration eat_i2c_open fail :ret=%d.", ret);
-        return;
-	}
-	LOG_INFO("vibration eat_i2c_open success.");
-
-    write_buffer[0] = MMA8X5X_CTRL_REG4;
-	write_buffer[1] = 0x20;
-    ret = eat_i2c_write(EAT_I2C_OWNER_0, write_buffer, 2);
-    if(EAT_DEV_STATUS_OK != ret)
-	{
-		LOG_ERROR("vibration start MMA8X5X_CTRL_REG4 fail :ret=%d.", ret);
-        return;
-	}
-	LOG_INFO("vibration start MMA8X5X_CTRL_REG4 success.");
-
-    write_buffer[0] = MMA8X5X_CTRL_REG5;
-	write_buffer[1] = 0x20;
-	ret = eat_i2c_write(EAT_I2C_OWNER_0, write_buffer, 2);
-    if(EAT_DEV_STATUS_OK != ret)
-	{
-		LOG_ERROR("vibration start MMA8X5X_CTRL_REG5 fail :ret=%d.", ret);
-        return;
-	}
-	LOG_INFO("vibration start MMA8X5X_CTRL_REG5 success.");
-
-    write_buffer[0] = MMA8X5X_TRANSIENT_CFG;
-	write_buffer[1] = 0x1e;
-	ret = eat_i2c_write(EAT_I2C_OWNER_0, write_buffer, 2);
-    if(EAT_DEV_STATUS_OK != ret)
-	{
-		LOG_ERROR("vibration start MMA8X5X_FF_MT_CFG fail :ret=%d.", ret);
-        return;
-	}
-	LOG_INFO("vibration start MMA8X5X_FF_MT_CFG success.");
-
-    write_buffer[0] = MMA8X5X_TRANSIENT_THS;
-	write_buffer[1] = 0x1;
-	ret = eat_i2c_write(EAT_I2C_OWNER_0, write_buffer, 2);
-    if(EAT_DEV_STATUS_OK != ret)
-	{
-		LOG_ERROR("vibration start MMA8X5X_FF_MT_THS fail :ret=%d.", ret);
-        return;
-	}
-	LOG_INFO("vibration start MMA8X5X_FF_MT_THS success.");
-
-    write_buffer[0] = MMA8X5X_HP_FILTER_CUTOFF;
-	write_buffer[1] = 0x3;
-	ret = eat_i2c_write(EAT_I2C_OWNER_0, write_buffer, 2);
-    if(EAT_DEV_STATUS_OK != ret)
-	{
-		LOG_ERROR("vibration start MMA8X5X_FF_MT_THS fail :ret=%d.", ret);
-        return;
-	}
-	LOG_INFO("vibration start MMA8X5X_FF_MT_THS success.");
-
-    write_buffer[0] =  MMA8X5X_TRANSIENT_COUNT;
-	write_buffer[1] = 0x40;
-	ret = eat_i2c_write(EAT_I2C_OWNER_0, write_buffer, 2);
-    if(EAT_DEV_STATUS_OK != ret)
-	{
-		LOG_ERROR("vibration start MMA8X5X_FF_MT_COUNT fail :ret=%d.", ret);
-        return;
-	}
-	LOG_INFO("vibration start MMA8X5X_FF_MT_COUNT success.");
-
-    write_buffer[0] = MMA8X5X_CTRL_REG1;
-	write_buffer[1] = 0x01;
-	ret = eat_i2c_write(EAT_I2C_OWNER_0, write_buffer, 2);
-	if(EAT_DEV_STATUS_OK != ret)
-	{
-		LOG_ERROR("vibration start MMA8X5X_CTRL_REG1 fail :ret=%d.", ret);
-        return;
-	}
-	LOG_INFO("vibration start MMA8X5X_CTRL_REG1 success.");*/
-
     mma_init();
 
 	eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
@@ -155,7 +76,7 @@ static void mma_init(void)
     mma_WhoAmI();
 
     mma_Standby();
-    //LOG_DEBUG("MMA8X5X_SYSMOD = %2x", mma_read(MMA8X5X_SYSMOD));
+    //LOG_DEBUG("MMA8X5X_TRANSIENT_SRC = %02x", mma_read(MMA8X5X_TRANSIENT_SRC));
 
     mma_write(MMA8X5X_CTRL_REG4, 0x20);
     mma_write(MMA8X5X_CTRL_REG5, 0x20);
@@ -165,7 +86,7 @@ static void mma_init(void)
     mma_write(MMA8X5X_TRANSIENT_COUNT, 0x40);
 
     mma_Active();
-    //LOG_DEBUG("MMA8X5X_SYSMOD = %2x", mma_read(MMA8X5X_SYSMOD));
+    //LOG_DEBUG("MMA8X5X_TRANSIENT_SRC = %02x", mma_read(MMA8X5X_TRANSIENT_SRC));
 }
 
 static void mma_open(void)
@@ -273,24 +194,34 @@ static void mma_ChangeDynamicRange(MMA_FULL_SCALE_EN mode)
 
 static void vibration_timer_handler(void)
 {
-    u8 read_buffer[MMA8X5X_BUF_SIZE] = { 0 };
-    u8 write_buffer[MMA8X5X_BUF_SIZE] = { 0 };
+    u8 read_buffer[MMA8X5X_BUF_SIZE] = {0};
+    u8 write_buffer[MMA8X5X_BUF_SIZE] = {0};
     s32 ret;
     long delta;
+    static eat_bool isFirstTime = EAT_TRUE;
+
+    #if 0
+    set_vibration_state(EAT_TRUE);//TO DO
+    #endif
 
     if(EAT_TRUE == vibration_fixed())
     {
-        //LOG_INFO("vibration is already fixed.");
-        //write_buffer[0] = MMA8X5X_TRANSIENT_CFG;
-        //ret = eat_i2c_read(EAT_I2C_OWNER_0, write_buffer, 1, read_buffer, 4);
-        //LOG_DEBUG("MMA8X5X_FF_MT_CFG=%x, %x, %x, %x", read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3]);
-
-  
+        //LOG_DEBUG("MMA8X5X_TRANSIENT_SRC = %02x", mma_read(MMA8X5X_TRANSIENT_SRC));
         if(mma_read(MMA8X5X_TRANSIENT_SRC) & 0x40)
         {
-            vibration_sendAlarm();
+            if(isFirstTime)
+            {
+                /* At the first time, the value of MMA8X5X_TRANSIENT_SRC is strangely 0x60.
+                 * Do not send alarm at the first time.
+                 */
+                isFirstTime = EAT_FALSE;
+            }
+            else
+            {
+                vibration_sendAlarm();
+            }
         }
-  }
+    }
     else
     {
         //LOG_INFO("vibration is not fixed.");

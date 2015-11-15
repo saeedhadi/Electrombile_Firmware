@@ -241,16 +241,14 @@ static int defend(const void* msg)
 		result = vibration_fixed() ? DEFEND_ON : DEFEND_OFF;
 		break;
 	default:
-		LOG_ERROR("unknown operator %d", req->operator);
-//		break;
+		LOG_ERROR("unknown operator %d!", req->operator);
 		return 0;
 	}
-
 
 	rsp = alloc_rspMsg(&req->header);
 	if (!rsp)
 	{
-		LOG_ERROR("alloc defend rsp message failed");
+		LOG_ERROR("alloc defend rsp message failed!");
 		return -1;
 	}
 

@@ -37,10 +37,12 @@ eat_bool setting_initial(void)
     eat_bool ret = EAT_FALSE;
 
     LOG_INFO("setting initial.");
-
-    //eat_fs_Delete(SETITINGFILE_NAME);//TODO, for debug
-
     setting_reset();
+
+    #if 0
+    LOG_DEBUG("setting delete.");
+    eat_fs_Delete(SETITINGFILE_NAME);//TODO, for debug
+    #endif
 
     fh_open = eat_fs_Open(SETITINGFILE_NAME, FS_READ_WRITE);
     if(EAT_FS_FILE_NOT_FOUND == fh_open)
@@ -70,6 +72,8 @@ eat_bool setting_initial(void)
         {
             LOG_DEBUG("read file success.");
 
+            eat_fs_Close(fh_open);
+
             if(storage_check())
             {
                 convert_storage_to_setting();
@@ -84,14 +88,12 @@ eat_bool setting_initial(void)
         }
         else
         {
-            LOG_ERROR("read file fail, and Return Error: %d, Readlen is %d.", fh_read, readLen);
+            LOG_ERROR("read file fail, and Return Error: %d, Readlen is %d!", fh_read, readLen);
         }
-
-        eat_fs_Close(fh_open);
     }
     else
     {
-        LOG_ERROR("open file failed, fh=%d.", fh_open);
+        LOG_ERROR("open file failed, fh=%d!", fh_open);
     }
 
     return ret;
