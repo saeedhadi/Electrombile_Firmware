@@ -127,6 +127,7 @@ void app_main(void *data)
     eat_timer_start(TIMER_WATCHDOG, setting.watchdog_timer_period);
     eat_timer_start(TIMER_AT_CMD, setting.at_cmd_timer_period);
     eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
+    eat_timer_start(TIMER_HEARTBEAT,setting.heartbeat_timer_period);
 
     while(EAT_TRUE)
     {

@@ -125,6 +125,7 @@ void setting_reset(void)
     setting.vibration_timer_period = 1000;
     setting.seek_timer_period = 2000;
     setting.socket_timer_period = 60000;
+    setting.heartbeat_timer_period= 3000;//3*60*1000;
 
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;

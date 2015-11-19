@@ -51,6 +51,7 @@ typedef struct
 	u32 vibration_timer_period;
     u32 seek_timer_period;
     u32 socket_timer_period;
+    u32 heartbeat_timer_period;
 
     //Switch configuration
     eat_bool isVibrateFixed;

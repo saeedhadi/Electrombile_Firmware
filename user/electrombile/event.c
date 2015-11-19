@@ -151,6 +151,11 @@ int event_timer(const EatEvent_st* event)
             LOG_INFO("TIMER_SOCKET expire.");
             socket_init();
             break;
+        case TIMER_HEARTBEAT:
+            LOG_INFO("TIMER_HEARTBEAT expire!");
+            msg_heartbeat();
+            eat_timer_start(TIMER_HEARTBEAT, setting.heartbeat_timer_period);
+            break;
 
         default:
             LOG_ERROR ("timer(%d) not processed!", event->data.timer.timer_id);
@@ -223,7 +228,7 @@ int event_threadMsg(const EatEvent_st* event)
 
             LOG_DEBUG("send alarm vibrate message.");
             socket_msg->alarmType = *alarm_type;
-            socket_sendData(socket_msg, sizeof(MSG_ALARM_REQ));
+            socket_sendData(socket_msg, sizeof(MSG_ALARM_REQ));     //发送报警信息
             break;
         }
 
@@ -249,7 +254,7 @@ int event_threadMsg(const EatEvent_st* event)
 
             LOG_DEBUG("send seek value message.");
             seek_msg->intensity = htonl((int)seek->intensity);
-            socket_sendData(seek_msg, sizeof(MSG_433));
+            socket_sendData(seek_msg, sizeof(MSG_433));     //发送找车信号
             break;
         }
 
@@ -277,7 +282,7 @@ int event_threadMsg(const EatEvent_st* event)
 
                 LOG_DEBUG("send GPS message.");
                 log_hex((const char*)msg, sizeof(MSG_GPS));
-                socket_sendData(msg, sizeof(MSG_GPS));
+                socket_sendData(msg, sizeof(MSG_GPS));  //发送GPS信息
             }
             else    //update local cell info
             {
@@ -305,7 +310,7 @@ int event_threadMsg(const EatEvent_st* event)
 
                 LOG_DEBUG("send CELL message.");
                 log_hex((const char*)msg, msgLen);
-                socket_sendData(msg, msgLen);
+                socket_sendData(msg, msgLen);    //发送基站信息
             }
             break;
         }
