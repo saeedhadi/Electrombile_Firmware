@@ -309,8 +309,7 @@ void msg_heartbeat(void)
 {
     u8 msgLen = sizeof(MSG_HEADER) + sizeof(short);
 	MSG_PING_REQ* msg = alloc_msg(CMD_PING, msgLen);
-    msg->statue = 33;   //TODO: to define the status bits
-    //LOG_DEBUG("%c %d %d %c %c",msg->header.cmd,msg->header.length,msg->header.seq,msg->header.signature,msg->statue);
+    msg->statue = EAT_TRUE;   //TODO: to define the status bits
 
 	socket_sendData(msg, msgLen);
 }

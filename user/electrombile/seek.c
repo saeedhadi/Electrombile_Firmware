@@ -51,7 +51,7 @@ void app_seek_thread(void *data)
 
     eat_gpio_setup(EAT_PIN43_GPIO19, EAT_GPIO_DIR_INPUT, EAT_GPIO_LEVEL_LOW);
     eat_gpio_setup(50, EAT_GPIO_DIR_OUTPUT, EAT_GPIO_LEVEL_LOW);
-    
+
 
     while(EAT_TRUE)
     {
@@ -81,7 +81,7 @@ void app_seek_thread(void *data)
     }
 }
 
-void delay_50(void) 
+void delay_50(void)
 {
     u8 i,j;
 	for(i=5;i>0;i--)
@@ -89,7 +89,7 @@ void delay_50(void)
 }
 
 /*-------------------------------250us精确延时---------------------------------*/
-void delay_600(void) 
+void delay_600(void)
 {
     u8 i,j;
 	for(i=50;i>0;i--)
@@ -97,7 +97,7 @@ void delay_600(void)
 }
 
 /*-------------------------------131ms精确延时--------------------------------*/
-void delay_131(void) 
+void delay_131(void)
 {
     u8 i,j;
 	for(i=0xfe;i>0;i--)
@@ -108,7 +108,7 @@ static void seek_timer_handler(void)
     int ret = EAT_FALSE;
     int value = 0;
     u8 i,j;
-    EatGpioLevel_enum BitState_2; 
+    EatGpioLevel_enum BitState_2;
     u8  ReadCode[3],GetCode;
 
     if(EAT_TRUE == seek_fixed())
@@ -139,44 +139,44 @@ static void seek_timer_handler(void)
           delay_200();
           eat_gpio_write(50,EAT_GPIO_LEVEL_LOW);
           delay_200();
-          
+
     }
-*/    {   
+*/    {
 //////////////////////////////找起始位//////////////////////////////////////////
-	
+
        value=0;
 ks:	while(eat_gpio_read(EAT_PIN43_GPIO19)==1);
 	for(i=100;i>0;i--) 					//重复20次，检测在3750微秒内出现高电平就退出解码程序
-	{    
-               delay_50(); 
+	{
+               delay_50();
 		if(eat_gpio_read(EAT_PIN43_GPIO19)==1){
                value ++;
                if(value<100)
-               goto ks;
+                    goto ks;
                else
                {
                     LOG_DEBUG("getcode error = no start,value=%d",value);
                     return;
                }
          }
-	}                                   
-	
+	}
+
 	while(eat_gpio_read(EAT_PIN43_GPIO19)==0);
 
 ///////////////////////////////接收数据///////////////////////////////////////////
-    
 
-	for(j=0;j<3;j++)                    
+
+	for(j=0;j<3;j++)
 	{
 		for(i=0;i<8;i++)
-		{ 
+		{
             delay_600();
-			BitState_2=eat_gpio_read(EAT_PIN43_GPIO19);		
+			BitState_2=eat_gpio_read(EAT_PIN43_GPIO19);
 			ReadCode[j]=ReadCode[j]<<1;
-			ReadCode[j]=ReadCode[j]|BitState_2; 
+			ReadCode[j]=ReadCode[j]|BitState_2;
 			if(eat_gpio_read(EAT_PIN43_GPIO19)==1) while(eat_gpio_read(EAT_PIN43_GPIO19)==1);
 			while(eat_gpio_read(EAT_PIN43_GPIO19)==0);
-		   				
+
 		}
 	}
 ////////////////////////////////校验及运算数据/////////////////////////////////////
@@ -186,14 +186,14 @@ ks:	while(eat_gpio_read(EAT_PIN43_GPIO19)==1);
                 LOG_DEBUG("getcode error = error data");
                     return;
          }    //校验
-    } 
+    }
     GetCode=0x00;
     for(i=0;i<8;i++)
     {
       GetCode |=((ReadCode[2]>>i)&(ReadCode[2]>>(i+1))&0x01<<i);             //运算
     }
     LOG_DEBUG("GetCode = %d",GetCode);
-        
+
     }
 
     //TO DO

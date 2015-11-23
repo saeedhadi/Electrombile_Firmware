@@ -134,7 +134,7 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
             //socket_id = s;		//TODO: according to the demo, but why?
             //LOG_DEBUG("SOC_READ with socket_id = %d.", socket_id);
 
-            rc = eat_soc_recv(socket_id, buffer, 128);
+            rc = eat_soc_recv(socket_id, buffer, 128); //return the legnth of the notify
             if (rc == SOC_WOULDBLOCK)
             {
                 LOG_ERROR("read data from socket block!");
