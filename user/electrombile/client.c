@@ -19,6 +19,8 @@
 #include "setting.h"
 #include "thread.h"
 #include "thread_msg.h"
+#include "timer.h"
+
 
 
 typedef int (*MSG_PROC)(const void* msg);
@@ -36,6 +38,9 @@ static int sms(const void* msg);
 static int defend(const void* msg);
 static int seek(const void* msg);
 static int location(const void* msgLocation);
+static int server_proc(const void* msg);
+static int GPS_time_proc(const void* msg);
+
 
 static MC_MSG_PROC msgProcs[] =
 {
@@ -46,6 +51,8 @@ static MC_MSG_PROC msgProcs[] =
 	{CMD_DEFEND, defend},
     {CMD_SEEK,  seek},
 	{CMD_LOCATION, location},
+    {CMD_SERVER, server_proc},
+    {CMD_TIMER, GPS_time_proc},
 };
 
 int client_proc(const void* m, int msgLen)
@@ -305,14 +312,98 @@ static int location(const void* msgLocation)
 	return 0;
 }
 
-void msg_heartbeat(void)
+static int GPS_time_proc(const void* msg)
 {
-    u8 msgLen = sizeof(MSG_HEADER) + sizeof(short);
-	MSG_PING_REQ* msg = alloc_msg(CMD_PING, msgLen);
-    msg->statue = EAT_TRUE;   //TODO: to define the status bits
+    MSG_GPSTIMER_REQ* req = (MSG_GPSTIMER_REQ*)msg;
+    MSG_GPSTIMER_RSP* rsp = NULL;
+    if(0 >= req->timer)
+    {
+        ;//rsp at the end
+    }
+    else if(10 >= req->timer)
+    {
+        setting.gps_send_timer_period = 10 * 1000;
+        convert_setting_to_storage();
+        storage_save();
 
-	socket_sendData(msg, msgLen);
+        eat_timer_stop(TIMER_GPS_SEND);
+        eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
+        LOG_INFO("SET TIMER to %d OK!",setting.gps_send_timer_period);
+    }
+    else if(21600 <= req->timer)
+    {
+        setting.gps_send_timer_period = 21600 * 1000;
+        convert_setting_to_storage();
+        storage_save();
+
+        eat_timer_stop(TIMER_GPS_SEND);
+        eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
+
+        LOG_INFO("SET TIMER to %d OK!",setting.gps_send_timer_period);
+    }
+    else if((10 < req->timer)&&(21600 > req->timer))
+    {
+        setting.gps_send_timer_period = req->timer * 1000;
+        convert_setting_to_storage();
+        storage_save();
+
+        eat_timer_stop(TIMER_GPS_SEND);
+        eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
+
+        LOG_INFO("SET TIMER to %d OK", setting.gps_send_timer_period);
+    }
+    rsp = alloc_rspMsg(&req->header);
+
+    rsp->result = setting.gps_send_timer_period;
+    socket_sendData(rsp,sizeof(MSG_GPSTIMER_RSP));
+
+    return 0;
 }
+static int server_proc(const void* msg)
+{
+    MSG_SERVER* msg_server = (MSG_SERVER*)msg;
+    u32 ip[4] = {0};
+    int count;
+    char domain[MAX_DOMAIN_NAME_LEN] = {0};
+
+    count = sscanf(msg_server->server,"%u.%u.%u.%u",&ip[0],&ip[1],&ip[2],&ip[3]);
+    if(4 == count)
+    {
+        setting.addr_type = ADDR_TYPE_IP;
+        setting.addr.ipaddr[0] = (u8)ip[0];
+        setting.addr.ipaddr[1] = (u8)ip[1];
+        setting.addr.ipaddr[2] = (u8)ip[2];
+        setting.addr.ipaddr[3] = (u8)ip[3];
+        setting.port = (u16)msg_server->port;
+        convert_setting_to_storage();
+        storage_save();
+        LOG_INFO("server proc %s:%d successful!",msg_server->server,msg_server->port);
+
+        eat_reset_module();
+    }
+    else
+    {
+        count = sscanf(msg_server->server, "%[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.]", domain);
+        if(1 == count)
+        {
+            setting.addr_type = ADDR_TYPE_DOMAIN;
+            strcpy(setting.addr.domain, msg_server->server);
+            setting.port = (u16)msg_server->port;
+            convert_setting_to_storage();
+            storage_save();
+            LOG_INFO("server proc %s:%d successful!",msg_server->server,msg_server->port);
+
+            eat_reset_module();
+        }
+        else
+        {
+            LOG_DEBUG("server proc %s:%d error!",msg_server->server,msg_server->port);
+        }
+    }
+
+    return 0;
+}
+
 
 
 

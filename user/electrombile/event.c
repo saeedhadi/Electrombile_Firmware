@@ -35,6 +35,8 @@ typedef struct
 int event_timer(const EatEvent_st* event);
 int event_threadMsg(const EatEvent_st* event);
 int event_mod_ready_rd(const EatEvent_st* event);
+static void msg_heartbeat(void);
+
 
 static EVENT_PROC eventProcs[] =
 {
@@ -75,6 +77,16 @@ static char* getEventDescription(EatEvent_enum event)
         }
     }
 }
+
+static void msg_heartbeat(void)
+{
+    u8 msgLen = sizeof(MSG_HEADER) + sizeof(short);
+	MSG_PING_REQ* msg = alloc_msg(CMD_PING, msgLen);
+    msg->statue = EAT_TRUE;   //TODO: to define the status bits
+
+	socket_sendData(msg, msgLen);
+}
+
 
 int event_mod_ready_rd(const EatEvent_st* event)
 {
@@ -151,6 +163,7 @@ int event_timer(const EatEvent_st* event)
             LOG_INFO("TIMER_SOCKET expire.");
             socket_init();
             break;
+
         case TIMER_HEARTBEAT:
             LOG_INFO("TIMER_HEARTBEAT expire!");
             msg_heartbeat();

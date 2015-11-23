@@ -159,6 +159,33 @@ typedef struct
 }__attribute__((__packed__)) MSG_433;
 
 /*
+ * GPS set_time message structure
+ */
+
+typedef struct
+{
+    MSG_HEADER header;
+    int timer;
+}__attribute__((__packed__)) MSG_GPSTIMER_REQ;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int result;
+}__attribute__((__packed__)) MSG_GPSTIMER_RSP;
+
+/*
+*server set_ip/domain message structure
+*this message has no response
+*/
+typedef struct
+{
+    MSG_HEADER header;
+    int port;
+    char server[];
+}__attribute__((__packed__)) MSG_SERVER;
+
+/*
  * defend message structure
  */
  enum DEFEND_TYPE

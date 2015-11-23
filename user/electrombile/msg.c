@@ -40,6 +40,9 @@ void* alloc_rspMsg(const MSG_HEADER* pMsg)
             msgLen = sizeof(MSG_SEEK_RSP);
             break;
 
+        case CMD_TIMER:
+            msgLen = sizeof(MSG_GPSTIMER_RSP);
+
         default:
             return NULL;
     }
