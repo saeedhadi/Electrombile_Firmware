@@ -31,6 +31,10 @@ static void mma_ChangeDynamicRange(MMA_FULL_SCALE_EN mode);
 
 #define VIBRATION_TRESHOLD 100000000
 
+static u16 avoid_freq_count;
+static eat_bool avoid_freq_flag;
+
+
 void app_vibration_thread(void *data)
 {
 	EatEvent_st event;
@@ -76,6 +80,11 @@ static void vibration_timer_handler(void)
     set_vibration_state(EAT_TRUE);//TO DO
     #endif
 
+    if(++avoid_freq_count == 30)
+    {
+        avoid_freq_count = 0;
+        avoid_freq_flag = EAT_FALSE;
+    }
     if(mma_read(MMA8X5X_TRANSIENT_SRC) & 0x40)
     {
         /* At the first time, the value of MMA8X5X_TRANSIENT_SRC is strangely 0x60.
@@ -101,8 +110,10 @@ static void vibration_timer_handler(void)
     {
         timerCount = 0;
 
-        if(isMoved)
+        if(isMoved && avoid_freq_flag == EAT_FALSE)
         {
+            avoid_freq_flag = EAT_TRUE;
+            avoid_freq_count = 0;
             vibration_sendAlarm();
         }
     }
