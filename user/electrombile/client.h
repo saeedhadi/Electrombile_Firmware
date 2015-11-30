@@ -14,5 +14,4 @@ void client_loop(void);
 void msg_heartbeat(void);
 
 
-
 #endif /* USER_ELECTROMBILE_CLIENT_H_ */

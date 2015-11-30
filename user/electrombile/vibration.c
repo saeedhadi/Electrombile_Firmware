@@ -16,8 +16,6 @@
 #include "thread_msg.h"
 #include "setting.h"
 
-#define VIBRATION_TRESHOLD 100000000
-
 static eat_bool vibration_sendAlarm(void);
 static void vibration_timer_handler(void);
 
@@ -31,12 +29,11 @@ static void mma_Active(void);
 static eat_bool mma_WhoAmI(void);
 static void mma_ChangeDynamicRange(MMA_FULL_SCALE_EN mode);
 
+#define VIBRATION_TRESHOLD 100000000
 
 void app_vibration_thread(void *data)
 {
 	EatEvent_st event;
-	s32 ret;
-	u8 write_buffer[10] = {0};
 
 	LOG_INFO("vibration thread start.");
 
@@ -69,11 +66,89 @@ void app_vibration_thread(void *data)
     }
 }
 
-#if 1
+static void vibration_timer_handler(void)
+{
+    static eat_bool isFirstTime = EAT_TRUE;
+    static eat_bool isMoved = EAT_TRUE;
+    static int timerCount = 0;
+
+    #if 0
+    set_vibration_state(EAT_TRUE);//TO DO
+    #endif
+
+    if(mma_read(MMA8X5X_TRANSIENT_SRC) & 0x40)
+    {
+        /* At the first time, the value of MMA8X5X_TRANSIENT_SRC is strangely 0x60.
+         * Do not send alarm at the first time.
+         */
+        if(isFirstTime)
+        {
+            isFirstTime = EAT_FALSE;
+
+            isMoved = EAT_FALSE;
+        }
+        else
+        {
+            isMoved = EAT_TRUE;
+        }
+    }
+    else
+    {
+        isMoved = EAT_FALSE;
+    }
+
+    if(EAT_TRUE == vibration_fixed())
+    {
+        timerCount = 0;
+
+        if(isMoved)
+        {
+            vibration_sendAlarm();
+        }
+    }
+    else
+    {
+        if(get_autodefend_state())
+        {
+            if(isMoved)
+            {
+                timerCount = 0;
+            }
+            else
+            {
+                timerCount++;
+
+                if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
+                {
+                    LOG_INFO("vibration state auto locked.");
+                    set_vibration_state(EAT_TRUE);
+                }
+            }
+        }
+    }
+
+    return;
+}
+
+static eat_bool vibration_sendAlarm(void)
+{
+    u8 msgLen = sizeof(MSG_THREAD) + 1;
+    MSG_THREAD* msg = allocMsg(msgLen);
+    unsigned char* alarmType = (unsigned char*)msg->data;
+
+    msg->cmd = CMD_THREAD_VIBRATE;
+    msg->length = 1;
+    *alarmType = ALARM_VIBRATE;
+
+    LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
+    return sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, msgLen);
+}
+
+
 static void mma_init(void)
 {
     mma_open();
-    mma_WhoAmI();
+    //mma_WhoAmI();
 
     mma_Standby();
     //LOG_DEBUG("MMA8X5X_TRANSIENT_SRC = %02x", mma_read(MMA8X5X_TRANSIENT_SRC));
@@ -188,58 +263,5 @@ static void mma_ChangeDynamicRange(MMA_FULL_SCALE_EN mode)
     }
 
     mma_Active();
-}
-
-#endif
-
-static void vibration_timer_handler(void)
-{
-    u8 read_buffer[MMA8X5X_BUF_SIZE] = {0};
-    u8 write_buffer[MMA8X5X_BUF_SIZE] = {0};
-    s32 ret;
-    long delta;
-    static eat_bool isFirstTime = EAT_TRUE;
-
-    #if 0
-    set_vibration_state(EAT_TRUE);//TO DO
-    #endif
-
-    if(EAT_TRUE == vibration_fixed())
-    {
-        //LOG_DEBUG("MMA8X5X_TRANSIENT_SRC = %02x", mma_read(MMA8X5X_TRANSIENT_SRC));
-        if(mma_read(MMA8X5X_TRANSIENT_SRC) & 0x40)
-        {
-            if(isFirstTime)
-            {
-                /* At the first time, the value of MMA8X5X_TRANSIENT_SRC is strangely 0x60.
-                 * Do not send alarm at the first time.
-                 */
-                isFirstTime = EAT_FALSE;
-            }
-            else
-            {
-                vibration_sendAlarm();
-            }
-        }
-    }
-    else
-    {
-        //LOG_INFO("vibration is not fixed.");
-        return;
-    }
-}
-
-static eat_bool vibration_sendAlarm(void)
-{
-    u8 msgLen = sizeof(MSG_THREAD) + 1;
-    MSG_THREAD* msg = allocMsg(msgLen);
-    unsigned char* alarmType = (unsigned char*)msg->data;
-
-    msg->cmd = CMD_THREAD_VIBRATE;
-    msg->length = 1;
-    *alarmType = ALARM_VIBRATE;
-
-    LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
-    return sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, msgLen);
 }
 

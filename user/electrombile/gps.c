@@ -21,25 +21,29 @@
 #include "protocol.h"
 #include "tool.h"
 
-#define NMEA_BUFF_SIZE 1024
-#define READ_BUFF_SIZE 2048
-
-static char gps_info_buf[READ_BUFF_SIZE]="";
-static eat_bool isGpsFixed = EAT_FALSE;
-static float latitude = 0.0;
-static float longitude = 0.0;
-static eat_bool isCellGet = EAT_FALSE;
-static short mcc = 0;  //mobile country code
-static short mnc = 0;  //mobile network code
-static char  cellNo = 0;   // cell count
-static CELL  cells[7] = {0};
-
 static void gps_timer_handler(u8 cmd);
 static void gps_at_read_handler(void);
 static eat_bool gps_sendGps(u8 cmd);
 static eat_bool gps_sendCell(u8 cmd);
 static eat_bool gps_isGpsFixed(void);
 static eat_bool gps_isCellGet(void);
+static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps);
+
+#define NMEA_BUFF_SIZE 1024
+#define READ_BUFF_SIZE 2048
+#define LATITUDE_THRESHOLD  0.001f
+#define LONGITUDE_THRESHOLD 0.001f
+
+static char gps_info_buf[READ_BUFF_SIZE]="";
+static eat_bool isGpsFixed = EAT_FALSE;
+static float latitude = 0.0;
+static float longitude = 0.0;
+static eat_bool isCellGet = EAT_FALSE;
+static short mcc = 0;//mobile country code
+static short mnc = 0;//mobile network code
+static char  cellNo = 0;//cell count
+static CELL  cells[7] = {0};
+static LOCAL_GPS* last_gps = 0;//gps sent for the last time
 
 void app_gps_thread(void *data)
 {
@@ -92,7 +96,6 @@ void app_gps_thread(void *data)
                         LOG_ERROR("cmd(%d) not processed!", msg->cmd);
                         break;
                 }
-
                 break;
 
             default:
@@ -144,10 +147,12 @@ static eat_bool gps_sendGps(u8 cmd)
     u8 msgLen = sizeof(MSG_THREAD) + sizeof(LOCAL_GPS);
     MSG_THREAD* msg = allocMsg(msgLen);
     LOCAL_GPS* gps = 0;
+    eat_bool cmp = EAT_FALSE;
+    eat_bool ret = EAT_FALSE;
 
     if (!msg)
     {
-        LOG_ERROR("alloc msg failed");
+        LOG_ERROR("alloc msg failed!");
         return EAT_FALSE;
     }
     msg->cmd = cmd;//CMD_THREAD_GPS or CMD_THREAD_LOCATION
@@ -158,21 +163,51 @@ static eat_bool gps_sendGps(u8 cmd)
     gps->gps.latitude = latitude;
     gps->gps.longitude = longitude;
 
-    LOG_DEBUG("send gps to THREAD_MAIN: lat(%f), lng(%f)", latitude, longitude);
+    if(last_gps == 0 || msg->cmd == CMD_THREAD_LOCATION)
+    {
+        LOG_DEBUG("the first cell.");
 
-    return sendMsg(THREAD_GPS, THREAD_MAIN, msg, msgLen);
+        last_gps = (LOCAL_GPS*)eat_mem_alloc(sizeof(LOCAL_GPS));
+
+        cmp = EAT_FALSE;
+    }
+    else
+    {
+        cmp = gps_DuplicateCheck(last_gps, gps);
+    }
+
+    if(EAT_TRUE == cmp)
+    {
+        //GPS is the same as before, do not send this msg
+        ret = EAT_TRUE;
+    }
+
+    else
+    {
+        memcpy(last_gps, gps, sizeof(LOCAL_GPS));
+
+        //GPS is different from before, send this msg, update the last_gps
+        LOG_DEBUG("send gps to THREAD_MAIN: latitude(%f), longitude(%f).", latitude, longitude);
+        ret = sendMsg(THREAD_GPS, THREAD_MAIN, msg, msgLen);
+    }
+
+    /* can not freeMsg(msg) here, if do, it will be crashed. */
+
+    return ret;
 }
 
 static eat_bool gps_sendCell(u8 cmd)
 {
     u8 msgLen = sizeof(MSG_THREAD) + sizeof(LOCAL_GPS);
-    MSG_THREAD* msg = allocMsg(msgLen);
-    LOCAL_GPS* gps = 0;
+    MSG_THREAD *msg = allocMsg(msgLen);
+    LOCAL_GPS *gps = 0;
     int i = 0;
+    eat_bool cmp = EAT_FALSE;
+    eat_bool ret = EAT_FALSE;
 
     if (!msg)
     {
-        LOG_ERROR("alloc msg failed");
+        LOG_ERROR("alloc msg failed!");
         return EAT_FALSE;
     }
     msg->cmd = cmd;//CMD_THREAD_GPS or CMD_THREAD_LOCATION
@@ -184,17 +219,44 @@ static eat_bool gps_sendCell(u8 cmd)
     gps->cellInfo.mcc = mcc;
     gps->cellInfo.mnc = mnc;
     gps->cellInfo.cellNo = cellNo;
-    LOG_DEBUG("send cell to THREAD_MAIN: mcc(%d), mnc(%d), cellNo(%d)", mcc, mnc, cellNo);
 
     for (i = 0; i < cellNo; i++)
     {
         gps->cellInfo.cell[i].lac = cells[i].lac;
         gps->cellInfo.cell[i].cellid = cells[i].cellid;
         gps->cellInfo.cell[i].rxl = cells[i].rxl;
-        //LOG_DEBUG("send gps: i(%d), lac(%d), cellid(%d), rxl(%d)", i, cells[i].lac, cells[i].cellid, cells[i].rxl);
     }
 
-    return sendMsg(THREAD_GPS, THREAD_MAIN, msg, msgLen);
+    if(last_gps == 0 || msg->cmd == CMD_THREAD_LOCATION)
+    {
+        LOG_DEBUG("the first cell or active acquisition");
+
+        last_gps = (LOCAL_GPS*)eat_mem_alloc(sizeof(LOCAL_GPS));
+
+        cmp = EAT_FALSE;
+    }
+    else
+    {
+        cmp = gps_DuplicateCheck(last_gps, gps);
+    }
+
+    if(EAT_TRUE == cmp)
+    {
+        //GPS is the same as before, do not send this msg
+        ret = EAT_TRUE;
+    }
+    else
+    {
+        memcpy(last_gps, gps, sizeof(LOCAL_GPS));
+
+        //GPS is different from before, send this msg, update the last_gps
+        LOG_DEBUG("send cell to THREAD_MAIN: mcc(%d), mnc(%d), cellNo(%d).", mcc, mnc, cellNo);
+        ret = sendMsg(THREAD_GPS, THREAD_MAIN, msg, msgLen);
+    }
+
+    /* can not freeMsg(msg) here, if do, it will be crashed. */
+
+    return ret;
 }
 
 static void gps_at_read_handler(void)
@@ -251,7 +313,7 @@ static void gps_at_read_handler(void)
         }
         else
         {
-            LOG_DEBUG("gps fixed=%d, \r\nlatitude=%f, longitude=%f.",isGpsFixed, latitude, longitude);
+            LOG_DEBUG("gps fixed=%d, \r\nlatitude=%f, longitude=%f.", isGpsFixed, latitude, longitude);
         }
     }
 
@@ -314,4 +376,93 @@ static void gps_at_read_handler(void)
 
     return;
 }
+
+static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
+{
+    short cellid[6], last_cellid[6];
+    short lac[6], last_lac[6];
+    short temp_cellid, temp_lac;
+    int i=0, j=0, count=0;
+
+    if(pre_gps->isGpsFixed != gps->isGpsFixed)
+    {
+        LOG_DEBUG("gps_type is different.");
+        return EAT_FALSE;
+    }
+    else
+    {
+        if(pre_gps->isGpsFixed == EAT_TRUE)
+        {
+            //GPS
+            if(pre_gps->gps.latitude - gps->gps.latitude <= LATITUDE_THRESHOLD && pre_gps->gps.latitude - gps->gps.latitude >= -LATITUDE_THRESHOLD)
+            {
+                count++;
+            }
+
+            if(pre_gps->gps.longitude - gps->gps.longitude <= LONGITUDE_THRESHOLD && pre_gps->gps.longitude - gps->gps.longitude >= -LONGITUDE_THRESHOLD)
+            {
+                count++;
+            }
+
+            if(count == 2)
+            {
+                LOG_DEBUG("GPS is the same. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
+                return EAT_TRUE;
+            }
+            else
+            {
+                LOG_DEBUG("GPS is different. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
+                return EAT_FALSE;
+            }
+
+        }
+        else
+        {
+            //CELL
+            if((pre_gps->cellInfo.mcc != gps->cellInfo.mcc) || \
+               (pre_gps->cellInfo.mnc != gps->cellInfo.mnc) || \
+               (pre_gps->cellInfo.cellNo != gps->cellInfo.cellNo) || \
+               (pre_gps->cellInfo.cell[0].lac != gps->cellInfo.cell[0].lac) || \
+               (pre_gps->cellInfo.cell[0].cellid != gps->cellInfo.cell[0].cellid))
+            {
+                LOG_DEBUG("CELL is different for the first parameters.");
+                return EAT_FALSE;
+            }
+            else
+            {
+                for(i=0; i<6; i++)
+                {
+                    last_cellid[i] = pre_gps->cellInfo.cell[i+1].cellid;
+                    last_lac[i] = pre_gps->cellInfo.cell[i+1].lac;
+                    cellid[i] = gps->cellInfo.cell[i+1].cellid;
+                    lac[i] = gps->cellInfo.cell[i+1].lac;
+                }
+
+                count = 0;
+                for(i=0; i<6; i++)
+                {
+                    for(j=0; j<6; j++)
+                    {
+                        if(last_cellid[i] == cellid[j] && last_lac[i] == lac[j])
+                        {
+                            count++;
+                        }
+                    }
+                }
+
+                if(count >= 3)
+                {
+                    LOG_DEBUG("CELL is the same, count = %d.", count);
+                    return EAT_TRUE;
+                }
+                else
+                {
+                    LOG_DEBUG("CELL is different, count = %d.", count);
+                    return EAT_FALSE;
+                }
+            }
+        }
+    }
+}
+
 

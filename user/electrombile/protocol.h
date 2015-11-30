@@ -13,7 +13,6 @@
 #define MAX_CELL_NUM 7
 #define TEL_NO_LENGTH 11
 
-//#include "macro.h"
 
 enum
 {
@@ -29,6 +28,10 @@ enum
 	CMD_LOCATION= 0x0a,
 	CMD_SERVER  = 0x0b,
 	CMD_TIMER   = 0x0c,
+    CMD_AUTODEFEND_SWITCH_SET,
+    CMD_AUTODEFEND_SWITCH_GET,
+    CMD_AUTODEFEND_PERIOD_SET,
+    CMD_AUTODEFEND_PERIOD_GET
 };
 
 enum
@@ -234,6 +237,71 @@ typedef struct
 
 
 typedef MSG_HEADER MSG_LOCATION;
+
+
+
+
+enum AUTODEFEND_SWITCH
+{
+    AUTO_DEFEND_OFF,
+    AUTO_DEFEND_ON
+};
+
+typedef struct
+{
+    MSG_HEADER header;
+    int token;
+    unsigned char onOff; //refer to AUTODEFEND_SWITCH
+}__attribute__((__packed__)) MSG_AUTODEFEND_SWITCH_SET_REQ;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int token;
+    unsigned char result;
+}__attribute__((__packed__)) MSG_AUTODEFEND_SWITCH_SET_RSP;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int token;
+}__attribute__((__packed__)) MSG_AUTODEFEND_SWITCH_GET_REQ;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int token;
+    unsigned char result;
+}__attribute__((__packed__)) MSG_AUTODEFEND_SWITCH_GET_RSP;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int token;
+    unsigned char period;   //time unit: minutes
+}__attribute__((__packed__)) MSG_AUTODEFEND_PERIOD_SET_REQ;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int token;
+    unsigned char result;
+}__attribute__((__packed__)) MSG_AUTODEFEND_PERIOD_SET_RSP;
+
+
+typedef struct
+{
+    MSG_HEADER header;
+    int token;
+}__attribute__((__packed__)) MSG_AUTODEFEND_PERIOD_GET_REQ;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int token;
+    unsigned char period;   //time unit: minutes
+}__attribute__((__packed__)) MSG_AUTODEFEND_PERIOD_GET_RSP;
+
 
 #pragma pack(pop)
 

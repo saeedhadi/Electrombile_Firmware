@@ -11,12 +11,14 @@
 
 LOCAL_DATA data =
 {
-        EAT_FALSE,
-        EAT_FALSE,
-        EAT_FALSE,
-		EAT_FALSE,
-		EAT_FALSE,
-        {0}
+    EAT_FALSE,
+    EAT_FALSE,
+    EAT_FALSE,
+    EAT_TRUE,
+    5,
+    EAT_FALSE,
+    EAT_FALSE,
+    {0}
 };
 
 
@@ -48,6 +50,26 @@ eat_bool seek_fixed(void)
 void set_seek_state(eat_bool fixed)
 {
     data.isSeekFixed = fixed;
+}
+
+eat_bool get_autodefend_state(void)
+{
+    return data.isAutodefendFixed;
+}
+
+void set_autodefend_state(eat_bool fixed)
+{
+    data.isAutodefendFixed = fixed;
+}
+
+unsigned char get_autodefend_period(void)
+{
+    return data.AutodefendPeriod;
+}
+
+void set_autodefend_period(unsigned char period)
+{
+    data.AutodefendPeriod = period;
 }
 
 

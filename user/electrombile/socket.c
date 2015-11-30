@@ -93,7 +93,7 @@ static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
 
 	if (result == EAT_TRUE)
 	{
-		LOG_DEBUG("hostname notify:%s -> %d.%d.%d.%d", setting.addr.domain, ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3], setting.port);
+		LOG_DEBUG("hostname notify:%s -> %d.%d.%d.%d.", setting.addr.domain, ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3], setting.port);
 
         address.sock_type = SOC_SOCK_STREAM;
         address.addr_len = 4;
@@ -106,15 +106,15 @@ static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
         rc = eat_soc_connect(socket_id, &address);
         if(rc >= 0)
         {
-        	LOG_INFO("socket id of new connection is :%d", rc);
+        	LOG_INFO("socket id of new connection is :%d.", rc);
         }
         else if (rc == SOC_WOULDBLOCK)
         {
-         	LOG_INFO("Connection is in progressing...%d...", socket_id);
+         	LOG_INFO("Connection is in progressing...", socket_id);
         }
         else
         {
-         	LOG_ERROR("Connect return error:%d", rc);
+         	LOG_ERROR("Connect return error:%d!", rc);
         }
 	}
 
@@ -126,15 +126,13 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
     u8 buffer[128] = {0};
     s32 rc = 0;
 
-    LOG_DEBUG("SOCKET notify:s(%d), socketid(%d), event(%s)", s, socket_id, getEventDescription(event));
+    LOG_DEBUG("SOCKET notify:s(%d), socketid(%d), event(%s).", s, socket_id, getEventDescription(event));
 
     switch (event)
     {
         case SOC_READ:
-            //socket_id = s;		//TODO: according to the demo, but why?
-            //LOG_DEBUG("SOC_READ with socket_id = %d.", socket_id);
 
-            rc = eat_soc_recv(socket_id, buffer, 128); //return the legnth of the notify
+            rc = eat_soc_recv(socket_id, buffer, 128);
             if (rc == SOC_WOULDBLOCK)
             {
                 LOG_ERROR("read data from socket block!");
@@ -158,7 +156,7 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
             }
             else
             {
-                LOG_ERROR("SOC_CONNECT failed, the server is OFF.");
+                LOG_ERROR("SOC_CONNECT failed, the server is OFF!");
                 eat_soc_close(socket_id);
 
                 eat_timer_start(TIMER_SOCKET, setting.socket_timer_period);
@@ -167,6 +165,8 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
             break;
 
         case SOC_CLOSE:
+            LOG_INFO("SOC_CLOSE.");
+
             eat_soc_close(socket_id);
             set_socket_state(EAT_FALSE);
             set_client_state(EAT_FALSE);
@@ -175,7 +175,7 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
             break;
 
         case SOC_ACKED:
-            LOG_DEBUG("acked size of send data: %d", ack_size);
+            LOG_DEBUG("acked size of send data: %d.", ack_size);
             break;
 
         default:
@@ -252,7 +252,7 @@ void socket_setup(void)
     socket_id = eat_soc_create(SOC_SOCK_STREAM, 0);
     if (socket_id < 0)
     {
-    	LOG_ERROR("eat_soc_create return error :%d", socket_id);
+    	LOG_ERROR("eat_soc_create return error :%d!", socket_id);
     	eat_reset_module();
     	return;
     }
@@ -264,7 +264,7 @@ void socket_setup(void)
     rc = eat_soc_setsockopt(socket_id, SOC_NBIO, &val, sizeof(val));
     if (rc != SOC_SUCCESS)
     {
-    	LOG_ERROR("eat_soc_setsockopt set SOC_NBIO failed: %d", rc);
+    	LOG_ERROR("eat_soc_setsockopt set SOC_NBIO failed: %d!", rc);
     	eat_reset_module();
     	return;
     }
@@ -272,7 +272,7 @@ void socket_setup(void)
     rc = eat_soc_setsockopt(socket_id, SOC_NODELAY, &val, sizeof(val));
     if (rc != SOC_SUCCESS)
     {
-    	LOG_ERROR("eat_soc_setsockopt set SOC_NODELAY failed: %d", rc);
+    	LOG_ERROR("eat_soc_setsockopt set SOC_NODELAY failed: %d!", rc);
     	eat_reset_module();
     	return;
     }
@@ -281,7 +281,7 @@ void socket_setup(void)
     rc = eat_soc_setsockopt(socket_id, SOC_ASYNC, &val, sizeof(val));
     if (rc != SOC_SUCCESS)
     {
-    	LOG_ERROR("eat_soc_setsockopt set SOC_ASYNC failed: %d", rc);
+    	LOG_ERROR("eat_soc_setsockopt set SOC_ASYNC failed: %d!", rc);
     	eat_reset_module();
     	return;
     }
@@ -351,17 +351,22 @@ void socket_close(void)
 
 s32 socket_sendData(void* data, s32 len)
 {
-    s32 rc = eat_soc_send(socket_id, data, len);
+    s32 rc;
+
+    log_hex((const char*)data, len);
+
+    rc = eat_soc_send(socket_id, data, len);
     if (rc >= 0)
     {
-        LOG_DEBUG("socket send data successful");
+        LOG_DEBUG("socket send data successful.");
     }
     else
     {
-        LOG_ERROR("sokcet send data failed:%d", rc);
+        LOG_ERROR("sokcet send data failed:%d!", rc);
     }
 
     free_msg(data);  //TODO: is it ok to free the msg here???
 
     return rc;
 }
+

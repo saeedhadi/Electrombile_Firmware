@@ -16,7 +16,6 @@
 #include "tool.h"
 #include "log.h"
 
-
 eat_bool tool_modem_write(const unsigned char *data)
 {
     unsigned short len = strlen(data);
@@ -47,7 +46,5 @@ unsigned char *tool_StrstrAndReturnEndPoint(char *str1, const char *str2)
 
     return p;
 }
-
-
 
 

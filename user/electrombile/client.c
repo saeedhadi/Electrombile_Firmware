@@ -38,6 +38,11 @@ static int sms(const void* msg);
 static int defend(const void* msg);
 static int seek(const void* msg);
 static int location(const void* msgLocation);
+static int autodefend_switch_set(const void* msg);
+static int autodefend_switch_get(const void* msg);
+static int autodefend_period_set(const void* msg);
+static int autodefend_period_get(const void* msg);
+
 static int server_proc(const void* msg);
 static int GPS_time_proc(const void* msg);
 
@@ -51,6 +56,10 @@ static MC_MSG_PROC msgProcs[] =
 	{CMD_DEFEND, defend},
     {CMD_SEEK,  seek},
 	{CMD_LOCATION, location},
+	{CMD_AUTODEFEND_SWITCH_SET, autodefend_switch_set},
+    {CMD_AUTODEFEND_SWITCH_GET, autodefend_switch_get},
+    {CMD_AUTODEFEND_PERIOD_SET, autodefend_period_set},
+    {CMD_AUTODEFEND_PERIOD_GET, autodefend_period_get},
     {CMD_SERVER, server_proc},
     {CMD_TIMER, GPS_time_proc},
 };
@@ -64,13 +73,13 @@ int client_proc(const void* m, int msgLen)
 
     if (msgLen < sizeof(MSG_HEADER))
     {
-        LOG_ERROR("receive message length not enough: %zu(at least(%zu)", msgLen, sizeof(MSG_HEADER));
+        LOG_ERROR("receive message length not enough: %zu(at least(%zu)!", msgLen, sizeof(MSG_HEADER));
         return -1;
     }
 
     if (msg->signature != ntohs(START_FLAG))
     {
-        LOG_ERROR("receive message head signature error:%d", msg->signature);
+        LOG_ERROR("receive message head signature error:%d!", msg->signature);
         return -1;
     }
 
@@ -85,13 +94,13 @@ int client_proc(const void* m, int msgLen)
             }
             else
             {
-                LOG_ERROR("Message %d not processed", msg->cmd);
+                LOG_ERROR("Message %d not processed!", msg->cmd);
                 return -1;
             }
         }
     }
 
-    LOG_ERROR("unknown message %d", msg->cmd);
+    LOG_ERROR("unknown message %d!", msg->cmd);
     return -1;
 }
 
@@ -108,15 +117,15 @@ void client_loop(void)
                 MSG_GPS* msg = alloc_msg(CMD_GPS, sizeof(MSG_GPS));
                 if (!msg)
                 {
-                    LOG_ERROR("alloc message failed");
+                    LOG_ERROR("alloc GPS message failed!");
                     return;
                 }
 
                 msg->gps.longitude = data.gps.longitude;
                 msg->gps.latitude = data.gps.latitude;
 
-                LOG_DEBUG("send GPS message");
-                log_hex((const char*)msg, sizeof(MSG_GPS));
+                LOG_DEBUG("send GPS message.");
+
                 socket_sendData(msg, sizeof(MSG_GPS));
 
                 data.isGpsFixed = EAT_FALSE;
@@ -129,7 +138,7 @@ void client_loop(void)
                 CELL* cell = (CELL*)(cgi + 1);
                 if (!msg)
                 {
-                    LOG_ERROR("alloc message failed");
+                    LOG_ERROR("alloc CELL message failed!");
                     return;
                 }
 
@@ -143,8 +152,7 @@ void client_loop(void)
                     cell[i].rxl= htons(data.cells[i].rxl);
                 }
 
-                LOG_DEBUG("send CELL message");
-                log_hex((const char*)msg, msgLen);
+                LOG_DEBUG("send CELL message.");
                 socket_sendData(msg, msgLen);
 
                 data.isCellGet = EAT_FALSE;
@@ -157,7 +165,7 @@ void client_loop(void)
 
             if (!msg)
             {
-                LOG_ERROR("alloc message failed");
+                LOG_ERROR("alloc login message failed!");
                 return;
             }
 
@@ -167,7 +175,6 @@ void client_loop(void)
             memcpy(msg->IMEI, imei, IMEI_LENGTH);
 
             LOG_DEBUG("send login message.");
-            log_hex((const char*)msg, sizeof(MSG_LOGIN_REQ));
             socket_sendData(msg, sizeof(MSG_LOGIN_REQ));
         }
 
@@ -177,6 +184,8 @@ void client_loop(void)
 
 static int login_rsp(const void* msg)
 {
+    LOG_DEBUG("get login respond.");
+
     set_client_state(EAT_TRUE);
 
     return 0;
@@ -184,6 +193,8 @@ static int login_rsp(const void* msg)
 
 static int ping_rsp(const void* msg)
 {
+    LOG_DEBUG("get ping respond.");
+
     return 0;
 }
 
@@ -195,28 +206,20 @@ static int alarm_rsp(const void* msg)
     switch(req->alarmType)
     {
         case ALARM_VIBRATE:
-            set_vibration_state(EAT_TRUE);
-            LOG_DEBUG("set vibration alarm on.");
+            LOG_DEBUG("get alarm(ALARM_VIBRATE) respond.");
             break;
 
         case ALARM_FENCE_OUT:
+            LOG_DEBUG("get alarm(ALARM_FENCE_OUT) respond.");
             break;
 
         case ALARM_FENCE_IN:
+            LOG_DEBUG("get alarm(ALARM_FENCE_IN) respond.");
             break;
 
         default:
             break;
     }
-
-    rsp = alloc_rspMsg(&req->header);
-	if (!rsp)
-	{
-		LOG_ERROR("alloc alarm rsp message failed");
-		return -1;
-	}
-
-    socket_sendData(rsp, sizeof(MSG_ALARM_RSP));
 
     return 0;
 }
@@ -234,22 +237,24 @@ static int defend(const void* msg)
 
 	switch (req->operator)
 	{
-	case DEFEND_ON:
-		LOG_DEBUG("set defend switch on.");
-		set_vibration_state(EAT_TRUE);
-		break;
+    	case DEFEND_ON:
+    		LOG_DEBUG("set defend switch on.");
+    		set_vibration_state(EAT_TRUE);
+    		break;
 
-	case DEFEND_OFF:
-		LOG_DEBUG("set defend switch off.");
-		set_vibration_state(EAT_FALSE);
-		break;
+    	case DEFEND_OFF:
+    		LOG_DEBUG("set defend switch off.");
+    		set_vibration_state(EAT_FALSE);
+    		break;
 
-	case DEFEND_GET:
-		result = vibration_fixed() ? DEFEND_ON : DEFEND_OFF;
-		break;
-	default:
-		LOG_ERROR("unknown operator %d!", req->operator);
-		return 0;
+    	case DEFEND_GET:
+    		result = vibration_fixed() ? DEFEND_ON : DEFEND_OFF;
+            LOG_DEBUG("get defend switch state(%d).", result);
+    		break;
+
+    	default:
+    		LOG_ERROR("unknown operator %d!", req->operator);
+    		return 0;
 	}
 
 	rsp = alloc_rspMsg(&req->header);
@@ -277,7 +282,7 @@ static int seek(const void* msg)
 		set_seek_state(EAT_TRUE);
         LOG_DEBUG("set seek on.");
 	}
-	else
+	else if(req->operator == SEEK_OFF)
 	{
 		set_seek_state(EAT_FALSE);
         LOG_DEBUG("set seek off.");
@@ -286,7 +291,7 @@ static int seek(const void* msg)
 	rsp = alloc_rspMsg(&req->header);
 	if (!rsp)
 	{
-		LOG_ERROR("alloc seek rsp message failed");
+		LOG_ERROR("alloc seek rsp message failed!");
 		return -1;
 	}
 
@@ -310,6 +315,100 @@ static int location(const void* msgLocation)
 	sendMsg(THREAD_MAIN, THREAD_GPS, msg, msgLen);
 
 	return 0;
+}
+
+static int autodefend_switch_set(const void* msg)
+{
+    MSG_AUTODEFEND_SWITCH_SET_REQ* req = (MSG_AUTODEFEND_SWITCH_SET_REQ*)msg;
+	MSG_AUTODEFEND_SWITCH_SET_RSP* rsp = NULL;
+
+	if(req->onOff == AUTO_DEFEND_ON)
+	{
+		set_autodefend_state(EAT_TRUE);
+        LOG_DEBUG("set autodefend swtich on.");
+	}
+	else if(req->onOff == AUTO_DEFEND_OFF)
+	{
+		set_autodefend_state(EAT_FALSE);
+        LOG_DEBUG("set autodefend swtich off.");
+	}
+
+	rsp = alloc_rspMsg(&req->header);
+	if (!rsp)
+	{
+		LOG_ERROR("alloc autodefend_swtich_set rsp message failed!");
+		return -1;
+	}
+
+	rsp->token = req->token;
+	rsp->result = MSG_SUCCESS;
+
+    socket_sendData(rsp, sizeof(MSG_AUTODEFEND_SWITCH_SET_RSP));
+
+    return 0;
+}
+
+static int autodefend_switch_get(const void* msg)
+{
+    MSG_AUTODEFEND_SWITCH_GET_REQ* req = (MSG_AUTODEFEND_SWITCH_GET_REQ*)msg;
+	MSG_AUTODEFEND_SWITCH_GET_RSP* rsp = NULL;
+
+    rsp = alloc_rspMsg(&req->header);
+	if (!rsp)
+	{
+		LOG_ERROR("alloc autodefend_swtich_get rsp message failed!");
+		return -1;
+	}
+
+	rsp->token = req->token;
+	rsp->result = get_autodefend_state() ? AUTO_DEFEND_ON : AUTO_DEFEND_OFF;
+
+    socket_sendData(rsp, sizeof(MSG_AUTODEFEND_SWITCH_GET_RSP));
+
+    return 0;
+}
+
+static int autodefend_period_set(const void* msg)
+{
+    MSG_AUTODEFEND_PERIOD_SET_REQ* req = (MSG_AUTODEFEND_PERIOD_SET_REQ*)msg;
+	MSG_AUTODEFEND_PERIOD_SET_RSP* rsp = NULL;
+
+    LOG_DEBUG("set autodefend period as %dmin.", req->period);
+    set_autodefend_period(req->period);
+
+    rsp = alloc_rspMsg(&req->header);
+	if (!rsp)
+	{
+		LOG_ERROR("alloc autodefend_period_set rsp message failed!");
+		return -1;
+	}
+
+	rsp->token = req->token;
+    rsp->result = MSG_SUCCESS;
+
+    socket_sendData(rsp, sizeof(MSG_AUTODEFEND_PERIOD_SET_RSP));
+
+    return 0;
+}
+
+static int autodefend_period_get(const void* msg)
+{
+    MSG_AUTODEFEND_PERIOD_GET_REQ* req = (MSG_AUTODEFEND_PERIOD_GET_REQ*)msg;
+	MSG_AUTODEFEND_PERIOD_GET_RSP* rsp = NULL;
+
+    rsp = alloc_rspMsg(&req->header);
+	if (!rsp)
+	{
+		LOG_ERROR("alloc autodefend_period_get rsp message failed!");
+		return -1;
+	}
+
+	rsp->token = req->token;
+    rsp->period = get_autodefend_period();
+
+    socket_sendData(rsp, sizeof(MSG_AUTODEFEND_PERIOD_GET_RSP));
+
+    return 0;
 }
 
 static int GPS_time_proc(const void* msg)

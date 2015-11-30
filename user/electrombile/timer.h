@@ -20,5 +20,4 @@
 #define TIMER_HEARTBEAT	EAT_TIMER_8
 
 
-
 #endif /* USER_ELECTROMBILE_TIMER_H_ */

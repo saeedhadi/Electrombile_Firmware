@@ -194,7 +194,6 @@ int event_threadMsg(const EatEvent_st* event)
                 break;
             }
 
-
             if (gps->isGpsFixed)    //update the local GPS data
             {
                 data.isGpsFixed = EAT_TRUE;
@@ -287,15 +286,14 @@ int event_threadMsg(const EatEvent_st* event)
                 if (!msg)
                 {
                     LOG_ERROR("alloc message failed!");
-                    return;
+                    return -1;
                 }
 
                 msg->gps.longitude = gps->gps.longitude;
                 msg->gps.latitude = gps->gps.latitude;
 
                 LOG_DEBUG("send GPS message.");
-                log_hex((const char*)msg, sizeof(MSG_GPS));
-                socket_sendData(msg, sizeof(MSG_GPS));  //发送GPS信息
+                socket_sendData(msg, sizeof(MSG_GPS));
             }
             else    //update local cell info
             {
@@ -308,7 +306,7 @@ int event_threadMsg(const EatEvent_st* event)
                 if (!msg)
                 {
                     LOG_ERROR("alloc message failed!");
-                    return;
+                    return -1;
                 }
 
                 cgi->mcc = htons(gps->cellInfo.mcc);
@@ -322,8 +320,7 @@ int event_threadMsg(const EatEvent_st* event)
                 }
 
                 LOG_DEBUG("send CELL message.");
-                log_hex((const char*)msg, msgLen);
-                socket_sendData(msg, msgLen);    //发送基站信息
+                socket_sendData(msg, msgLen);
             }
             break;
         }
