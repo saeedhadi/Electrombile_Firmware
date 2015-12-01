@@ -1,7 +1,7 @@
 /*
  * socket.c
  *
- *  Created on: 2015Äê7ÔÂ8ÈÕ
+ *  Created on: 2015/7/8/
  *      Author: jk
  */
 #include <stdio.h>
@@ -353,7 +353,7 @@ s32 socket_sendData(void* data, s32 len)
 {
     s32 rc;
 
-    log_hex((const char*)data, len);
+    LOG_HEX((const char*)data, len);
 
     rc = eat_soc_send(socket_id, data, len);
     if (rc >= 0)

@@ -1,7 +1,7 @@
 /*
  * client.h
  *
- *  Created on: 2015Äê7ÔÂ9ÈÕ
+ *  Created on: 2015/7/9
  *      Author: jk
  */
 
@@ -13,5 +13,6 @@ int client_proc(const void* m, int msgLen);
 void client_loop(void);
 void msg_heartbeat(void);
 
+void msg_wild(const void*, int);
 
 #endif /* USER_ELECTROMBILE_CLIENT_H_ */

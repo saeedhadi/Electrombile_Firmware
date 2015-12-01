@@ -8,6 +8,8 @@
 #ifndef USER_ELECTROMBILE_LOG_H_
 #define USER_ELECTROMBILE_LOG_H_
 
+#include <eat_interface.h>
+
 #ifdef LOG_DEBUG_FLAG
 #define LOG_DEBUG(fmt, ...) eat_trace("[DBG][%s:%d %s]"fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #else
@@ -26,7 +28,20 @@
 #define LOG_ERROR(fmt, ...)
 #endif
 
+#ifdef LOG_DEBUG_FLAG
+#define LOG_HEX(data, len)  log_hex(data, len);
+#else
+#define LOG_HEX(data, len)
+#endif
+
+#ifdef LOG_DEBUG_FLAG
+#define LOG_REMOTE(fmt, ...) log_remote("[%s:%d %s]"fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#else
+#define LOG_REMOTE(fmt, ...)
+#endif
+
 void log_hex(const char* data, int length);
+void log_remote(const char* fmt, ...);
 
 
 #endif /* USER_ELECTROMBILE_LOG_H_ */

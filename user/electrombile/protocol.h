@@ -1,7 +1,7 @@
 /*
  * protocol.h
  *
- *  Created on: 2015Äê6ÔÂ29ÈÕ
+ *  Created on: 2015ï¿½ï¿½6ï¿½ï¿½29ï¿½ï¿½
  *      Author: jk
  */
 
@@ -16,6 +16,7 @@
 
 enum
 {
+    CMD_WILD    = 0x00,
     CMD_LOGIN   = 0x01,
     CMD_GPS     = 0x02,
     CMD_CELL    = 0x03,

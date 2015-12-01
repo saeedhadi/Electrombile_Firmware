@@ -8,8 +8,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "log.h"
+#include "client.h"
 
 
 void log_hex(const char* data, int length)
@@ -60,4 +62,25 @@ void log_hex(const char* data, int length)
     }
 }
 
+void log_remote(const char* fmt, ...)
+{
+    char buf[1024] = {0};
+    int length = 0;
+
+    va_list arg;
+    va_start(arg, fmt);
+    vsnprintf(buf, 1024, fmt, arg);
+    va_end(arg);
+
+    length = strlen(buf);
+
+    if (socket_conneted())
+    {
+        msg_wild(buf, length);
+    }
+    else
+    {
+        eat_trace("%s", buf);
+    }
+}
 
