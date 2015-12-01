@@ -505,4 +505,13 @@ static int server_proc(const void* msg)
 
 
 
+void msg_wild(const void* m, int len)
+{
+    u8 msgLen = sizeof(MSG_HEADER) + len;
+    MSG_HEADER* msg = alloc_msg(CMD_WILD, msgLen);
+
+    memcpy(msg + 1, m, len);
+
+    socket_sendData(msg, msgLen);
+}
 
