@@ -33,6 +33,7 @@
 #endif
 
 void log_hex(const char* data, int length);
+void log_remote(const char* fmt, ...);
 
 
 #endif /* USER_ELECTROMBILE_LOG_H_ */
