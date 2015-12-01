@@ -10,7 +10,8 @@
 
 
 void socket_init(void);
-
+void socket_setup(void);
+void socket_close(void);
 s32 socket_sendData(void* data, s32 len);
 
 

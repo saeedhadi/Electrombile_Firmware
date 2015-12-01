@@ -40,6 +40,24 @@ void* alloc_rspMsg(const MSG_HEADER* pMsg)
             msgLen = sizeof(MSG_SEEK_RSP);
             break;
 
+        case CMD_AUTODEFEND_SWITCH_SET:
+            msgLen = sizeof(MSG_AUTODEFEND_SWITCH_SET_RSP);
+            break;
+
+        case CMD_AUTODEFEND_SWITCH_GET:
+            msgLen = sizeof(MSG_AUTODEFEND_SWITCH_GET_RSP);
+            break;
+
+        case CMD_AUTODEFEND_PERIOD_SET:
+            msgLen = sizeof(MSG_AUTODEFEND_PERIOD_SET_RSP);
+            break;
+
+        case CMD_AUTODEFEND_PERIOD_GET:
+            msgLen = sizeof(MSG_AUTODEFEND_PERIOD_GET_RSP);
+            break;
+        case CMD_TIMER:
+            msgLen = sizeof(MSG_GPSTIMER_RSP);
+			break;
         default:
             return NULL;
     }

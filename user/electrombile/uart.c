@@ -4,6 +4,7 @@
  *  Created on: 2015Äê7ÔÂ8ÈÕ
  *      Author: jk
  */
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -63,7 +64,6 @@ int event_uart_ready_rd(const EatEvent_st* event)
         LOG_INFO("IMEI = %s", imei);
         return 0;
     }
-
 
     if (strstr(buf, "rtc"))
     {

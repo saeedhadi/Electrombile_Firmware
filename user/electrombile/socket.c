@@ -16,6 +16,12 @@
 #include "data.h"
 #include "timer.h"
 
+static char* getEventDescription(soc_event_enum event);
+static char* getStateDescription(cbm_bearer_state_enum state);
+static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4]);
+static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size);
+static void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4]);
+
 
 static s8 socket_id = 0;
 
@@ -80,14 +86,14 @@ static char* getStateDescription(cbm_bearer_state_enum state)
 	}
 }
 
-void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
+static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
 {
     sockaddr_struct address={SOC_SOCK_STREAM};
     s8 rc = SOC_SUCCESS;
 
 	if (result == EAT_TRUE)
 	{
-		LOG_DEBUG("hostname notify: %d.%d.%d.%d:%d", ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3], setting.port);
+		LOG_DEBUG("hostname notify:%s -> %d.%d.%d.%d.", setting.addr.domain, ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3], setting.port);
 
         address.sock_type = SOC_SOCK_STREAM;
         address.addr_len = 4;
@@ -100,37 +106,36 @@ void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
         rc = eat_soc_connect(socket_id, &address);
         if(rc >= 0)
         {
-        	LOG_INFO("socket id of new connection is :%d", rc);
+        	LOG_INFO("socket id of new connection is :%d.", rc);
         }
         else if (rc == SOC_WOULDBLOCK)
         {
-         	LOG_INFO("Connection is in progressing...");
+         	LOG_INFO("Connection is in progressing...", socket_id);
         }
         else
         {
-         	LOG_ERROR("Connect return error:%d", rc);
+         	LOG_ERROR("Connect return error:%d!", rc);
         }
 	}
 
     return;
 }
 
-void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
+static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
 {
     u8 buffer[128] = {0};
     s32 rc = 0;
 
-    LOG_DEBUG("SOCKET notify:socketid(%d), event(%s)", s, getEventDescription(event));
+    LOG_DEBUG("SOCKET notify:s(%d), socketid(%d), event(%s).", s, socket_id, getEventDescription(event));
 
     switch (event)
     {
         case SOC_READ:
-            socket_id = s;		//TODO: according to the demo, but why?
 
             rc = eat_soc_recv(socket_id, buffer, 128);
             if (rc == SOC_WOULDBLOCK)
             {
-                LOG_ERROR("read data from socket block");
+                LOG_ERROR("read data from socket block!");
             }
             else if (rc > 0)
             {
@@ -138,7 +143,7 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
             }
             else
             {
-                LOG_ERROR("eat_soc_recv error:rc=%d", rc);
+                LOG_ERROR("eat_soc_recv error:rc=%d!", rc);
             }
 
             break;
@@ -151,22 +156,26 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
             }
             else
             {
-                LOG_ERROR("SOC_CONNECT failed, the server is OFF.");
-                eat_timer_start(TIMER_AT_CMD, setting.at_cmd_timer_period);//restart the AT timer again
+                LOG_ERROR("SOC_CONNECT failed, the server is OFF!");
+                eat_soc_close(socket_id);
+
+                eat_timer_start(TIMER_SOCKET, setting.socket_timer_period);
             }
 
             break;
 
         case SOC_CLOSE:
-            eat_soc_close(s);
+            LOG_INFO("SOC_CLOSE.");
+
+            eat_soc_close(socket_id);
             set_socket_state(EAT_FALSE);
             set_client_state(EAT_FALSE);
 
-            eat_timer_start(TIMER_AT_CMD, setting.at_cmd_timer_period);//restart the AT timer again
+            eat_timer_start(TIMER_SOCKET, setting.socket_timer_period);
             break;
 
         case SOC_ACKED:
-            LOG_DEBUG("acked size of send data: %d", ack_size);
+            LOG_DEBUG("acked size of send data: %d.", ack_size);
             break;
 
         default:
@@ -175,107 +184,9 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
 
 }
 
-void socket_setup(void)
+static void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
 {
-	s8 rc = SOC_SUCCESS;
-	s8 val = EAT_TRUE;
-	sockaddr_struct address={SOC_SOCK_STREAM};
-
-    eat_soc_notify_register(soc_notify_cb);
-    socket_id = eat_soc_create(SOC_SOCK_STREAM, 0);
-    if (socket_id < 0)
-    {
-    	LOG_ERROR("eat_soc_create return error :%d", socket_id);
-    	eat_reset_module();//TODO: error handle
-    	return;
-    }
-    else
-    {
-    	LOG_DEBUG("socket id = %d", socket_id);
-    }
-
-    rc = eat_soc_setsockopt(socket_id, SOC_NBIO, &val, sizeof(val));
-    if (rc != SOC_SUCCESS)
-    {
-    	LOG_ERROR("eat_soc_setsockopt set SOC_NBIO failed: %d", rc);
-    	eat_reset_module();//TODO: error handle
-    	return;
-    }
-
-    rc = eat_soc_setsockopt(socket_id, SOC_NODELAY, &val, sizeof(val));
-    if (rc != SOC_SUCCESS)
-    {
-    	LOG_ERROR("eat_soc_setsockopt set SOC_NODELAY failed: %d", rc);
-    	eat_reset_module();//TODO: error handle
-    	return;
-    }
-
-    val = SOC_READ | SOC_WRITE | SOC_CLOSE | SOC_CONNECT;
-    rc = eat_soc_setsockopt(socket_id, SOC_ASYNC, &val, sizeof(val));
-    if (rc != SOC_SUCCESS)
-    {
-    	LOG_ERROR("eat_soc_setsockopt set SOC_ASYNC failed: %d", rc);
-    	eat_reset_module();//TODO: error handle
-    	return;
-    }
-
-    address.sock_type = SOC_SOCK_STREAM;
-    address.addr_len = 4;
-    if (setting.addr_type == ADDR_TYPE_IP)
-    {
-        address.addr[0] = setting.addr.ipaddr[0];
-        address.addr[1] = setting.addr.ipaddr[1];
-        address.addr[2] = setting.addr.ipaddr[2];
-        address.addr[3] = setting.addr.ipaddr[3];
-    }
-    else
-    {
-    	u8 ipaddr[4] = {0};
-    	u8 len = 0;
-
-    	eat_soc_gethost_notify_register(hostname_notify_cb);
-    	rc = eat_soc_gethostbyname(setting.addr.domain, ipaddr, &len, 1234);
-    	if (rc == SOC_WOULDBLOCK)
-    	{
-    		LOG_INFO("eat_soc_gethostbyname wait callback.");
-    		return;
-    	}
-    	else if (rc == SOC_SUCCESS)
-    	{
-            address.addr[0] = ipaddr[0];
-            address.addr[1] = ipaddr[1];
-            address.addr[2] = ipaddr[2];
-            address.addr[3] = ipaddr[3];
-
-            LOG_DEBUG("host:%s -> %d.%d.%d.%d", setting.addr.domain, ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3]);
-    	}
-    	else
-    	{
-    		LOG_ERROR("eat_soc_gethostbyname error!");
-    		return;
-    	}
-    }
-
-    address.port = setting.port;                /* TCP server port */
-    rc = eat_soc_connect(socket_id, &address);
-    if(rc >= 0)
-    {
-    	LOG_INFO("socket id of new connection is :%d", rc);
-    }
-    else if (rc == SOC_WOULDBLOCK)
-    {
-     	LOG_INFO("Connection is in progressing...");
-    }
-    else
-    {
-     	LOG_ERROR("Connect return error:%d", rc);
-    }
-}
-
-
-void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
-{
-	LOG_INFO("bear_notify state: %s", getStateDescription(state));
+	LOG_INFO("bear_notify state: %s.", getStateDescription(state));
 
 	switch (state)
 	{
@@ -306,10 +217,10 @@ void socket_init(void)
         if (rc == CBM_OK)
         {
             LOG_INFO("hold bearer success.");
-
             eat_timer_stop(TIMER_AT_CMD);
-            socket_setup();
+
             LOG_INFO("setup socket again.");
+            socket_setup();
         }
         else
         {
@@ -330,19 +241,132 @@ void socket_init(void)
     return;
 }
 
-s32 socket_sendData(void* data, s32 len)
+
+void socket_setup(void)
 {
-    s32 rc = eat_soc_send(socket_id, data, len);
-    if (rc >= 0)
+	s8 rc = SOC_SUCCESS;
+	s8 val = EAT_TRUE;
+	sockaddr_struct address={SOC_SOCK_STREAM};
+
+    eat_soc_notify_register(soc_notify_cb);
+    socket_id = eat_soc_create(SOC_SOCK_STREAM, 0);
+    if (socket_id < 0)
     {
-        LOG_DEBUG("socket send data successful");
+    	LOG_ERROR("eat_soc_create return error :%d!", socket_id);
+    	eat_reset_module();
+    	return;
     }
     else
     {
-        LOG_ERROR("sokcet send data failed:%d", rc);
+    	LOG_DEBUG("eat_soc_create ok, socket_id = %d.", socket_id);
+    }
+
+    rc = eat_soc_setsockopt(socket_id, SOC_NBIO, &val, sizeof(val));
+    if (rc != SOC_SUCCESS)
+    {
+    	LOG_ERROR("eat_soc_setsockopt set SOC_NBIO failed: %d!", rc);
+    	eat_reset_module();
+    	return;
+    }
+
+    rc = eat_soc_setsockopt(socket_id, SOC_NODELAY, &val, sizeof(val));
+    if (rc != SOC_SUCCESS)
+    {
+    	LOG_ERROR("eat_soc_setsockopt set SOC_NODELAY failed: %d!", rc);
+    	eat_reset_module();
+    	return;
+    }
+
+    val = SOC_READ | SOC_WRITE | SOC_CLOSE | SOC_CONNECT;
+    rc = eat_soc_setsockopt(socket_id, SOC_ASYNC, &val, sizeof(val));
+    if (rc != SOC_SUCCESS)
+    {
+    	LOG_ERROR("eat_soc_setsockopt set SOC_ASYNC failed: %d!", rc);
+    	eat_reset_module();
+    	return;
+    }
+
+    address.sock_type = SOC_SOCK_STREAM;
+    address.addr_len = 4;
+    if (setting.addr_type == ADDR_TYPE_IP)
+    {
+        address.addr[0] = setting.addr.ipaddr[0];
+        address.addr[1] = setting.addr.ipaddr[1];
+        address.addr[2] = setting.addr.ipaddr[2];
+        address.addr[3] = setting.addr.ipaddr[3];
+
+        LOG_DEBUG("ip: %d.%d.%d.%d:%d.", address.addr[0], address.addr[1], address.addr[2], address.addr[3], setting.port);
+    }
+    else
+    {
+    	u8 ipaddr[4] = {0};
+    	u8 len = 0;
+
+    	eat_soc_gethost_notify_register(hostname_notify_cb);
+    	rc = eat_soc_gethostbyname(setting.addr.domain, ipaddr, &len, 1234);
+    	if (rc == SOC_WOULDBLOCK)
+    	{
+    		LOG_INFO("eat_soc_gethostbyname wait callback.");
+    		return;
+    	}
+    	else if (rc == SOC_SUCCESS)
+    	{
+            address.addr[0] = ipaddr[0];
+            address.addr[1] = ipaddr[1];
+            address.addr[2] = ipaddr[2];
+            address.addr[3] = ipaddr[3];
+
+            LOG_DEBUG("host:%s -> %d.%d.%d.%d:%d.", setting.addr.domain, ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3], setting.port);
+    	}
+    	else
+    	{
+    		LOG_ERROR("eat_soc_gethostbyname error!");
+    		return;
+    	}
+    }
+
+    address.port = setting.port;                /* TCP server port */
+    rc = eat_soc_connect(socket_id, &address);
+    if(rc >= 0)
+    {
+    	LOG_INFO("socket id of new connection is :%d.", rc);
+    }
+    else if (rc == SOC_WOULDBLOCK)
+    {
+     	LOG_INFO("Connection is in progressing...");
+    }
+    else
+    {
+     	LOG_ERROR("Connect return error:%d!", rc);
+    }
+}
+
+void socket_close(void)
+{
+    LOG_INFO("close the socket(%d).", socket_id);
+    eat_soc_close(socket_id);
+
+    return;
+}
+
+s32 socket_sendData(void* data, s32 len)
+{
+    s32 rc;
+
+    log_hex((const char*)data, len);
+
+    rc = eat_soc_send(socket_id, data, len);
+    if (rc >= 0)
+    {
+        LOG_DEBUG("socket send data successful.");
+    }
+    else
+    {
+        LOG_ERROR("sokcet send data failed:%d!", rc);
     }
 
     free_msg(data);  //TODO: is it ok to free the msg here???
 
     return rc;
 }
+

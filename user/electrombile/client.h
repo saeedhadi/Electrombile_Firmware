@@ -11,6 +11,7 @@
 
 int client_proc(const void* m, int msgLen);
 void client_loop(void);
+void msg_heartbeat(void);
 
 
 #endif /* USER_ELECTROMBILE_CLIENT_H_ */
