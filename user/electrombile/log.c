@@ -78,5 +78,9 @@ void log_remote(const char* fmt, ...)
     {
         msg_wild(buf, length);
     }
+    else
+    {
+        eat_trace("%s", buf);
+    }
 }
 
