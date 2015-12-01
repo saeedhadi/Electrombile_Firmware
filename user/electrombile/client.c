@@ -1,7 +1,7 @@
 /*
  * client.c
  *
- *  Created on: 2015Äê7ÔÂ9ÈÕ
+ *  Created on: 2015/7/9
  *      Author: jk
  */
 
@@ -69,7 +69,7 @@ int client_proc(const void* m, int msgLen)
     MSG_HEADER* msg = (MSG_HEADER*)m;
     size_t i = 0;
 
-    log_hex(m, msgLen);
+    LOG_HEX(m, msgLen);
 
     if (msgLen < sizeof(MSG_HEADER))
     {

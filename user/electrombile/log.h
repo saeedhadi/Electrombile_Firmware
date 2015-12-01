@@ -26,6 +26,12 @@
 #define LOG_ERROR(fmt, ...)
 #endif
 
+#ifdef LOG_DEBUG_FLAG
+#define LOG_HEX(data, len)  log_hex(data, len);
+#else
+#define LOG_HEX(data, len)
+#endif
+
 void log_hex(const char* data, int length);
 
 
