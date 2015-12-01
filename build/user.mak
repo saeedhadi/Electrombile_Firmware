@@ -8,28 +8,27 @@
 #########################################################################
 
 #RVCT 3.1 Root Directory
-DIR_ARM  = C:\RVCT_EAT
-#DIR_ARM  = D:\Project\Electrombile\SIMCOM\RVCT31_for_EAT\RVCT_EAT
-#生成二进制文件名
+DIR_ARM  = $(RVCT31)
+
 BIN = app
 
-#Core 库所在目录
+#Core file
 CORE_DIR = core
 
-#源文件所在目录
+#project directory
 SRC_DIR = user
 
-#编译输出文件目录
+#output directory
 OUTPUT_BIN_DIR = output
 OUTPUT_LIB_DIR = output/obj
 OUTPUT_LOG_DIR = output/log
 
-#模块名--模块名和该模块源代码所在目录名一样
+#project name in project directory
 SRC_OPEN_MODE_NAME = electrombile
 
-#宏定义
+# Macro definition
 # FEA_APP_EXAMPLE_OPT = -DAPP_EXAMPLE
-#在源程序中使用方法
+# how-to use in src
 # #ifdef APP_EXAMPLE
 # do something...;
 # #endif
