@@ -74,6 +74,9 @@ void log_remote(const char* fmt, ...)
 
     length = strlen(buf);
 
-    msg_wild(buf, length);
+    if (socket_conneted())
+    {
+        msg_wild(buf, length);
+    }
 }
 
