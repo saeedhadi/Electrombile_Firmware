@@ -43,7 +43,8 @@ static short mcc = 0;//mobile country code
 static short mnc = 0;//mobile network code
 static char  cellNo = 0;//cell count
 static CELL  cells[7] = {0};
-static LOCAL_GPS* last_gps = 0;//gps sent for the last time
+static LOCAL_GPS last_gps_info;
+static LOCAL_GPS* last_gps =&last_gps_info;//gps sent for the last time
 
 void app_gps_thread(void *data)
 {
@@ -167,7 +168,7 @@ static eat_bool gps_sendGps(u8 cmd)
     {
         LOG_DEBUG("the first cell.");
 
-        last_gps = (LOCAL_GPS*)eat_mem_alloc(sizeof(LOCAL_GPS));
+        //last_gps = (LOCAL_GPS*)eat_mem_alloc(sizeof(LOCAL_GPS));
 
         cmp = EAT_FALSE;
     }
@@ -231,7 +232,7 @@ static eat_bool gps_sendCell(u8 cmd)
     {
         LOG_DEBUG("the first cell or active acquisition");
 
-        last_gps = (LOCAL_GPS*)eat_mem_alloc(sizeof(LOCAL_GPS));
+        //last_gps = (LOCAL_GPS*)eat_mem_alloc(sizeof(LOCAL_GPS));
 
         cmp = EAT_FALSE;
     }

@@ -124,10 +124,12 @@ static void vibration_timer_handler(void)
             if(isMoved)
             {
                 timerCount = 0;
+                LOG_INFO("timerCount == 0 now !");
             }
             else
             {
                 timerCount++;
+                //LOG_INFO("timerCount == %d at %d !",timerCount,get_autodefend_period() * 60);
 
                 if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
                 {

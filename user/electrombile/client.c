@@ -373,7 +373,7 @@ static int autodefend_period_set(const void* msg)
     MSG_AUTODEFEND_PERIOD_SET_REQ* req = (MSG_AUTODEFEND_PERIOD_SET_REQ*)msg;
 	MSG_AUTODEFEND_PERIOD_SET_RSP* rsp = NULL;
 
-    LOG_DEBUG("set autodefend period as %dmin.", req->period);
+    LOG_DEBUG("set autodefend period as %dmins.", req->period);
     set_autodefend_period(req->period);
 
     rsp = alloc_rspMsg(&req->header);
@@ -405,7 +405,7 @@ static int autodefend_period_get(const void* msg)
 
 	rsp->token = req->token;
     rsp->period = get_autodefend_period();
-
+    LOG_INFO("alloc autodefend_period_get rsp message as %dmins",rsp->period);
     socket_sendData(rsp, sizeof(MSG_AUTODEFEND_PERIOD_GET_RSP));
 
     return 0;

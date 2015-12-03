@@ -13,6 +13,9 @@
 #include "log.h"
 #include "client.h"
 
+#define LOGFILE_NAME  L"C:\\log_file.txt"
+
+
 
 void log_hex(const char* data, int length)
 {
@@ -62,7 +65,7 @@ void log_hex(const char* data, int length)
     }
 }
 
-void log_remote(const char* fmt, ...)
+void log_remote(const char* fmt, ...) //when socket connected,LOG_remote;else LOG_location
 {
     char buf[1024] = {0};
     int length = 0;
@@ -83,4 +86,131 @@ void log_remote(const char* fmt, ...)
         eat_trace("%s", buf);
     }
 }
+
+void log_file(const char* fmt, ...)
+{
+    eat_bool ret = EAT_FALSE;
+    char buf[1024] = {0};
+    FS_HANDLE fh_open, fh_write, fh_commit;
+    int seekRet = 0;
+    UINT writedLen;
+
+    va_list arg;
+    va_start(arg, fmt);
+    vsnprintf(buf, 1024, fmt, arg);
+    va_end(arg);
+
+    fh_open = eat_fs_Open(LOGFILE_NAME, FS_READ_WRITE);
+
+    if(EAT_FS_FILE_NOT_FOUND == fh_open)
+    {
+        LOG_INFO("log_file not exists.");
+        fh_open = eat_fs_Open(LOGFILE_NAME, FS_CREATE);
+        if(EAT_FS_NO_ERROR <= fh_open)
+        {
+            LOG_INFO("creat log_file success, fh=%d.", fh_open);
+            eat_fs_Close(fh_open);
+
+            fh_open = eat_fs_Open(LOGFILE_NAME, FS_READ_WRITE);//reopen to write something
+
+            if(EAT_FS_FILE_NOT_FOUND == fh_open)
+            {
+
+                LOG_INFO("open log_file success, fh=%d.", fh_open);
+
+                seekRet = eat_fs_Seek(fh_open,1,EAT_FS_FILE_END);//find the file end and point the next line
+
+                if(seekRet < 0)
+                {
+                    eat_trace("Seek File Pointer Fail");
+                    eat_fs_Close(fh_open);
+                    return;
+                }
+
+                else
+                {
+                    eat_trace("Seek File Pointer Success");
+                    fh_write = eat_fs_Write(seekRet, buf, sizeof(buf), &writedLen);
+                    if(EAT_FS_NO_ERROR == fh_write && sizeof(buf) == writedLen)
+                    {
+                        LOG_DEBUG("write file success.");
+
+                        fh_commit = eat_fs_Commit(fh_open);
+                        if(EAT_FS_NO_ERROR == fh_commit)
+                        {
+                            LOG_DEBUG("commit file success.");
+                            ret = EAT_TRUE;
+                        }
+                        else
+                        {
+                            LOG_ERROR("commit file failed, and Return Error is %d.", fh_commit);
+                        }
+                    }
+                    else
+                    {
+                        LOG_ERROR("write file failed, and Return Error is %d, writedLen is %d.", fh_write, writedLen);
+                    }
+                    eat_fs_Close(fh_open);
+                    ret = EAT_TRUE;
+                    return;
+                }
+            }
+
+        }
+        else
+        {
+            LOG_ERROR("creat log_file failed, fh=%d.", fh_open);
+        }
+    }
+    else if(EAT_FS_NO_ERROR <= fh_open)
+    {
+        LOG_INFO("open log_file success, fh=%d.", fh_open);
+
+        seekRet = eat_fs_Seek(fh_open,1,EAT_FS_FILE_END);
+
+        if(seekRet<0)
+        {
+            eat_trace("Seek File Pointer Fail");
+            eat_fs_Close(fh_open);
+            return;
+        }
+        else
+        {
+            eat_trace("Seek File Pointer Success");
+            fh_write = eat_fs_Write(seekRet, buf, sizeof(buf), &writedLen);
+            if(EAT_FS_NO_ERROR == fh_write && sizeof(buf) == writedLen)
+            {
+                LOG_DEBUG("write file success.");
+
+                fh_commit = eat_fs_Commit(fh_open);
+                if(EAT_FS_NO_ERROR == fh_commit)
+                {
+                    LOG_DEBUG("commit file success.");
+                    ret = EAT_TRUE;
+                }
+                else
+                {
+                    LOG_ERROR("commit file failed, and Return Error is %d.", fh_commit);
+                }
+            }
+            else
+            {
+                LOG_ERROR("write file failed, and Return Error is %d, writedLen is %d.", fh_write, writedLen);
+            }
+            eat_fs_Close(fh_open);
+            ret = EAT_TRUE;
+            return;
+        }
+
+    }
+    else
+    {
+        LOG_ERROR("open file failed, fh=%d!", fh_open);
+        eat_fs_Close(fh_open);
+        return;
+    }
+
+}
+
+
 

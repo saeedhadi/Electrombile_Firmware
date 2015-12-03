@@ -25,6 +25,7 @@
 void* alloc_msg(char cmd, size_t length);
 void* alloc_rspMsg(const MSG_HEADER* pMsg);
 
+
 void free_msg(void* msg);
 
 #endif /* USER_ELECTROMBILE_MSG_H_ */
