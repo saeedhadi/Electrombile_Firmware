@@ -382,7 +382,7 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
 {
     short cellid[6], last_cellid[6];
     short lac[6], last_lac[6];
-    //short temp_cellid, temp_lac;
+    short temp_cellid, temp_lac;
     int i=0, j=0, count=0;
 
     if(pre_gps->isGpsFixed != gps->isGpsFixed)

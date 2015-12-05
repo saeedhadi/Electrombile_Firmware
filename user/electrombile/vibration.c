@@ -13,7 +13,6 @@
 #include "thread.h"
 #include "log.h"
 #include "timer.h"
-#include "data.h"
 #include "thread_msg.h"
 #include "setting.h"
 
@@ -130,9 +129,9 @@ static void vibration_timer_handler(void)
             else
             {
                 timerCount++;
-                LOG_INFO("timerCount == %d at %d !",timerCount * setting.vibration_timer_period/1000,get_autodefend_period() * 60);
+                //LOG_INFO("timerCount == %d at %d !",timerCount,get_autodefend_period() * 60);
 
-                if(timerCount *100* setting.vibration_timer_period >= (get_autodefend_period() * 60000))
+                if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
                 {
                     LOG_INFO("vibration state auto locked.");
                     set_vibration_state(EAT_TRUE);
@@ -155,7 +154,6 @@ static eat_bool vibration_sendAlarm(void)
     *alarmType = ALARM_VIBRATE;
 
     LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
-
     return sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, msgLen);
 }
 

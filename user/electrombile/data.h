@@ -42,9 +42,5 @@ void set_client_state(eat_bool logined);
 void set_seek_state(eat_bool fixed);
 void set_autodefend_state(eat_bool fixed);
 void set_autodefend_period(unsigned char period);
-unsigned char get_autodefend_period(void);
-eat_bool get_autodefend_state(void);
-
-
 
 #endif /* USER_ELECTROMBILE_DATA_H_ */
