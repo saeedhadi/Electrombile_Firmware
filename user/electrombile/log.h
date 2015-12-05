@@ -40,9 +40,15 @@
 #define LOG_REMOTE(fmt, ...)
 #endif
 
+#define LOGFILE_NAME  L"C:\\log_file.txt"
+#define READ_WHOLE_FILE 0
+
+
 void log_hex(const char* data, int length);
 void log_remote(const char* fmt, ...);
 void log_file(const char* fmt, ...);
+void read_file(unsigned short *filename);
+
 
 
 

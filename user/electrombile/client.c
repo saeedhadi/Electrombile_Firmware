@@ -201,7 +201,7 @@ static int ping_rsp(const void* msg)
 static int alarm_rsp(const void* msg)
 {
     MSG_ALARM_REQ* req = (MSG_ALARM_REQ*)msg;
-    MSG_ALARM_RSP* rsp = NULL;
+    //MSG_ALARM_RSP* rsp = NULL;
 
     switch(req->alarmType)
     {
@@ -463,7 +463,7 @@ static int server_proc(const void* msg)
     MSG_SERVER* msg_server = (MSG_SERVER*)msg;
     u32 ip[4] = {0};
     int count;
-    char domain[MAX_DOMAIN_NAME_LEN] = {0};
+    signed char domain[MAX_DOMAIN_NAME_LEN] = {0};
 
     count = sscanf(msg_server->server,"%u.%u.%u.%u",&ip[0],&ip[1],&ip[2],&ip[3]);
     if(4 == count)
