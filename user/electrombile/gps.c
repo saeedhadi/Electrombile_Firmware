@@ -34,7 +34,7 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps);
 #define LATITUDE_THRESHOLD  0.001f
 #define LONGITUDE_THRESHOLD 0.001f
 
-static char gps_info_buf[READ_BUFF_SIZE]="";
+//static char gps_info_buf[READ_BUFF_SIZE]="";
 static eat_bool isGpsFixed = EAT_FALSE;
 static float latitude = 0.0;
 static float longitude = 0.0;
