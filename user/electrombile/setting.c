@@ -39,7 +39,7 @@ eat_bool setting_initial(void)
     LOG_INFO("setting initial.");
     setting_reset();
 
-    #if 0
+    #if 1
     LOG_DEBUG("setting delete.");
     eat_fs_Delete(SETITINGFILE_NAME);//TODO, for debug
     #endif
@@ -104,7 +104,7 @@ void setting_reset(void)
     LOG_INFO("setting reset.");
 
     /* Server configuration */
-    #if 1
+    #if 0
     setting.addr_type = ADDR_TYPE_DOMAIN;
     strcpy(setting.addr.domain, "www.xiaoan110.com");
     #else
@@ -115,7 +115,7 @@ void setting_reset(void)
     setting.addr.ipaddr[3] = 200;
     #endif
 
-    setting.port = 9877;
+    setting.port = 9880;
 
     /* Timer configuration */
     setting.watchdog_timer_period = 50000;

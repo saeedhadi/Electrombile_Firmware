@@ -87,6 +87,12 @@ int event_uart_ready_rd(const EatEvent_st* event)
 		return 0;
 	}
 
+    if(strstr(buf, "readlog"))
+    {
+        read_file(LOGFILE_NAME);
+        return 0;
+    }
+
 	return 0;
 }
 

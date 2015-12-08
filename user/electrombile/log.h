@@ -23,7 +23,7 @@
 #endif
 
 #ifdef LOG_ERROR_FLAG
-#define LOG_ERROR(fmt, ...) eat_trace("[ERR][%s:%d %s]"fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define LOG_ERROR(fmt, ...) log_file("[ERR][%s:%d %s]"fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)//eat_trace("[ERR][%s:%d %s]"fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 #define LOG_ERROR(fmt, ...)
 #endif
@@ -40,9 +40,15 @@
 #define LOG_REMOTE(fmt, ...)
 #endif
 
+#define LOGFILE_NAME  L"C:\\log_file.txt"
+#define READ_WHOLE_FILE 0
+
+
 void log_hex(const char* data, int length);
 void log_remote(const char* fmt, ...);
 void log_file(const char* fmt, ...);
+void read_file(unsigned short *filename);
+
 
 
 

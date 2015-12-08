@@ -13,6 +13,7 @@
 #include "thread.h"
 #include "log.h"
 #include "timer.h"
+#include "data.h"
 #include "thread_msg.h"
 #include "setting.h"
 
@@ -33,6 +34,8 @@ static void mma_ChangeDynamicRange(MMA_FULL_SCALE_EN mode);
 
 static u16 avoid_freq_count;
 static eat_bool avoid_freq_flag;
+int gro[6] = {0};
+int grog[3] = {0};
 
 
 void app_vibration_thread(void *data)
@@ -85,6 +88,8 @@ static void vibration_timer_handler(void)
         avoid_freq_count = 0;
         avoid_freq_flag = EAT_FALSE;
     }
+
+
     if(mma_read(MMA8X5X_TRANSIENT_SRC) & 0x40)
     {
         /* At the first time, the value of MMA8X5X_TRANSIENT_SRC is strangely 0x60.
@@ -124,12 +129,12 @@ static void vibration_timer_handler(void)
             if(isMoved)
             {
                 timerCount = 0;
-                LOG_INFO("timerCount == 0 now !");
+                LOG_INFO("timerCount = 0 now !");
             }
             else
             {
                 timerCount++;
-                //LOG_INFO("timerCount == %d at %d !",timerCount,get_autodefend_period() * 60);
+                //LOG_INFO("timerCount == %d at %d !",timerCount * setting.vibration_timer_period/1000,get_autodefend_period() * 60);
 
                 if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
                 {
@@ -154,6 +159,7 @@ static eat_bool vibration_sendAlarm(void)
     *alarmType = ALARM_VIBRATE;
 
     LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
+
     return sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, msgLen);
 }
 
