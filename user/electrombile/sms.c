@@ -50,7 +50,7 @@ static eat_sms_flash_message_cb(EatSmsReadCnf_st smsFlashMessage)
 static void sms_version_proc(u8 *p, u8 *number)
 {
     unsigned char *ptr1;
-    char ack_message[64]={0};
+    unsigned char ack_message[64]={0};
 
     ptr1 = tool_StrstrAndReturnEndPoint(p, "VERSION?");
     if(NULL != ptr1)
@@ -232,14 +232,14 @@ static void eat_sms_read_cb(EatSmsReadCnf_st smsReadCnfContent)
 {
     u8 format = 0;
     unsigned char *p = smsReadCnfContent.data;
-    unsigned char *ptr1;
-    unsigned char *ptr2;
-    char ack_message[64]={0};
-    int count = 0;
-    u8 ipaddr[4] = {0};
-    int port = 0;
-    s8 domain[MAX_DOMAIN_NAME_LEN];
-    u32 timer_period = 0;
+    //unsigned char *ptr1;
+    //unsigned char *ptr2;
+    //char ack_message[64]={0};
+    //int count = 0;
+    //u8 ipaddr[4] = {0};
+    //int port = 0;
+    //s8 domain[MAX_DOMAIN_NAME_LEN];
+    //u32 timer_period = 0;
 
     LOG_DEBUG("new message.");
     eat_get_sms_format(&format);

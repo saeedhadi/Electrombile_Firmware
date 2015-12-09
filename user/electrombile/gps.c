@@ -34,7 +34,7 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps);
 #define LATITUDE_THRESHOLD  0.001f
 #define LONGITUDE_THRESHOLD 0.001f
 
-static char gps_info_buf[READ_BUFF_SIZE]="";
+//static char gps_info_buf[READ_BUFF_SIZE]="";
 static eat_bool isGpsFixed = EAT_FALSE;
 static float latitude = 0.0;
 static float longitude = 0.0;
@@ -43,7 +43,8 @@ static short mcc = 0;//mobile country code
 static short mnc = 0;//mobile network code
 static char  cellNo = 0;//cell count
 static CELL  cells[7] = {0};
-static LOCAL_GPS* last_gps = 0;//gps sent for the last time
+static LOCAL_GPS last_gps_info;
+static LOCAL_GPS* last_gps =&last_gps_info;//gps sent for the last time
 
 void app_gps_thread(void *data)
 {
@@ -167,7 +168,7 @@ static eat_bool gps_sendGps(u8 cmd)
     {
         LOG_DEBUG("the first cell.");
 
-        last_gps = (LOCAL_GPS*)eat_mem_alloc(sizeof(LOCAL_GPS));
+        //last_gps = (LOCAL_GPS*)eat_mem_alloc(sizeof(LOCAL_GPS));
 
         cmp = EAT_FALSE;
     }
@@ -231,7 +232,7 @@ static eat_bool gps_sendCell(u8 cmd)
     {
         LOG_DEBUG("the first cell or active acquisition");
 
-        last_gps = (LOCAL_GPS*)eat_mem_alloc(sizeof(LOCAL_GPS));
+        //last_gps = (LOCAL_GPS*)eat_mem_alloc(sizeof(LOCAL_GPS));
 
         cmp = EAT_FALSE;
     }
@@ -381,7 +382,7 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
 {
     short cellid[6], last_cellid[6];
     short lac[6], last_lac[6];
-    short temp_cellid, temp_lac;
+    //short temp_cellid, temp_lac;
     int i=0, j=0, count=0;
 
     if(pre_gps->isGpsFixed != gps->isGpsFixed)

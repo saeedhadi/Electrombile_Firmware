@@ -201,7 +201,7 @@ static int ping_rsp(const void* msg)
 static int alarm_rsp(const void* msg)
 {
     MSG_ALARM_REQ* req = (MSG_ALARM_REQ*)msg;
-    MSG_ALARM_RSP* rsp = NULL;
+    //MSG_ALARM_RSP* rsp = NULL;
 
     switch(req->alarmType)
     {
@@ -373,7 +373,7 @@ static int autodefend_period_set(const void* msg)
     MSG_AUTODEFEND_PERIOD_SET_REQ* req = (MSG_AUTODEFEND_PERIOD_SET_REQ*)msg;
 	MSG_AUTODEFEND_PERIOD_SET_RSP* rsp = NULL;
 
-    LOG_DEBUG("set autodefend period as %dmin.", req->period);
+    LOG_DEBUG("set autodefend period as %dmins.", req->period);
     set_autodefend_period(req->period);
 
     rsp = alloc_rspMsg(&req->header);
@@ -405,7 +405,7 @@ static int autodefend_period_get(const void* msg)
 
 	rsp->token = req->token;
     rsp->period = get_autodefend_period();
-
+    LOG_INFO("alloc autodefend_period_get rsp message as %dmins",rsp->period);
     socket_sendData(rsp, sizeof(MSG_AUTODEFEND_PERIOD_GET_RSP));
 
     return 0;
@@ -463,7 +463,7 @@ static int server_proc(const void* msg)
     MSG_SERVER* msg_server = (MSG_SERVER*)msg;
     u32 ip[4] = {0};
     int count;
-    char domain[MAX_DOMAIN_NAME_LEN] = {0};
+    signed char domain[MAX_DOMAIN_NAME_LEN] = {0};
 
     count = sscanf(msg_server->server,"%u.%u.%u.%u",&ip[0],&ip[1],&ip[2],&ip[3]);
     if(4 == count)

@@ -68,4 +68,7 @@ eat_bool storage_save(void);
 void convert_storage_to_setting(void);
 void convert_setting_to_storage(void);
 
+#define SETITINGFILE_NAME  L"C:\\setting.txt"
+
+
 #endif /* USER_ELECTROMBILE_SETTING_H_ */

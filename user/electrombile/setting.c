@@ -15,7 +15,7 @@
 #include "eat_uart.h"
 #include "log.h"
 
-#define SETITINGFILE_NAME  L"C:\\setting.txt"
+
 
 SETTING setting;
 STORAGE storage;
@@ -115,7 +115,7 @@ void setting_reset(void)
     setting.addr.ipaddr[3] = 200;
     #endif
 
-    setting.port = 9877;
+    setting.port = 9880;
 
     /* Timer configuration */
     setting.watchdog_timer_period = 50000;
