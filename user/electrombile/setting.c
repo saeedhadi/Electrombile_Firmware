@@ -15,7 +15,7 @@
 #include "eat_uart.h"
 #include "log.h"
 
-#define SETITINGFILE_NAME  L"C:\\setting.txt"
+
 
 SETTING setting;
 STORAGE storage;

@@ -15,6 +15,7 @@
 
 #include "uart.h"
 #include "log.h"
+#include "setting.h"
 
 int event_uart_ready_rd(const EatEvent_st* event)
 {
@@ -90,6 +91,13 @@ int event_uart_ready_rd(const EatEvent_st* event)
     if(strstr(buf, "readlog"))
     {
         read_file(LOGFILE_NAME);
+        return 0;
+    }
+
+    if(strstr(buf, "deletesetting"))
+    {
+        LOG_DEBUG("setting deleted.");
+        eat_fs_Delete(SETITINGFILE_NAME);//TODO, for debug
         return 0;
     }
 
