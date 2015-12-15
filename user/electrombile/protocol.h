@@ -72,6 +72,10 @@ typedef struct
 {
     float longitude;
     float latitude;
+    float altitude;
+    float speed;
+    float course;
+
 }__attribute__((__packed__)) GPS;
 
 /*
