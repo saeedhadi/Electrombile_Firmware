@@ -34,8 +34,6 @@ static void mma_ChangeDynamicRange(MMA_FULL_SCALE_EN mode);
 
 static u16 avoid_freq_count;
 static eat_bool avoid_freq_flag;
-int gro[6] = {0};
-int grog[3] = {0};
 
 
 void app_vibration_thread(void *data)
@@ -78,36 +76,6 @@ static void vibration_timer_handler(void)
     static eat_bool isFirstTime = EAT_TRUE;
     static eat_bool isMoved = EAT_TRUE;
     static int timerCount = 0;
-
-    #if 0
-    set_vibration_state(EAT_TRUE);//TO DO
-    #endif
-
-    #if 0
-    gro[0] = mma_read(MMA8X5X_OUT_X_MSB);
-
-    gro[1] = mma_read(MMA8X5X_OUT_X_LSB);
-
-    grog[0] = ((gro[0]<<4) &0x0ff0) | ((gro[1]>>4)&0x000f);
-
-    gro[2] = mma_read(MMA8X5X_OUT_Y_MSB);
-
-    gro[3] = mma_read(MMA8X5X_OUT_Y_LSB);
-
-    grog[1] = ((gro[2]<<4) &0x0ff0) | ((gro[3]>>4)&0x000f);
-
-    gro[4] = mma_read(MMA8X5X_OUT_Z_MSB);
-
-    gro[5] = mma_read(MMA8X5X_OUT_Z_LSB);
-
-    grog[2] = ((gro[4]<<4) &0x0ff0) | ((gro[5]>>4)&0x000f);
-
-    LOG_ERROR("mma8652information:grox %fg",(grog[0]/0x800)?(-(grog[0]^0xfff)/1024.f):(grog[0]/1024.f));
-    LOG_ERROR("mma8652information:groy %fg",(grog[1]/0x800)?(-(grog[1]^0xfff)/1024.f):(grog[1]/1024.f));
-    LOG_ERROR("mma8652information:groz %fg",(grog[2]/0x800)?(-(grog[2]^0xfff)/1024.f):(grog[2]/1024.f));
-    LOG_ERROR("do not look at me !");
-
-    #endif
 
     if(++avoid_freq_count == 30)
     {

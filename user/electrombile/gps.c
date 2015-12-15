@@ -20,6 +20,7 @@
 #include "setting.h"
 #include "protocol.h"
 #include "tool.h"
+#include "math.h"
 
 static void gps_timer_handler(u8 cmd);
 static void gps_at_read_handler(void);
@@ -28,11 +29,16 @@ static eat_bool gps_sendCell(u8 cmd);
 static eat_bool gps_isGpsFixed(void);
 static eat_bool gps_isCellGet(void);
 static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps);
+static double gps2rad(double d);
+static double getdistance(LOCAL_GPS *pre_gps, LOCAL_GPS *gps);
 
 #define NMEA_BUFF_SIZE 1024
 #define READ_BUFF_SIZE 2048
 #define LATITUDE_THRESHOLD  0.001f
 #define LONGITUDE_THRESHOLD 0.001f
+#define EARTH_RADIUS 6378137 //radius of our earth
+#define pi 3.141592653
+
 
 //static char gps_info_buf[READ_BUFF_SIZE]="";
 static eat_bool isGpsFixed = EAT_FALSE;
@@ -384,6 +390,7 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
     short lac[6], last_lac[6];
     //short temp_cellid, temp_lac;
     int i=0, j=0, count=0;
+    double distance = 0;
 
     if(pre_gps->isGpsFixed != gps->isGpsFixed)
     {
@@ -394,8 +401,8 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
     {
         if(pre_gps->isGpsFixed == EAT_TRUE)
         {
-            //GPS
-            if(pre_gps->gps.latitude - gps->gps.latitude <= LATITUDE_THRESHOLD && pre_gps->gps.latitude - gps->gps.latitude >= -LATITUDE_THRESHOLD)
+            //old gps gps_DuplicateCheck
+            /*if(pre_gps->gps.latitude - gps->gps.latitude <= LATITUDE_THRESHOLD && pre_gps->gps.latitude - gps->gps.latitude >= -LATITUDE_THRESHOLD)
             {
                 count++;
             }
@@ -404,8 +411,20 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
             {
                 count++;
             }
-
             if(count >= 1)//if longitude change or latitude change ,push the information of GPS
+            {
+                LOG_DEBUG("GPS is the same. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
+                return EAT_TRUE;
+            }
+            else
+            {
+                LOG_DEBUG("GPS is different. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
+                return EAT_FALSE;
+            }*/
+
+
+            distance = getdistance(pre_gps,gps);
+            if(distance <= 0.005 && distance >= -0.005)//if the distance change 5m ,push the information of GPS
             {
                 LOG_DEBUG("GPS is the same. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
                 return EAT_TRUE;
@@ -465,5 +484,26 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
         }
     }
 }
+
+
+static double gps2rad(double d)
+{
+    return d * pi / 180.0;
+}
+
+static double getdistance(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
+{
+    double radLat1 = gps2rad(pre_gps->gps.latitude);
+    double radLat2 = gps2rad(gps->gps.latitude);
+    double a = radLat1 - radLat2;
+    double b = gps2rad(pre_gps->gps.longitude) - gps2rad(gps->gps.longitude);
+    double s = 2 * asin(sqrt(pow(sin(a/2),2)+cos(radLat1)*cos(radLat2)*pow(sin(b/2),2)));
+
+    s = s * EARTH_RADIUS;
+
+    LOG_DEBUG("the distance with the pre time is : %f km", s);
+    return s ;
+}
+
 
 
