@@ -405,7 +405,7 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
                 count++;
             }
 
-            if(count == 2)
+            if(count >= 1)//if longitude change or latitude change ,push the information of GPS
             {
                 LOG_DEBUG("GPS is the same. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
                 return EAT_TRUE;

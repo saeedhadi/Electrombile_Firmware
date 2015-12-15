@@ -169,6 +169,10 @@ int event_timer(const EatEvent_st* event)
             msg_heartbeat();
             eat_timer_start(TIMER_HEARTBEAT, setting.heartbeat_timer_period);
             break;
+        case TIMER_SEEKAUTOOFF:
+            LOG_INFO("TIMER_SEEKAUTOOFF expire!");
+            set_seek_state(EAT_FALSE);
+            break;
 
         default:
             LOG_ERROR ("timer(%d) not processed!", event->data.timer.timer_id);

@@ -52,7 +52,7 @@ typedef struct
     u32 seek_timer_period;
     u32 socket_timer_period;
     u32 heartbeat_timer_period;
-
+    u32 seekautooff_timer_peroid;
     //Switch configuration
     eat_bool isVibrateFixed;
 }SETTING;

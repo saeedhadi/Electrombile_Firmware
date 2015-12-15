@@ -280,6 +280,10 @@ static int seek(const void* msg)
 	if (req->operator == SEEK_ON)
 	{
 		set_seek_state(EAT_TRUE);
+        eat_timer_start(TIMER_SEEKAUTOOFF,setting.seekautooff_timer_peroid);
+
+        LOG_DEBUG("seek auto_off is on ,time is %ds",setting.seekautooff_timer_peroid/1000);
+
         LOG_DEBUG("set seek on.");
 	}
 	else if(req->operator == SEEK_OFF)
