@@ -96,7 +96,7 @@ int event_uart_ready_rd(const EatEvent_st* event)
 
     if(strstr(buf, "deletesetting"))
     {
-        LOG_DEBUG("setting deleted.");
+        LOG_DEBUG("setting.txt deleted.");
         eat_fs_Delete(SETITINGFILE_NAME);//TODO, for debug
         return 0;
     }

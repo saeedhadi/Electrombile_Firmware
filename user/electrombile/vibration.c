@@ -133,7 +133,9 @@ static void vibration_timer_handler(void)
                 if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
                 {
                     LOG_INFO("vibration state auto locked.");
+                    mileagehandle(EAT_FALSE, EAT_TRUE);
                     set_vibration_state(EAT_TRUE);
+
                 }
             }
         }

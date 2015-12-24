@@ -28,6 +28,8 @@ typedef struct
 	EVENT_FUNC pfn;
 }EVENT_PROC;
 
+extern EatRtc_st GPStime;
+
 
 /*
  * local event function definition
@@ -172,6 +174,14 @@ int event_timer(const EatEvent_st* event)
         case TIMER_SEEKAUTOOFF:
             LOG_INFO("TIMER_SEEKAUTOOFF expire!");
             set_seek_state(EAT_FALSE);
+            break;
+        case TIMER_RTC_UPDATE:
+            LOG_INFO("TIMER_RTC_UPDATE expire!");
+            updatertctime();
+            if(1980 == GPStime.year+YEAROFFSET )//if not catch the gps time , wait 30s and catch it again
+                eat_timer_start(TIMER_RTC_UPDATE, 30*1000);
+            else
+                eat_timer_start(TIMER_RTC_UPDATE, setting.timeupdate_timer_peroid);
             break;
 
         default:

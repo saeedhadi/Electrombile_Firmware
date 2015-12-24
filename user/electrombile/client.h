@@ -12,6 +12,7 @@
 int client_proc(const void* m, int msgLen);
 void client_loop(void);
 void msg_heartbeat(void);
+void mileagehandle(eat_bool start_flag,eat_bool end_flag);
 
 void msg_wild(const void*, int);
 
