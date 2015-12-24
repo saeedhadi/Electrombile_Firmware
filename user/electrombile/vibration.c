@@ -55,16 +55,20 @@ static void move_alarm_timer_handler()
 {
     char addbuf[2];
     char readbuf[3];
-    int i;
-    float tmp[3];
+    int i,j;
+    float tmp[3]={0};
+    short temp;
     static float x_data[MAX_MOVE_DATA_LEN], y_data[MAX_MOVE_DATA_LEN], z_data[MAX_MOVE_DATA_LEN];
     float temp_data[MAX_MOVE_DATA_LEN];
     static int timerCount = 0;
     addbuf[0] = MMA8X5X_OUT_X_MSB;
     eat_i2c_read(EAT_I2C_OWNER_0, addbuf, 1, readbuf, 3);
-    x_data[timerCount] = readbuf[0];
-    y_data[timerCount] = readbuf[1];
-    z_data[timerCount] = readbuf[2];
+    temp = readbuf[0]<<8;
+    x_data[timerCount] = temp/256;
+     temp = readbuf[1]<<8;
+    y_data[timerCount] = temp/256;
+     temp = readbuf[2]<<8;
+    z_data[timerCount] = temp/256;
     timerCount++;
     
     if(timerCount<MAX_MOVE_DATA_LEN)
@@ -76,10 +80,10 @@ static void move_alarm_timer_handler()
         timerCount = 0;
         for(i=0;i<MAX_MOVE_DATA_LEN;i++)
         {
-            tmp[0] += x_data[i]/MAX_MOVE_DATA_LEN;
-            tmp[1] += y_data[i]/MAX_MOVE_DATA_LEN;
-            tmp[2] += z_data[i]/MAX_MOVE_DATA_LEN;
-        }
+            tmp[0] += (x_data[i]/MAX_MOVE_DATA_LEN);
+            tmp[1] += (y_data[i]/MAX_MOVE_DATA_LEN);
+            tmp[2] += (z_data[i]/MAX_MOVE_DATA_LEN);
+        }  
         for(i=0;i<MAX_MOVE_DATA_LEN;i++)
         {
             x_data[i] = x_data[i] - tmp[0];
@@ -88,41 +92,56 @@ static void move_alarm_timer_handler()
         }
         DigitalIntegrate(x_data, temp_data, MAX_MOVE_DATA_LEN,MOVE_TIMER_PERIOD/1000.0);
         DigitalIntegrate(temp_data, x_data, MAX_MOVE_DATA_LEN,MOVE_TIMER_PERIOD/1000.0);
-        for(i=0;i<MAX_MOVE_DATA_LEN;i++)
+       for(i=0;i<MAX_MOVE_DATA_LEN;i++)
         {
-            if(x_data[i]>50||x_data[i]<-50)
+            if(x_data[0]<abs(x_data[i]))
+            {
+                x_data[0] = x_data[i];
+            }
+            if(x_data[i]>1||x_data[i]<-1)
             {
                 vibration_sendAlarm();
                 LOG_DEBUG("MOVE_TRESHOLD_X[%d]   = %f", i,x_data[i]);
-                return;
+               return;
             }
                 
         }
+        LOG_DEBUG("MAX_X  = %f", x_data[0]);
         DigitalIntegrate(y_data, temp_data, MAX_MOVE_DATA_LEN,MOVE_TIMER_PERIOD/1000.0);
+        
         DigitalIntegrate(temp_data, y_data, MAX_MOVE_DATA_LEN,MOVE_TIMER_PERIOD/1000.0);
         for(i=0;i<MAX_MOVE_DATA_LEN;i++)
         {
-            if(y_data[i]>50||y_data[i]<-50)
+            if(y_data[i]>1||y_data[i]<-1)
             {
                 vibration_sendAlarm();
                 LOG_DEBUG("MOVE_TRESHOLD_Y[%d]   = %f",i, y_data[i]);
+
                 return;
+            }
+            if(y_data[0]<abs(y_data[i]))
+            {
+                y_data[0] = y_data[i];
             }
                 
         }
+         LOG_DEBUG("MAX_Y  = %f", y_data[0]);
         DigitalIntegrate(z_data, temp_data, MAX_MOVE_DATA_LEN,MOVE_TIMER_PERIOD/1000.0);
         DigitalIntegrate(temp_data, z_data, MAX_MOVE_DATA_LEN,MOVE_TIMER_PERIOD/1000.0);
         for(i=0;i<MAX_MOVE_DATA_LEN;i++)
         {
-            if(z_data[i]>50||z_data[i]<-50)
+            if(z_data[i]>1||z_data[i]<-1)
             {
                 vibration_sendAlarm();
                 LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, z_data[i]);
                 return;
             }
-                
+            if(z_data[0]<abs(z_data[i]))
+            {
+                z_data[0] = z_data[i];
+            }    
         }
-        
+        LOG_DEBUG("MAX_z  = %f", z_data[0]);
     }
         
     
@@ -134,7 +153,6 @@ void app_vibration_thread(void *data)
 	LOG_INFO("vibration thread start.");
 
     mma_init();
-
 	eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
 	while(EAT_TRUE)
 	{
@@ -205,7 +223,7 @@ static void vibration_timer_handler(void)
 
         if(isMoved && avoid_freq_flag == EAT_FALSE)
         {
-            avoid_freq_flag = EAT_TRUE;
+            
             avoid_freq_count = 0;
             eat_timer_start(TIMER_MOVE_ALARM, MOVE_TIMER_PERIOD);
 //            vibration_sendAlarm();
@@ -248,7 +266,7 @@ static eat_bool vibration_sendAlarm(void)
     *alarmType = ALARM_VIBRATE;
 
     LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
-
+    avoid_freq_flag = EAT_TRUE;
     return sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, msgLen);
 }
 
