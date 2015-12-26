@@ -33,7 +33,8 @@ enum
     CMD_AUTODEFEND_SWITCH_GET = 0x0e,
     CMD_AUTODEFEND_PERIOD_SET = 0x0f,
     CMD_AUTODEFEND_PERIOD_GET = 0x10,
-    CMD_MILEAGE,
+    CMD_MILEAGE = 0x11,
+    CMD_AUTODEFEND_STATE
 };
 
 enum
@@ -317,6 +318,11 @@ typedef struct
 }__attribute__((__packed__)) MSG_MILEAGE_REQ;
 
 
+typedef struct
+{
+    MSG_HEADER header;
+    char state;             //0 express OFF,1 express ON
+}__attribute__((__packed__)) MSG_AUTODEFEND_STATE_REQ;
 
 
 

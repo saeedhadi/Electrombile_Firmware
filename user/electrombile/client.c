@@ -585,4 +585,15 @@ static time_t timestamp_get(void)
     return mktime(&stm);
 }
 
+void send_autodefendstate_msg(eat_bool state)
+{
+    u8 msgLen = sizeof(MSG_HEADER) + sizeof(char);
+	MSG_AUTODEFEND_STATE_REQ* msg = alloc_msg(CMD_AUTODEFEND_STATE, msgLen);
+    msg->state = state;   //TODO: to send the state of the autodefend
+
+	socket_sendData(msg, msgLen);
+
+}
+
+
 

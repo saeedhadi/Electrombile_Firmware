@@ -16,6 +16,8 @@
 #include "data.h"
 #include "thread_msg.h"
 #include "setting.h"
+#include "client.h"
+
 
 static eat_bool vibration_sendAlarm(void);
 static void vibration_timer_handler(void);
@@ -55,7 +57,7 @@ static void move_alarm_timer_handler()
 {
     char addbuf[2];
     char readbuf[3];
-    int i,j;
+    int i;
     float tmp[3]={0};
     short temp;
     static float x_data[MAX_MOVE_DATA_LEN], y_data[MAX_MOVE_DATA_LEN], z_data[MAX_MOVE_DATA_LEN];
@@ -70,7 +72,7 @@ static void move_alarm_timer_handler()
      temp = readbuf[2]<<8;
     z_data[timerCount] = temp/256;
     timerCount++;
-    
+
     if(timerCount<MAX_MOVE_DATA_LEN)
     {
         eat_timer_start(TIMER_MOVE_ALARM, MOVE_TIMER_PERIOD);
@@ -83,7 +85,7 @@ static void move_alarm_timer_handler()
             tmp[0] += (x_data[i]/MAX_MOVE_DATA_LEN);
             tmp[1] += (y_data[i]/MAX_MOVE_DATA_LEN);
             tmp[2] += (z_data[i]/MAX_MOVE_DATA_LEN);
-        }  
+        }
         for(i=0;i<MAX_MOVE_DATA_LEN;i++)
         {
             x_data[i] = x_data[i] - tmp[0];
@@ -104,11 +106,11 @@ static void move_alarm_timer_handler()
                 LOG_DEBUG("MOVE_TRESHOLD_X[%d]   = %f", i,x_data[i]);
                return;
             }
-                
+
         }
         LOG_DEBUG("MAX_X  = %f", x_data[0]);
         DigitalIntegrate(y_data, temp_data, MAX_MOVE_DATA_LEN,MOVE_TIMER_PERIOD/1000.0);
-        
+
         DigitalIntegrate(temp_data, y_data, MAX_MOVE_DATA_LEN,MOVE_TIMER_PERIOD/1000.0);
         for(i=0;i<MAX_MOVE_DATA_LEN;i++)
         {
@@ -123,7 +125,7 @@ static void move_alarm_timer_handler()
             {
                 y_data[0] = y_data[i];
             }
-                
+
         }
          LOG_DEBUG("MAX_Y  = %f", y_data[0]);
         DigitalIntegrate(z_data, temp_data, MAX_MOVE_DATA_LEN,MOVE_TIMER_PERIOD/1000.0);
@@ -139,12 +141,12 @@ static void move_alarm_timer_handler()
             if(z_data[0]<abs(z_data[i]))
             {
                 z_data[0] = z_data[i];
-            }    
+            }
         }
         LOG_DEBUG("MAX_z  = %f", z_data[0]);
     }
-        
-    
+
+
 }
 void app_vibration_thread(void *data)
 {
@@ -168,7 +170,7 @@ void app_vibration_thread(void *data)
     					break;
                             case TIMER_MOVE_ALARM:
     					move_alarm_timer_handler();
-    					
+
     					break;
     				default:
     					LOG_ERROR("timer(%d) expire!", event.data.timer.timer_id);
@@ -223,10 +225,10 @@ static void vibration_timer_handler(void)
 
         if(isMoved && avoid_freq_flag == EAT_FALSE)
         {
-            
+
             avoid_freq_count = 0;
             eat_timer_start(TIMER_MOVE_ALARM, MOVE_TIMER_PERIOD);
-//            vibration_sendAlarm();
+            //vibration_sendAlarm();  //bec use displacement judgement , there do not alarm
         }
     }
     else
@@ -241,12 +243,12 @@ static void vibration_timer_handler(void)
             else
             {
                 timerCount++;
-                //LOG_INFO("timerCount == %d at %d !",timerCount * setting.vibration_timer_period/1000,get_autodefend_period() * 60);
 
                 if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
                 {
                     LOG_INFO("vibration state auto locked.");
                     mileagehandle(EAT_FALSE, EAT_TRUE);
+                    send_autodefendstate_msg(EAT_FALSE);
                     set_vibration_state(EAT_TRUE);
 
                 }
