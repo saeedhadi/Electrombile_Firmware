@@ -7,6 +7,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+
 
 #include <eat_interface.h>
 
@@ -23,12 +25,17 @@
 
 
 
+
 typedef int (*MSG_PROC)(const void* msg);
 typedef struct
 {
     char cmd;
     MSG_PROC pfn;
 }MC_MSG_PROC;
+
+extern EatRtc_st GPStime;
+extern double mileage;
+static eat_bool mileage_flag = EAT_FALSE;
 
 
 static int login_rsp(const void* msg);
@@ -42,9 +49,11 @@ static int autodefend_switch_set(const void* msg);
 static int autodefend_switch_get(const void* msg);
 static int autodefend_period_set(const void* msg);
 static int autodefend_period_get(const void* msg);
-
+static time_t timestamp_get(void);
 static int server_proc(const void* msg);
 static int GPS_time_proc(const void* msg);
+static void msg_mileage_send(MSG_MILEAGE_REQ msg_mileage);
+
 
 
 static MC_MSG_PROC msgProcs[] =
@@ -123,6 +132,9 @@ void client_loop(void)
 
                 msg->gps.longitude = data.gps.longitude;
                 msg->gps.latitude = data.gps.latitude;
+                msg->gps.altitude = data.gps.altitude;
+                msg->gps.speed = data.gps.speed;
+                msg->gps.course = data.gps.course;
 
                 LOG_DEBUG("send GPS message.");
 
@@ -244,7 +256,9 @@ static int defend(const void* msg)
 
     	case DEFEND_OFF:
     		LOG_DEBUG("set defend switch off.");
+
     		set_vibration_state(EAT_FALSE);
+            mileagehandle(EAT_TRUE,EAT_FALSE);
     		break;
 
     	case DEFEND_GET:
@@ -280,6 +294,10 @@ static int seek(const void* msg)
 	if (req->operator == SEEK_ON)
 	{
 		set_seek_state(EAT_TRUE);
+        eat_timer_start(TIMER_SEEKAUTOOFF,setting.seekautooff_timer_peroid);
+
+        LOG_DEBUG("seek auto_off is on ,time is %ds",setting.seekautooff_timer_peroid/1000);
+
         LOG_DEBUG("set seek on.");
 	}
 	else if(req->operator == SEEK_OFF)
@@ -514,4 +532,68 @@ void msg_wild(const void* m, int len)
 
     socket_sendData(msg, msgLen);
 }
+void mileagehandle(eat_bool start_flag,eat_bool end_flag)
+{
+    static MSG_MILEAGE_REQ msg_mileage;
+    time_t timestamp;
+    timestamp = timestamp_get();
+    LOG_DEBUG("timestamp:%ld",timestamp);
+    if(EAT_TRUE == start_flag && EAT_FALSE == end_flag)
+    {
+        msg_mileage.starttime = timestamp;
+        msg_mileage.mileage = 0;
+        mileage_flag = EAT_TRUE;
+        mileage = 0.f;
+    }
+    else if(EAT_TRUE == end_flag && EAT_FALSE == start_flag && mileage_flag == EAT_TRUE)
+    {
+        msg_mileage.endtime = timestamp;
+        msg_mileage.mileage = (int)mileage;
+        msg_mileage_send(msg_mileage);
+        LOG_DEBUG("send this mileage :%d m",msg_mileage.mileage);
+        mileage_flag = EAT_FALSE;
+    }
+    else
+    {
+        mileage_flag = EAT_FALSE;
+        return;
+    }
+}
+
+static void msg_mileage_send(MSG_MILEAGE_REQ msg_mileage)
+{
+    u8 msgLen = sizeof(MSG_MILEAGE_REQ);
+    MSG_MILEAGE_REQ* msg = alloc_msg(CMD_MILEAGE, msgLen);
+    msg->endtime = msg_mileage.endtime;
+    msg->starttime = msg_mileage.starttime;
+    msg->mileage = (int)msg_mileage.mileage;
+    LOG_INFO("send the mileage");
+    socket_sendData(msg, msgLen);
+}
+
+static time_t timestamp_get(void)
+{
+    struct tm stm;
+    memset(&stm,0,sizeof(stm));
+    eat_get_rtc(&GPStime);
+    stm.tm_year=GPStime.year + YEAROFFSET - 1900;
+    stm.tm_mon=GPStime.mon - 1;
+    stm.tm_mday=GPStime.day;
+    stm.tm_hour=GPStime.hour;
+    stm.tm_min=GPStime.min;
+    stm.tm_sec=GPStime.sec;
+    return mktime(&stm);
+}
+
+void send_autodefendstate_msg(eat_bool state)
+{
+    u8 msgLen = sizeof(MSG_HEADER) + sizeof(char);
+	MSG_AUTODEFEND_STATE_REQ* msg = alloc_msg(CMD_AUTODEFEND_STATE, msgLen);
+    msg->state = state;   //TODO: to send the state of the autodefend
+
+	socket_sendData(msg, msgLen);
+
+}
+
+
 

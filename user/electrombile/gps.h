@@ -12,4 +12,5 @@
 void app_gps_thread(void *data);
 
 
+
 #endif /* USER_ELECTROMBILE_GPS_H_ */

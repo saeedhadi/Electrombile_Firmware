@@ -52,7 +52,8 @@ typedef struct
     u32 seek_timer_period;
     u32 socket_timer_period;
     u32 heartbeat_timer_period;
-
+    u32 seekautooff_timer_peroid;
+    u32 timeupdate_timer_peroid;
     //Switch configuration
     eat_bool isVibrateFixed;
 }SETTING;
@@ -67,8 +68,12 @@ eat_bool storage_check(void);
 eat_bool storage_save(void);
 void convert_storage_to_setting(void);
 void convert_setting_to_storage(void);
+eat_bool updatertctime(void);
+
 
 #define SETITINGFILE_NAME  L"C:\\setting.txt"
+#define YEAROFFSET 1950
+
 
 
 #endif /* USER_ELECTROMBILE_SETTING_H_ */

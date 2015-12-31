@@ -29,10 +29,12 @@ enum
 	CMD_LOCATION= 0x0a,
 	CMD_SERVER  = 0x0b,
 	CMD_TIMER   = 0x0c,
-    CMD_AUTODEFEND_SWITCH_SET,
-    CMD_AUTODEFEND_SWITCH_GET,
-    CMD_AUTODEFEND_PERIOD_SET,
-    CMD_AUTODEFEND_PERIOD_GET
+    CMD_AUTODEFEND_SWITCH_SET = 0x0d,
+    CMD_AUTODEFEND_SWITCH_GET = 0x0e,
+    CMD_AUTODEFEND_PERIOD_SET = 0x0f,
+    CMD_AUTODEFEND_PERIOD_GET = 0x10,
+    CMD_MILEAGE = 0x11,
+    CMD_AUTODEFEND_STATE
 };
 
 enum
@@ -72,6 +74,10 @@ typedef struct
 {
     float longitude;
     float latitude;
+    float altitude;
+    float speed;
+    float course;
+
 }__attribute__((__packed__)) GPS;
 
 /*
@@ -302,6 +308,22 @@ typedef struct
     int token;
     unsigned char period;   //time unit: minutes
 }__attribute__((__packed__)) MSG_AUTODEFEND_PERIOD_GET_RSP;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int starttime;
+    int endtime;
+    int mileage;
+}__attribute__((__packed__)) MSG_MILEAGE_REQ;
+
+
+typedef struct
+{
+    MSG_HEADER header;
+    char state;             //0 express OFF,1 express ON
+}__attribute__((__packed__)) MSG_AUTODEFEND_STATE_REQ;
+
 
 
 #pragma pack(pop)

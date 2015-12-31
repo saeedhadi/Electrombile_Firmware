@@ -19,6 +19,7 @@
 
 SETTING setting;
 STORAGE storage;
+eat_bool updatertctime_flag = EAT_FALSE;
 
 eat_bool vibration_fixed(void)
 {
@@ -125,7 +126,9 @@ void setting_reset(void)
     setting.vibration_timer_period = 1000;
     setting.seek_timer_period = 2000;
     setting.socket_timer_period = 60000;
-    setting.heartbeat_timer_period= 3*60*1000;
+    setting.heartbeat_timer_period = 3*60*1000;
+    setting.seekautooff_timer_peroid = 30*1000;
+    setting.timeupdate_timer_peroid = 1*24*60*60*1000;
 
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;
@@ -219,6 +222,7 @@ void convert_storage_to_setting(void)
     return;
 }
 
+
 void convert_setting_to_storage(void)
 {
     if(ADDR_TYPE_DOMAIN == setting.addr_type)
@@ -244,6 +248,12 @@ void convert_setting_to_storage(void)
     LOG_DEBUG("gps_send_timer_period = %d.", storage.gps_send_timer_period);
 
     return;
+}
+
+eat_bool updatertctime()
+{
+    updatertctime_flag = EAT_TRUE;
+    return updatertctime_flag;
 }
 
 

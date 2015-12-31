@@ -20,6 +20,7 @@
 #include "setting.h"
 #include "protocol.h"
 #include "tool.h"
+#include "math.h"
 
 static void gps_timer_handler(u8 cmd);
 static void gps_at_read_handler(void);
@@ -28,23 +29,50 @@ static eat_bool gps_sendCell(u8 cmd);
 static eat_bool gps_isGpsFixed(void);
 static eat_bool gps_isCellGet(void);
 static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps);
+static long double gps2rad(double d);
+static long double getdistance(LOCAL_GPS *pre_gps, LOCAL_GPS *gps);
+void set_rtctime(double time);
+
 
 #define NMEA_BUFF_SIZE 1024
 #define READ_BUFF_SIZE 2048
 #define LATITUDE_THRESHOLD  0.001f
 #define LONGITUDE_THRESHOLD 0.001f
+#define EARTH_RADIUS 6378137 //radius of our earth unit :  m
+#define pi 3.141592653
 
-//static char gps_info_buf[READ_BUFF_SIZE]="";
+typedef struct
+{
+   short year;
+   short mon;
+   short day;
+   short hour;
+   short min;
+   short sec;
+}__attribute__((__packed__)) GPSTIME;
+
+
+
 static eat_bool isGpsFixed = EAT_FALSE;
 static float latitude = 0.0;
 static float longitude = 0.0;
+static float altitude = 0.0;
+static float speed = 0.0;
+static float course = 0.0;
+
+
 static eat_bool isCellGet = EAT_FALSE;
+extern eat_bool updatertctime_flag;
 static short mcc = 0;//mobile country code
 static short mnc = 0;//mobile network code
 static char  cellNo = 0;//cell count
 static CELL  cells[7] = {0};
 static LOCAL_GPS last_gps_info;
+EatRtc_st GPStime = {0};
+double mileage = 0.f;
+
 static LOCAL_GPS* last_gps =&last_gps_info;//gps sent for the last time
+
 
 void app_gps_thread(void *data)
 {
@@ -160,15 +188,17 @@ static eat_bool gps_sendGps(u8 cmd)
     msg->length = sizeof(LOCAL_GPS);
 
     gps = (LOCAL_GPS*)msg->data;
+
     gps->isGpsFixed = EAT_TRUE;
     gps->gps.latitude = latitude;
     gps->gps.longitude = longitude;
+    gps->gps.altitude = altitude;
+    gps->gps.speed = speed;
+    gps->gps.course = course;
 
     if(last_gps == 0 || msg->cmd == CMD_THREAD_LOCATION)
     {
         LOG_DEBUG("the first cell.");
-
-        //last_gps = (LOCAL_GPS*)eat_mem_alloc(sizeof(LOCAL_GPS));
 
         cmp = EAT_FALSE;
     }
@@ -185,10 +215,10 @@ static eat_bool gps_sendGps(u8 cmd)
 
     else
     {
-        memcpy(last_gps, gps, sizeof(LOCAL_GPS));
-
         //GPS is different from before, send this msg, update the last_gps
-        LOG_DEBUG("send gps to THREAD_MAIN: latitude(%f), longitude(%f).", latitude, longitude);
+
+        memcpy(last_gps, gps, sizeof(LOCAL_GPS));
+        LOG_DEBUG("send gps to THREAD_MAIN");
         ret = sendMsg(THREAD_GPS, THREAD_MAIN, msg, msgLen);
     }
 
@@ -267,6 +297,7 @@ static void gps_at_read_handler(void)
     unsigned char  buf[READ_BUFF_SIZE] = {0};  //用于读取AT指令的响应
     unsigned int len = 0;
     unsigned int count = 0, cellCount = 0;
+    static double gpstimes = 0.0;
     int _mcc = 0;
     int _mnc = 0;
     int lac = 0;
@@ -306,15 +337,21 @@ static void gps_at_read_handler(void)
     buf_p1 = tool_StrstrAndReturnEndPoint(buf, "+CGNSINF: ");
     if(NULL != buf_p1)
     {
-        count = sscanf(buf_p1, "%*d,%d,%*f,%f,%f,%*s",&isGpsFixed, &latitude, &longitude);
-        if(3 != count)
+        count = sscanf(buf_p1, "%*d,%d,%lf,%f,%f,%f,%f,%f,%*s",&isGpsFixed,&gpstimes, &latitude, &longitude,&altitude,&speed,&course);
+
+        if(7 != count)
         {
-            LOG_DEBUG("gps not fixed.");
+            if(updatertctime_flag)// update the rtc time once day
+            {
+                set_rtctime(gpstimes);
+                LOG_INFO("GPStime set:%04d,%02d,%02d,%02d:%02d:%02d",GPStime.year+YEAROFFSET,GPStime.mon,GPStime.day,GPStime.hour,GPStime.min,GPStime.sec);
+            }
+            LOG_DEBUG("gps not fixed : %d",count);
             isGpsFixed = EAT_FALSE;
         }
         else
         {
-            LOG_DEBUG("gps fixed=%d, \r\nlatitude=%f, longitude=%f.", isGpsFixed, latitude, longitude);
+            LOG_DEBUG("gps fixed:latitude=%f,longitude=%f,altitude=%f,speed=%f,course=%f", latitude, longitude,altitude,speed,course);
         }
     }
 
@@ -384,6 +421,7 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
     short lac[6], last_lac[6];
     //short temp_cellid, temp_lac;
     int i=0, j=0, count=0;
+    double distance = 0;
 
     if(pre_gps->isGpsFixed != gps->isGpsFixed)
     {
@@ -394,24 +432,16 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
     {
         if(pre_gps->isGpsFixed == EAT_TRUE)
         {
-            //GPS
-            if(pre_gps->gps.latitude - gps->gps.latitude <= LATITUDE_THRESHOLD && pre_gps->gps.latitude - gps->gps.latitude >= -LATITUDE_THRESHOLD)
-            {
-                count++;
-            }
 
-            if(pre_gps->gps.longitude - gps->gps.longitude <= LONGITUDE_THRESHOLD && pre_gps->gps.longitude - gps->gps.longitude >= -LONGITUDE_THRESHOLD)
-            {
-                count++;
-            }
-
-            if(count == 2)
+            distance = getdistance(pre_gps,gps);
+            if(distance <= 10 )//if the distance change 10m ,push the information of GPS
             {
                 LOG_DEBUG("GPS is the same. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
                 return EAT_TRUE;
             }
             else
             {
+                mileage += distance;
                 LOG_DEBUG("GPS is different. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
                 return EAT_FALSE;
             }
@@ -465,5 +495,53 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
         }
     }
 }
+
+
+static long double gps2rad(double d) //get rad value of latitude and longitude
+{
+    return d * pi / 180.f;
+}
+
+static long double getdistance(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)  //get distance of new gps and the last gps
+{
+    long double radLat1 = gps2rad(pre_gps->gps.latitude);
+    long double radLat2 = gps2rad(gps->gps.latitude);
+    long double a = radLat1 - radLat2;
+    long double b = gps2rad(pre_gps->gps.longitude) - gps2rad(gps->gps.longitude);
+
+    long double s = 2 * asin(sqrt(sin(a/2)*sin(a/2)+cos(radLat1)*cos(radLat2)*sin(b/2)*sin(b/2)));
+    LOG_DEBUG("Lat1:%lf,Lat2:%lf,Lon1:%lf,Lon2:%lf",pre_gps->gps.latitude,gps->gps.latitude,pre_gps->gps.longitude,gps->gps.longitude);
+
+    s = s * EARTH_RADIUS;
+
+    return s ;
+}
+
+void set_rtctime(double time)
+{
+
+    GPSTIME gpstime;
+
+    gpstime.year = (short)(time/10000000000);
+    time -= gpstime.year * 10000000000;
+    gpstime.mon = (short)(time/100000000);
+    time -= gpstime.mon * 100000000;
+    gpstime.day = (short)(time/1000000);
+    time -= gpstime.day * 1000000;
+    gpstime.hour = (short)(time/10000);
+    time -= gpstime.hour * 10000;
+    gpstime.min = (short)(time/100);
+    time -= gpstime.min * 100;
+    gpstime.sec = (short)(time);
+    GPStime.year = gpstime.year-YEAROFFSET;//bec GPStime.year:[0:127]
+    GPStime.mon = gpstime.mon;
+    GPStime.day = gpstime.day;
+    GPStime.hour = gpstime.hour;
+    GPStime.min = gpstime.min;
+    GPStime.sec = gpstime.sec;
+
+    eat_set_rtc(&GPStime);
+}
+
 
 
