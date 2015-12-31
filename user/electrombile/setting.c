@@ -121,7 +121,6 @@ void setting_reset(void)
     /* Timer configuration */
     setting.watchdog_timer_period = 50000;
     setting.at_cmd_timer_period = 5000;
-    setting.gps_timer_period = 30 * 1000;
     setting.gps_send_timer_period = 30 * 1000;
     setting.vibration_timer_period = 1000;
     setting.seek_timer_period = 2000;

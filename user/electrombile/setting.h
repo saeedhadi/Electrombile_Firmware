@@ -46,7 +46,6 @@ typedef struct
 	//Timer configuration
 	u32 watchdog_timer_period;
     u32 at_cmd_timer_period;
-	u32 gps_timer_period;
     u32 gps_send_timer_period;
 	u32 vibration_timer_period;
     u32 seek_timer_period;

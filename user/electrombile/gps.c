@@ -22,6 +22,8 @@
 #include "tool.h"
 #include "math.h"
 
+#define TIMER_GPS_PERIOD (30 * 1000)
+
 static void gps_timer_handler(u8 cmd);
 static void gps_at_read_handler(void);
 static eat_bool gps_sendGps(u8 cmd);
@@ -82,7 +84,7 @@ void app_gps_thread(void *data)
 
     LOG_INFO("gps thread start.");
 
-    eat_timer_start(TIMER_GPS, setting.gps_timer_period);
+    eat_timer_start(TIMER_GPS, TIMER_GPS_PERIOD);
     tool_modem_write("AT+CGNSPWR=1\r");//turn on GNSS power supply
     tool_modem_write("AT+CENG=3,1\r");//set cell on
 
@@ -97,7 +99,7 @@ void app_gps_thread(void *data)
                     case TIMER_GPS:
                     	LOG_INFO("TIMER_GPS expire.");
                         gps_timer_handler(CMD_THREAD_GPS);
-                        eat_timer_start(TIMER_GPS, setting.gps_timer_period);
+                        eat_timer_start(TIMER_GPS, TIMER_GPS_PERIOD);
                         break;
 
                     default:
