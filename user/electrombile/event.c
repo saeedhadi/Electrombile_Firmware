@@ -131,10 +131,12 @@ int event_proc(EatEvent_st* event)
 			}
 			else
 			{
-		        LOG_ERROR("event(%d) not processed!", event->event);
+		        LOG_ERROR("event(%s) not processed!", getEventDescription(event->event));
 			}
 		}
 	}
+
+	LOG_ERROR("event(%s) has no handler!", getEventDescription(event->event));
 
 	return -1;
 }
@@ -254,7 +256,7 @@ int event_threadMsg(const EatEvent_st* event)
 
             LOG_DEBUG("send alarm vibrate message.");
             socket_msg->alarmType = *alarm_type;
-            socket_sendData(socket_msg, sizeof(MSG_ALARM_REQ));     //发送报警信息
+            socket_sendData(socket_msg, sizeof(MSG_ALARM_REQ));
             break;
         }
 
@@ -280,7 +282,7 @@ int event_threadMsg(const EatEvent_st* event)
 
             LOG_DEBUG("send seek value message.");
             seek_msg->intensity = htonl((int)seek->intensity);
-            socket_sendData(seek_msg, sizeof(MSG_433));     //发送找车信号
+            socket_sendData(seek_msg, sizeof(MSG_433));
             break;
         }
 
