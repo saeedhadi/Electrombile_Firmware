@@ -595,5 +595,13 @@ void send_autodefendstate_msg(eat_bool state)
 
 }
 
+void msg_heartbeat(void)
+{
+    u8 msgLen = sizeof(MSG_HEADER) + sizeof(short);
+    MSG_PING_REQ* msg = alloc_msg(CMD_PING, msgLen);
+    msg->statue = EAT_TRUE;   //TODO: to define the status bits
+
+    socket_sendData(msg, msgLen);
+}
 
 

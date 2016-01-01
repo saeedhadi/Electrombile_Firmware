@@ -31,27 +31,6 @@ typedef struct
 extern EatRtc_st GPStime;
 
 
-/*
- * local event function definition
- */
-int event_timer(const EatEvent_st* event);
-int event_threadMsg(const EatEvent_st* event);
-int event_mod_ready_rd(const EatEvent_st* event);
-static void msg_heartbeat(void);
-
-
-static EVENT_PROC eventProcs[] =
-{
-    {EAT_EVENT_TIMER,				event_timer},
-    {EAT_EVENT_MDM_READY_RD,        event_mod_ready_rd},
-    {EAT_EVENT_MDM_READY_WR,        EAT_NULL},
-    {EAT_EVENT_UART_READY_RD,       event_uart_ready_rd},
-    {EAT_EVENT_UART_READY_WR,		EAT_NULL},
-    {EAT_EVENT_UART_SEND_COMPLETE,	EAT_NULL},
-    {EAT_EVENT_USER_MSG,            event_threadMsg},
-};
-
-
 #define DESC_DEF(x) case x:\
                             return #x
 
@@ -80,15 +59,6 @@ static char* getEventDescription(EatEvent_enum event)
     }
 }
 
-static void msg_heartbeat(void)
-{
-    u8 msgLen = sizeof(MSG_HEADER) + sizeof(short);
-	MSG_PING_REQ* msg = alloc_msg(CMD_PING, msgLen);
-    msg->statue = EAT_TRUE;   //TODO: to define the status bits
-
-	socket_sendData(msg, msgLen);
-}
-
 
 int event_mod_ready_rd(const EatEvent_st* event)
 {
@@ -111,34 +81,6 @@ int event_mod_ready_rd(const EatEvent_st* event)
 	}
 
 	return 0;
-}
-
-
-int event_proc(EatEvent_st* event)
-{
-	int i = 0;
-
-    LOG_DEBUG("event: %s.", getEventDescription(event->event));
-
-	for (i = 0; i < sizeof(eventProcs) / sizeof(eventProcs[0]); i++)
-	{
-		if (eventProcs[i].event == event->event)
-		{
-			EVENT_FUNC pfn = eventProcs[i].pfn;
-			if (pfn)
-			{
-				return pfn(event);
-			}
-			else
-			{
-		        LOG_ERROR("event(%s) not processed!", getEventDescription(event->event));
-			}
-		}
-	}
-
-	LOG_ERROR("event(%s) has no handler!", getEventDescription(event->event));
-
-	return -1;
 }
 
 int event_timer(const EatEvent_st* event)
@@ -210,7 +152,7 @@ int event_threadMsg(const EatEvent_st* event)
                 break;
             }
 
-            if (gps->isGpsFixed)    //update the local GPS data
+            if (gps->isGps)    //update the local GPS data
             {
                 data.isGpsFixed = EAT_TRUE;
                 data.gps.latitude = gps->gps.latitude;
@@ -296,7 +238,7 @@ int event_threadMsg(const EatEvent_st* event)
                 break;
             }
 
-            if (gps->isGpsFixed)    //update the local GPS data
+            if (gps->isGps)    //update the local GPS data
             {
                 MSG_GPS* msg = alloc_msg(CMD_GPS, sizeof(MSG_GPS));
                 if (!msg)
@@ -351,3 +293,44 @@ int event_threadMsg(const EatEvent_st* event)
     return 0;
 }
 
+
+
+
+static EVENT_PROC eventProcs[] =
+{
+    {EAT_EVENT_TIMER,               event_timer},
+    {EAT_EVENT_MDM_READY_RD,        event_mod_ready_rd},
+    {EAT_EVENT_MDM_READY_WR,        EAT_NULL},
+    {EAT_EVENT_UART_READY_RD,       event_uart_ready_rd},
+    {EAT_EVENT_UART_READY_WR,       EAT_NULL},
+    {EAT_EVENT_UART_SEND_COMPLETE,  EAT_NULL},
+    {EAT_EVENT_USER_MSG,            event_threadMsg},
+};
+
+
+int event_proc(EatEvent_st* event)
+{
+    int i = 0;
+
+    LOG_DEBUG("event: %s.", getEventDescription(event->event));
+
+    for (i = 0; i < sizeof(eventProcs) / sizeof(eventProcs[0]); i++)
+    {
+        if (eventProcs[i].event == event->event)
+        {
+            EVENT_FUNC pfn = eventProcs[i].pfn;
+            if (pfn)
+            {
+                return pfn(event);
+            }
+            else
+            {
+                LOG_ERROR("event(%s) not processed!", getEventDescription(event->event));
+            }
+        }
+    }
+
+    LOG_ERROR("event(%s) has no handler!", getEventDescription(event->event));
+
+    return -1;
+}
