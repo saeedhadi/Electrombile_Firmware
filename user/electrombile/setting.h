@@ -9,6 +9,7 @@
 #define USER_ELECTROMBILE_SETTING_H_
 
 #include <eat_type.h>
+#include "mileage.h"
 
 #define MAX_DOMAIN_NAME_LEN 32
 typedef enum
@@ -56,6 +57,7 @@ typedef struct
     u32 timeupdate_timer_peroid;
     //Switch configuration
     eat_bool isVibrateFixed;
+    DumpVoltage dump_voltage[40];
 }SETTING;
 
 extern SETTING setting;
@@ -69,9 +71,12 @@ eat_bool storage_save(void);
 void convert_storage_to_setting(void);
 void convert_setting_to_storage(void);
 eat_bool updatertctime(void);
+void setting_dump_voltage_init(void);
+
 
 
 #define SETITINGFILE_NAME  L"C:\\setting.txt"
+#define MILEAGEFILE_NAME   L"C:\\mileage.txt"
 #define YEAROFFSET 1950
 
 

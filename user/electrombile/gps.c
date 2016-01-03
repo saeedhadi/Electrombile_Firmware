@@ -338,14 +338,13 @@ static void gps_at_read_handler(void)
     if(NULL != buf_p1)
     {
         count = sscanf(buf_p1, "%*d,%d,%lf,%f,%f,%f,%f,%f,%*s",&isGpsFixed,&gpstimes, &latitude, &longitude,&altitude,&speed,&course);
-
+        if(updatertctime_flag)// update the rtc time once day
+        {
+            set_rtctime(gpstimes);
+            LOG_INFO("GPStime set:%04d,%02d,%02d,%02d:%02d:%02d",GPStime.year+YEAROFFSET,GPStime.mon,GPStime.day,GPStime.hour,GPStime.min,GPStime.sec);
+        }
         if(7 != count)
         {
-            if(updatertctime_flag)// update the rtc time once day
-            {
-                set_rtctime(gpstimes);
-                LOG_INFO("GPStime set:%04d,%02d,%02d,%02d:%02d:%02d",GPStime.year+YEAROFFSET,GPStime.mon,GPStime.day,GPStime.hour,GPStime.min,GPStime.sec);
-            }
             LOG_DEBUG("gps not fixed : %d",count);
             isGpsFixed = EAT_FALSE;
         }
@@ -541,6 +540,8 @@ void set_rtctime(double time)
     GPStime.sec = gpstime.sec;
 
     eat_set_rtc(&GPStime);
+    updatertctime_flag = EAT_FALSE
+        ;
 }
 
 

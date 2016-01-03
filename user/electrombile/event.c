@@ -171,10 +171,12 @@ int event_timer(const EatEvent_st* event)
             msg_heartbeat();
             eat_timer_start(TIMER_HEARTBEAT, setting.heartbeat_timer_period);
             break;
+
         case TIMER_SEEKAUTOOFF:
             LOG_INFO("TIMER_SEEKAUTOOFF expire!");
             set_seek_state(EAT_FALSE);
             break;
+
         case TIMER_RTC_UPDATE:
             LOG_INFO("TIMER_RTC_UPDATE expire!");
             updatertctime();
@@ -182,6 +184,11 @@ int event_timer(const EatEvent_st* event)
                 eat_timer_start(TIMER_RTC_UPDATE, 30*1000);
             else
                 eat_timer_start(TIMER_RTC_UPDATE, setting.timeupdate_timer_peroid);
+            break;
+
+        case TIMER_FOR_TEST:
+            battery_getvalue();
+            eat_timer_start(TIMER_FOR_TEST, 2*1000);
             break;
 
         default:

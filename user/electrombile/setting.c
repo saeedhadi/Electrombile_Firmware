@@ -14,11 +14,15 @@
 #include "eat_interface.h"
 #include "eat_uart.h"
 #include "log.h"
+#include "mileage.h"
+
 
 
 
 SETTING setting;
 STORAGE storage;
+DumpVoltage dump_voltage[40] = mileage_initial;
+DumpVoltage mileage_storage[40] = mileage_initial;
 eat_bool updatertctime_flag = EAT_FALSE;
 
 eat_bool vibration_fixed(void)
@@ -129,7 +133,7 @@ void setting_reset(void)
     setting.heartbeat_timer_period = 3*60*1000;
     setting.seekautooff_timer_peroid = 30*1000;
     setting.timeupdate_timer_peroid = 1*24*60*60*1000;
-
+    setting_dump_voltage_init();
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;
 
@@ -255,5 +259,10 @@ eat_bool updatertctime()
     updatertctime_flag = EAT_TRUE;
     return updatertctime_flag;
 }
+void setting_dump_voltage_init(void)
+{
+
+}
+
 
 
