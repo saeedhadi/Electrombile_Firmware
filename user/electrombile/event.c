@@ -28,6 +28,14 @@ typedef struct
 	EVENT_FUNC pfn;
 }EVENT_PROC;
 
+typedef int (*THREAD_MSG_FUNC)(const MSG_THREAD* msg);
+typedef struct
+{
+    char cmd;
+    THREAD_MSG_FUNC pfn;
+}THREAD_MSG_PROC;
+
+
 extern EatRtc_st GPStime;
 
 
@@ -38,6 +46,7 @@ static char* getEventDescription(EatEvent_enum event)
 {
     switch (event)
     {
+#ifdef LOG_DEBUG_FLAG
         DESC_DEF(EAT_EVENT_TIMER);
         DESC_DEF(EAT_EVENT_KEY);
         DESC_DEF(EAT_EVENT_INT);
@@ -50,6 +59,7 @@ static char* getEventDescription(EatEvent_enum event)
         DESC_DEF(EAT_EVENT_UART_SEND_COMPLETE);
         DESC_DEF(EAT_EVENT_USER_MSG);
         DESC_DEF(EAT_EVENT_IME_KEY);
+#endif
         default:
         {
             static char soc_event[10] = {0};
@@ -60,7 +70,7 @@ static char* getEventDescription(EatEvent_enum event)
 }
 
 
-int event_mod_ready_rd(const EatEvent_st* event)
+static int event_mod_ready_rd(const EatEvent_st* event)
 {
 	u8 buf[256] = {0};
 	u16 len = 0;
@@ -83,7 +93,7 @@ int event_mod_ready_rd(const EatEvent_st* event)
 	return 0;
 }
 
-int event_timer(const EatEvent_st* event)
+static int event_timer(const EatEvent_st* event)
 {
     switch (event->data.timer.timer_id)
     {
@@ -135,162 +145,199 @@ int event_timer(const EatEvent_st* event)
     return 0;
 }
 
-int event_threadMsg(const EatEvent_st* event)
+static int threadCmd_GPS(const MSG_THREAD* msg)
+{
+    LOCAL_GPS* gps = (LOCAL_GPS*) msg->data;
+
+     if (msg->length < sizeof(LOCAL_GPS)  || !gps)
+     {
+         LOG_ERROR("msg from THREAD_GPS error!");
+         return -1;
+     }
+
+     if (gps->isGps)    //update the local GPS data
+     {
+         data.isGpsFixed = EAT_TRUE;
+         data.gps.latitude = gps->gps.latitude;
+         data.gps.longitude = gps->gps.longitude;
+         LOG_DEBUG("receive thread command CMD_GPS_UPDATE: lat(%f), lng(%f).", gps->gps.latitude, gps->gps.longitude);
+     }
+     else    //update local cell info
+     {
+         data.isCellGet = EAT_TRUE;
+         data.cgi.mcc = gps->cellInfo.mcc;
+         data.cgi.mnc = gps->cellInfo.mnc;
+         data.cgi.cellNo = gps->cellInfo.cellNo;
+         memcpy(data.cells, gps->cellInfo.cell, sizeof(CELL) * gps->cellInfo.cellNo);
+         LOG_DEBUG("receive thread command CMD_GPS_UPDATE: cellid(%x), lac(%d).", data.cells[0].cellid, data.cells[0].lac);
+     }
+
+    return 0;
+}
+
+static int threadCmd_SMS(const MSG_THREAD* msg)
+{
+    LOG_DEBUG("receive thread command CMD_SMS.");
+
+    return 0;
+}
+
+static int threadCmd_Vibrate(const MSG_THREAD* msg)
+{
+    unsigned char* alarm_type = (unsigned char*)msg->data;
+    MSG_ALARM_REQ* socket_msg = 0;
+
+    if (msg->length != sizeof(*alarm_type))
+    {
+        LOG_ERROR("msg length error: msgLen(%d)!", msg->length);
+        return -1;
+    }
+    LOG_DEBUG("receive thread command CMD_VIBRATE: alarmType(%d).", *alarm_type);
+
+    socket_msg = alloc_msg(CMD_ALARM, sizeof(MSG_ALARM_REQ));
+    if (!socket_msg)
+    {
+        LOG_ERROR("alloc message failed!");
+        return -1;
+    }
+
+    LOG_DEBUG("send alarm vibrate message.");
+    socket_msg->alarmType = *alarm_type;
+    socket_sendData(socket_msg, sizeof(MSG_ALARM_REQ));
+
+    return 0;
+}
+
+static int threadCmd_Seek(const MSG_THREAD* msg)
+{
+    SEEK_INFO* seek = (SEEK_INFO*)msg->data;
+    MSG_433* seek_msg;
+
+    if (msg->length < sizeof(SEEK_INFO)  || !seek)
+    {
+        LOG_ERROR("msg from THREAD_SEEK error!");
+        return -1;
+    }
+
+    LOG_DEBUG("receive thread command CMD_SEEK: value(%f).", seek->intensity);
+
+    seek_msg = alloc_msg(CMD_433, sizeof(MSG_433));
+    if (!seek_msg)
+    {
+        LOG_ERROR("alloc message failed!");
+        return -1;
+    }
+
+    LOG_DEBUG("send seek value message.");
+    seek_msg->intensity = htonl((int)seek->intensity);
+    socket_sendData(seek_msg, sizeof(MSG_433));
+
+    return 0;
+}
+
+static int threadCmd_Location(const MSG_THREAD* msg)
+{
+    LOCAL_GPS* gps = (LOCAL_GPS*) msg->data;
+
+    if (msg->length < sizeof(LOCAL_GPS)  || !gps)
+    {
+        LOG_ERROR("msg from THREAD_GPS error!");
+        return -1;
+    }
+
+    if (gps->isGps)    //update the local GPS data
+    {
+        MSG_GPS* msg = alloc_msg(CMD_GPS, sizeof(MSG_GPS));
+        if (!msg)
+        {
+            LOG_ERROR("alloc message failed!");
+            return -1;
+        }
+
+        msg->gps.longitude = gps->gps.longitude;
+        msg->gps.latitude = gps->gps.latitude;
+
+        LOG_DEBUG("send GPS message.");
+        socket_sendData(msg, sizeof(MSG_GPS));
+    }
+    else    //update local cell info
+    {
+        size_t msgLen = sizeof(MSG_HEADER) + sizeof(CGI) + sizeof(CELL) * gps->cellInfo.cellNo;
+        MSG_HEADER* msg = alloc_msg(CMD_CELL, msgLen);
+        CGI* cgi = (CGI*)(msg + 1);
+        CELL* cell = (CELL*)(cgi + 1);
+        int i = 0;
+
+        if (!msg)
+        {
+            LOG_ERROR("alloc message failed!");
+            return -1;
+        }
+
+        cgi->mcc = htons(gps->cellInfo.mcc);
+        cgi->mnc = htons(gps->cellInfo.mnc);
+        cgi->cellNo = gps->cellInfo.cellNo;
+        for (i = 0; i < gps->cellInfo.cellNo; i++)
+        {
+            cell[i].lac = htons(gps->cellInfo.cell[i].lac);
+            cell[i].cellid = htons(gps->cellInfo.cell[i].cellid);
+            cell[i].rxl= htons(gps->cellInfo.cell[i].rxl);
+        }
+
+        LOG_DEBUG("send CELL message.");
+        socket_sendData(msg, msgLen);
+    }
+
+    return 0;
+}
+
+
+static THREAD_MSG_PROC msgProcs[] =
+{
+        {CMD_THREAD_GPS, threadCmd_GPS},
+        {CMD_THREAD_SMS, threadCmd_SMS},
+        {CMD_THREAD_VIBRATE, threadCmd_Vibrate},
+        {CMD_THREAD_SEEK, threadCmd_Seek},
+        {CMD_THREAD_LOCATION, threadCmd_Location},
+};
+
+static int event_threadMsg(const EatEvent_st* event)
 {
     MSG_THREAD* msg = (MSG_THREAD*) event->data.user_msg.data_p;
     u8 msgLen = event->data.user_msg.len;
+    size_t i = 0;
+    int rc = 0;
 
-    switch (msg->cmd)
+    if (msg->length + sizeof(MSG_THREAD) != msgLen)
     {
-        case CMD_THREAD_GPS:
+        LOG_ERROR("Message length error");
+        freeMsg(msg);
+
+        return -1;
+    }
+
+    for (i = 0; i < sizeof(msgProcs) / sizeof(msgProcs[0]); i++)
+    {
+        if (msgProcs[i].cmd == msg->cmd)
         {
-            LOCAL_GPS* gps = (LOCAL_GPS*) msg->data;
-
-            if (msgLen < sizeof(LOCAL_GPS)  || !gps)
+            THREAD_MSG_FUNC pfn = msgProcs[i].pfn;
+            if (pfn)
             {
-                LOG_ERROR("msg from THREAD_GPS error!");
+                rc = pfn(msg);
                 break;
             }
-
-            if (gps->isGps)    //update the local GPS data
+            else
             {
-                data.isGpsFixed = EAT_TRUE;
-                data.gps.latitude = gps->gps.latitude;
-                data.gps.longitude = gps->gps.longitude;
-                LOG_DEBUG("receive thread command CMD_GPS_UPDATE: lat(%f), lng(%f).", gps->gps.latitude, gps->gps.longitude);
+                LOG_ERROR("Message %d not processed!", msg->cmd);
+                rc = -1;
+                break;
             }
-            else    //update local cell info
-            {
-                data.isCellGet = EAT_TRUE;
-                data.cgi.mcc = gps->cellInfo.mcc;
-                data.cgi.mnc = gps->cellInfo.mnc;
-                data.cgi.cellNo = gps->cellInfo.cellNo;
-                memcpy(data.cells, gps->cellInfo.cell, sizeof(CELL) * gps->cellInfo.cellNo);
-                LOG_DEBUG("receive thread command CMD_GPS_UPDATE: cellid(%x), lac(%d).", data.cells[0].cellid, data.cells[0].lac);
-            }
-            break;
         }
-
-        case CMD_THREAD_SMS:
-        {
-            LOG_DEBUG("receive thread command CMD_SMS.");
-            break;
-        }
-
-        case CMD_THREAD_VIBRATE:
-        {
-            unsigned char* alarm_type = (unsigned char*)msg->data;
-            MSG_ALARM_REQ* socket_msg;
-
-            if (msg->length != 1)
-            {
-                LOG_ERROR("msg length error: msgLen(%d)!", msgLen);
-                break;
-            }
-            LOG_DEBUG("receive thread command CMD_VIBRATE: alarmType(%d).", *alarm_type);
-
-            socket_msg = alloc_msg(CMD_ALARM, sizeof(MSG_ALARM_REQ));
-            if (!socket_msg)
-            {
-                LOG_ERROR("alloc message failed!");
-                break;
-            }
-
-            LOG_DEBUG("send alarm vibrate message.");
-            socket_msg->alarmType = *alarm_type;
-            socket_sendData(socket_msg, sizeof(MSG_ALARM_REQ));
-            break;
-        }
-
-        case CMD_THREAD_SEEK:
-        {
-            SEEK_INFO* seek = (SEEK_INFO*)msg->data;
-            MSG_433* seek_msg;
-
-            if (msgLen < sizeof(SEEK_INFO)  || !seek)
-            {
-                LOG_ERROR("msg from THREAD_SEEK error!");
-                break;
-            }
-
-            LOG_DEBUG("receive thread command CMD_SEEK: value(%f).", seek->intensity);
-
-            seek_msg = alloc_msg(CMD_433, sizeof(MSG_433));
-            if (!seek_msg)
-            {
-                LOG_ERROR("alloc message failed!");
-                break;
-            }
-
-            LOG_DEBUG("send seek value message.");
-            seek_msg->intensity = htonl((int)seek->intensity);
-            socket_sendData(seek_msg, sizeof(MSG_433));
-            break;
-        }
-
-        case CMD_THREAD_LOCATION:
-        {
-            LOCAL_GPS* gps = (LOCAL_GPS*) msg->data;
-
-            if (msgLen < sizeof(LOCAL_GPS)  || !gps)
-            {
-                LOG_ERROR("msg from THREAD_GPS error!");
-                break;
-            }
-
-            if (gps->isGps)    //update the local GPS data
-            {
-                MSG_GPS* msg = alloc_msg(CMD_GPS, sizeof(MSG_GPS));
-                if (!msg)
-                {
-                    LOG_ERROR("alloc message failed!");
-                    return -1;
-                }
-
-                msg->gps.longitude = gps->gps.longitude;
-                msg->gps.latitude = gps->gps.latitude;
-
-                LOG_DEBUG("send GPS message.");
-                socket_sendData(msg, sizeof(MSG_GPS));
-            }
-            else    //update local cell info
-            {
-                size_t msgLen = sizeof(MSG_HEADER) + sizeof(CGI) + sizeof(CELL) * gps->cellInfo.cellNo;
-                MSG_HEADER* msg = alloc_msg(CMD_CELL, msgLen);
-                CGI* cgi = (CGI*)(msg + 1);
-                CELL* cell = (CELL*)(cgi + 1);
-                int i = 0;
-
-                if (!msg)
-                {
-                    LOG_ERROR("alloc message failed!");
-                    return -1;
-                }
-
-                cgi->mcc = htons(gps->cellInfo.mcc);
-                cgi->mnc = htons(gps->cellInfo.mnc);
-                cgi->cellNo = gps->cellInfo.cellNo;
-                for (i = 0; i < gps->cellInfo.cellNo; i++)
-                {
-                    cell[i].lac = htons(gps->cellInfo.cell[i].lac);
-                    cell[i].cellid = htons(gps->cellInfo.cell[i].cellid);
-                    cell[i].rxl= htons(gps->cellInfo.cell[i].rxl);
-                }
-
-                LOG_DEBUG("send CELL message.");
-                socket_sendData(msg, msgLen);
-            }
-            break;
-        }
-
-        default:
-            LOG_ERROR("receive unknown thread command:%d!", msg->cmd);
-            break;
     }
 
     freeMsg(msg);
 
-    return 0;
+    return rc;
 }
 
 
