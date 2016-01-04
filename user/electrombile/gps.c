@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #include <eat_interface.h>
 #include <eat_modem.h>
@@ -20,9 +21,16 @@
 #include "setting.h"
 #include "protocol.h"
 #include "tool.h"
-#include "math.h"
 
 #define TIMER_GPS_PERIOD (30 * 1000)
+#define EARTH_RADIUS 6378137 //radius of our earth unit :  m
+#define PI 3.141592653
+
+#define READ_BUFF_SIZE 2048
+
+//degree to radian
+#define DEG2RAD(d) (d * PI / 180.f)
+
 
 static void gps_timer_handler(u8 cmd);
 static void gps_at_read_handler(void);
@@ -31,17 +39,12 @@ static eat_bool gps_sendCell(u8 cmd);
 static eat_bool gps_isGpsFixed(void);
 static eat_bool gps_isCellGet(void);
 static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps);
-static long double gps2rad(double d);
+
 static long double getdistance(LOCAL_GPS *pre_gps, LOCAL_GPS *gps);
 void set_rtctime(double time);
 
 
-#define NMEA_BUFF_SIZE 1024
-#define READ_BUFF_SIZE 2048
-#define LATITUDE_THRESHOLD  0.001f
-#define LONGITUDE_THRESHOLD 0.001f
-#define EARTH_RADIUS 6378137 //radius of our earth unit :  m
-#define pi 3.141592653
+
 
 typedef struct
 {
@@ -103,7 +106,7 @@ void app_gps_thread(void *data)
                         break;
 
                     default:
-                    	LOG_ERROR("ERR: timer[%d] expire!", event.data.timer.timer_id);
+                    	LOG_ERROR("timer[%d] expire!", event.data.timer.timer_id);
                         break;
                 }
                 break;
@@ -191,7 +194,7 @@ static eat_bool gps_sendGps(u8 cmd)
 
     gps = (LOCAL_GPS*)msg->data;
 
-    gps->isGpsFixed = EAT_TRUE;
+    gps->isGps = EAT_TRUE;
     gps->gps.latitude = latitude;
     gps->gps.longitude = longitude;
     gps->gps.altitude = altitude;
@@ -247,7 +250,7 @@ static eat_bool gps_sendCell(u8 cmd)
     msg->length = sizeof(LOCAL_GPS);
 
     gps = (LOCAL_GPS*)msg->data;
-    gps->isGpsFixed = EAT_FALSE;
+    gps->isGps = EAT_FALSE;
 
     gps->cellInfo.mcc = mcc;
     gps->cellInfo.mnc = mnc;
@@ -296,7 +299,7 @@ static void gps_at_read_handler(void)
 {
     unsigned char *buf_p1 = NULL;
     unsigned char *buf_p2 = NULL;
-    unsigned char  buf[READ_BUFF_SIZE] = {0};  //ÓÃÓÚ¶ÁÈ¡ATÖ¸ÁîµÄÏìÓ¦
+    unsigned char  buf[READ_BUFF_SIZE] = {0};  //ï¿½ï¿½ï¿½Ú¶ï¿½È¡ATÖ¸ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦
     unsigned int len = 0;
     unsigned int count = 0, cellCount = 0;
     static double gpstimes = 0.0;
@@ -425,14 +428,14 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
     int i=0, j=0, count=0;
     double distance = 0;
 
-    if(pre_gps->isGpsFixed != gps->isGpsFixed)
+    if(pre_gps->isGps != gps->isGps)
     {
         LOG_DEBUG("gps_type is different.");
         return EAT_FALSE;
     }
     else
     {
-        if(pre_gps->isGpsFixed == EAT_TRUE)
+        if(pre_gps->isGps == EAT_TRUE)
         {
 
             distance = getdistance(pre_gps,gps);
@@ -499,17 +502,13 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
 }
 
 
-static long double gps2rad(double d) //get rad value of latitude and longitude
-{
-    return d * pi / 180.f;
-}
 
 static long double getdistance(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)  //get distance of new gps and the last gps
 {
-    long double radLat1 = gps2rad(pre_gps->gps.latitude);
-    long double radLat2 = gps2rad(gps->gps.latitude);
+    long double radLat1 = DEG2RAD(pre_gps->gps.latitude);
+    long double radLat2 = DEG2RAD(gps->gps.latitude);
     long double a = radLat1 - radLat2;
-    long double b = gps2rad(pre_gps->gps.longitude) - gps2rad(gps->gps.longitude);
+    long double b = DEG2RAD(pre_gps->gps.longitude) - DEG2RAD(gps->gps.longitude);
 
     long double s = 2 * asin(sqrt(sin(a/2)*sin(a/2)+cos(radLat1)*cos(radLat2)*sin(b/2)*sin(b/2)));
     LOG_DEBUG("Lat1:%lf,Lat2:%lf,Lon1:%lf,Lon2:%lf",pre_gps->gps.latitude,gps->gps.latitude,pre_gps->gps.longitude,gps->gps.longitude);
