@@ -40,12 +40,14 @@ static char* getEventDescription(soc_event_enum event)
 {
 	switch (event)
 	{
+#ifdef LOG_DEBUG_FLAG
 		DESC_DEF(SOC_READ);
 		DESC_DEF(SOC_WRITE);
 		DESC_DEF(SOC_ACCEPT);
 		DESC_DEF(SOC_CONNECT);
 		DESC_DEF(SOC_CLOSE);
 		DESC_DEF(SOC_ACKED);
+#endif
 		default:
 		{
 			static char soc_event[10] = {0};
@@ -69,6 +71,7 @@ static char* getStateDescription(cbm_bearer_state_enum state)
 {
 	switch (state)
 	{
+#ifdef LOG_DEBUG_FLAG
 		DESC_DEF(CBM_DEACTIVATED);
 		DESC_DEF(CBM_ACTIVATING);
 		DESC_DEF(CBM_ACTIVATED);
@@ -77,6 +80,7 @@ static char* getStateDescription(cbm_bearer_state_enum state)
 		DESC_DEF(CBM_GPRS_AUTO_DISC_TIMEOUT);
 		DESC_DEF(CBM_NWK_NEG_QOS_MODIFY);
 		DESC_DEF(CBM_WIFI_STA_INFO_MODIFY);
+#endif
 		default:
 		{
 			static char bearer_state[10] = {0};
