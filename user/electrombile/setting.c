@@ -14,15 +14,14 @@
 #include "eat_interface.h"
 #include "eat_uart.h"
 #include "log.h"
-#include "mileage.h"
 
 
 
 
 SETTING setting;
 STORAGE storage;
-DumpVoltage dump_voltage[40] = mileage_initial;
-DumpVoltage mileage_storage[40] = mileage_initial;
+DumpVoltage dump_voltage = mileage_initial;
+DumpVoltage mileage_storage = mileage_initial;
 eat_bool updatertctime_flag = EAT_FALSE;
 
 eat_bool vibration_fixed(void)
@@ -48,58 +47,6 @@ eat_bool setting_initial(void)
     LOG_DEBUG("setting delete.");
     eat_fs_Delete(SETITINGFILE_NAME);//TODO, for debug
     #endif
-
-    fh_open = eat_fs_Open(SETITINGFILE_NAME, FS_READ_WRITE);
-    if(EAT_FS_FILE_NOT_FOUND == fh_open)
-    {
-        LOG_INFO("file not exists.");
-        fh_open = eat_fs_Open(SETITINGFILE_NAME, FS_CREATE);
-        if(EAT_FS_NO_ERROR <= fh_open)
-        {
-            LOG_INFO("creat file success, fh=%d.", fh_open);
-            eat_fs_Close(fh_open);
-
-            convert_setting_to_storage();
-            storage_save();
-            ret = EAT_TRUE;
-        }
-        else
-        {
-            LOG_ERROR("creat file failed, fh=%d.", fh_open);
-        }
-    }
-    else if(EAT_FS_NO_ERROR <= fh_open)
-    {
-        LOG_INFO("open file success, fh=%d.", fh_open);
-
-        fh_read = eat_fs_Read(fh_open, &storage, sizeof(STORAGE), &readLen);
-        if (EAT_FS_NO_ERROR == fh_read)
-        {
-            LOG_DEBUG("read file success.");
-
-            eat_fs_Close(fh_open);
-
-            if(storage_check())
-            {
-                convert_storage_to_setting();
-            }
-            else
-            {
-                convert_setting_to_storage();
-                storage_save();
-            }
-
-            ret = EAT_TRUE;
-        }
-        else
-        {
-            LOG_ERROR("read file fail, and Return Error: %d, Readlen is %d!", fh_read, readLen);
-        }
-    }
-    else
-    {
-        LOG_ERROR("open file failed, fh=%d!", fh_open);
-    }
 
     return ret;
 }
@@ -132,7 +79,7 @@ void setting_reset(void)
     setting.socket_timer_period = 60000;
     setting.heartbeat_timer_period = 3*60*1000;
     setting.seekautooff_timer_peroid = 30*1000;
-    setting.timeupdate_timer_peroid = 1*24*60*60*1000;
+    setting.timeupdate_timer_peroid = 1*24*60*60*1000;      //one day
     setting_dump_voltage_init();
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;
@@ -170,6 +117,33 @@ eat_bool storage_save(void)
 
         fh_write = eat_fs_Write(fh_open, &storage, sizeof(STORAGE), &writedLen);
         if(EAT_FS_NO_ERROR == fh_write && sizeof(STORAGE) == writedLen)
+        {
+            LOG_DEBUG("write file success.");
+
+            fh_commit = eat_fs_Commit(fh_open);
+            if(EAT_FS_NO_ERROR == fh_commit)
+            {
+                LOG_DEBUG("commit file success.");
+                ret = EAT_TRUE;
+            }
+            else
+            {
+                LOG_ERROR("commit file failed, and Return Error is %d.", fh_commit);
+            }
+        }
+        else
+        {
+            LOG_ERROR("write file failed, and Return Error is %d, writedLen is %d.", fh_write, writedLen);
+        }
+    }
+
+    fh_open = eat_fs_Open(MILEAGEFILE_NAME, FS_READ_WRITE);
+    if(EAT_FS_NO_ERROR <= fh_open)
+    {
+        LOG_INFO("open file success, fh=%d.", fh_open);
+
+        fh_write = eat_fs_Write(fh_open, &mileage_storage, sizeof(DumpVoltage), &writedLen);
+        if(EAT_FS_NO_ERROR == fh_write && sizeof(DumpVoltage) == writedLen)
         {
             LOG_DEBUG("write file success.");
 
@@ -227,6 +201,7 @@ void convert_storage_to_setting(void)
 }
 
 
+
 void convert_setting_to_storage(void)
 {
     if(ADDR_TYPE_DOMAIN == setting.addr_type)
@@ -264,5 +239,118 @@ void setting_dump_voltage_init(void)
 
 }
 
+eat_bool settingfile_reset()
+{
+    FS_HANDLE fh_open, fh_read;
+    UINT readLen;
+    eat_bool ret = EAT_FALSE;
 
+    fh_open = eat_fs_Open(SETITINGFILE_NAME, FS_READ_WRITE);
+    if(EAT_FS_FILE_NOT_FOUND == fh_open)
+    {
+        LOG_INFO("file not exists.");
+        fh_open = eat_fs_Open(SETITINGFILE_NAME, FS_CREATE);
+        if(EAT_FS_NO_ERROR <= fh_open)
+        {
+            LOG_INFO("creat file success, fh=%d.", fh_open);
+            eat_fs_Close(fh_open);
+
+            convert_setting_to_storage();
+            storage_save();
+            ret = EAT_TRUE;
+        }
+        else
+        {
+            LOG_ERROR("creat file failed, fh=%d.", fh_open);
+        }
+    }
+    else if(EAT_FS_NO_ERROR <= fh_open)
+    {
+        LOG_INFO("open file success, fh=%d.", fh_open);
+
+        fh_read = eat_fs_Read(fh_open, &storage, sizeof(STORAGE), &readLen);
+        if (EAT_FS_NO_ERROR == fh_read)
+        {
+            LOG_DEBUG("read file success.");
+
+            eat_fs_Close(fh_open);
+
+            if(storage_check())
+            {
+                convert_storage_to_setting();
+            }
+            else
+            {
+                convert_setting_to_storage();
+                storage_save();
+            }
+
+            ret = EAT_TRUE;
+        }
+        else
+        {
+            LOG_ERROR("read file fail, and Return Error: %d, Readlen is %d!", fh_read, readLen);
+        }
+    }
+    else
+    {
+        LOG_ERROR("open file failed, fh=%d!", fh_open);
+    }
+
+
+    fh_open = eat_fs_Open(MILEAGEFILE_NAME, FS_READ_WRITE);
+    if(EAT_FS_FILE_NOT_FOUND == fh_open)
+    {
+        LOG_INFO("file not exists.");
+        fh_open = eat_fs_Open(MILEAGEFILE_NAME, FS_CREATE);
+        if(EAT_FS_NO_ERROR <= fh_open)
+        {
+            LOG_INFO("creat file success, fh=%d.", fh_open);
+            eat_fs_Close(fh_open);
+
+            //convert_setting_to_storage();
+            storage_save();
+            ret = EAT_TRUE;
+        }
+        else
+        {
+            LOG_ERROR("creat file failed, fh=%d.", fh_open);
+        }
+    }
+    else if(EAT_FS_NO_ERROR <= fh_open)
+    {
+        LOG_INFO("open file success, fh=%d.", fh_open);
+
+        fh_read = eat_fs_Read(fh_open, &mileage_storage, sizeof(DumpVoltage), &readLen);
+        if (EAT_FS_NO_ERROR == fh_read)
+        {
+            LOG_DEBUG("read file success.");
+
+            eat_fs_Close(fh_open);
+
+            if(storage_check())
+            {
+                //convert_storage_to_setting();
+            }
+            else
+            {
+                //convert_setting_to_storage();
+                storage_save();
+            }
+
+            ret = EAT_TRUE;
+        }
+        else
+        {
+            LOG_ERROR("read file fail, and Return Error: %d, Readlen is %d!", fh_read, readLen);
+        }
+    }
+    else
+    {
+        LOG_ERROR("open file failed, fh=%d!", fh_open);
+    }
+
+
+    return ret;
+}
 
