@@ -487,10 +487,10 @@ static int server_proc(const void* msg)
     if(4 == count)
     {
         setting.addr_type = ADDR_TYPE_IP;
-        setting.addr.ipaddr[0] = (u8)ip[0];
-        setting.addr.ipaddr[1] = (u8)ip[1];
-        setting.addr.ipaddr[2] = (u8)ip[2];
-        setting.addr.ipaddr[3] = (u8)ip[3];
+        setting.ipaddr[0] = (u8)ip[0];
+        setting.ipaddr[1] = (u8)ip[1];
+        setting.ipaddr[2] = (u8)ip[2];
+        setting.ipaddr[3] = (u8)ip[3];
         setting.port = (u16)msg_server->port;
         convert_setting_to_storage();
         storage_save();
@@ -504,7 +504,7 @@ static int server_proc(const void* msg)
         if(1 == count)
         {
             setting.addr_type = ADDR_TYPE_DOMAIN;
-            strcpy(setting.addr.domain, msg_server->server);
+            strcpy(setting.domain, msg_server->server);
             setting.port = (u16)msg_server->port;
             convert_setting_to_storage();
             storage_save();
@@ -595,5 +595,13 @@ void send_autodefendstate_msg(eat_bool state)
 
 }
 
+void msg_heartbeat(void)
+{
+    u8 msgLen = sizeof(MSG_HEADER) + sizeof(short);
+    MSG_PING_REQ* msg = alloc_msg(CMD_PING, msgLen);
+    msg->statue = EAT_TRUE;   //TODO: to define the status bits
+
+    socket_sendData(msg, msgLen);
+}
 
 

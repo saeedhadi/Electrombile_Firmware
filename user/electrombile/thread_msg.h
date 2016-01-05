@@ -46,7 +46,7 @@ typedef struct
 #pragma anon_unions
 typedef struct
 {
-    eat_bool isGpsFixed;    //TURE: 发送的是GPS信息，FALSE：发送的是基站信息
+    eat_bool isGps;    //TURE: GPS; FALSE: 鍩虹珯淇℃伅
     union
     {
         GPS gps;

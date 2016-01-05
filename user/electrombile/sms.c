@@ -6,7 +6,7 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>  //strtok()必须加载这个头函数
+#include <stdlib.h>
 
 #include "eat_modem.h"
 #include "eat_interface.h"
@@ -77,11 +77,11 @@ static void sms_server_proc(u8 *p, u8 *number)
     {
         if(setting.addr_type == ADDR_TYPE_IP)
         {
-            sprintf(ack_message, "SERVER %d.%d.%d.%d:%d",setting.addr.ipaddr[0],setting.addr.ipaddr[1],setting.addr.ipaddr[2],setting.addr.ipaddr[3],setting.port);
+            sprintf(ack_message, "SERVER %d.%d.%d.%d:%d",setting.ipaddr[0],setting.ipaddr[1],setting.ipaddr[2],setting.ipaddr[3],setting.port);
         }
         else if(setting.addr_type == ADDR_TYPE_DOMAIN)
         {
-            sprintf(ack_message, "SERVER %s:%d",setting.addr.domain,setting.port);
+            sprintf(ack_message, "SERVER %s:%d",setting.domain,setting.port);
         }
         eat_send_text_sms(number, ack_message);
     }
@@ -100,10 +100,10 @@ static void sms_server_proc(u8 *p, u8 *number)
                 {
                     //domainORip is ip
                     setting.addr_type = ADDR_TYPE_IP;
-                    setting.addr.ipaddr[0] = (u8)ip[0];
-                    setting.addr.ipaddr[1] = (u8)ip[1];
-                    setting.addr.ipaddr[2] = (u8)ip[2];
-                    setting.addr.ipaddr[3] = (u8)ip[3];
+                    setting.ipaddr[0] = (u8)ip[0];
+                    setting.ipaddr[1] = (u8)ip[1];
+                    setting.ipaddr[2] = (u8)ip[2];
+                    setting.ipaddr[3] = (u8)ip[3];
                     setting.port = (u16)port;
                     convert_setting_to_storage();
                     storage_save();
@@ -128,7 +128,7 @@ static void sms_server_proc(u8 *p, u8 *number)
                 {
                     //domainORip is domain
                     setting.addr_type = ADDR_TYPE_DOMAIN;
-                    strcpy(setting.addr.domain, domainORip);
+                    strcpy(setting.domain, domainORip);
                     setting.port = (u16)port;
                     convert_setting_to_storage();
                     storage_save();

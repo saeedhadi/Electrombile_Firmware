@@ -40,12 +40,14 @@ static char* getEventDescription(soc_event_enum event)
 {
 	switch (event)
 	{
+#ifdef LOG_DEBUG_FLAG
 		DESC_DEF(SOC_READ);
 		DESC_DEF(SOC_WRITE);
 		DESC_DEF(SOC_ACCEPT);
 		DESC_DEF(SOC_CONNECT);
 		DESC_DEF(SOC_CLOSE);
 		DESC_DEF(SOC_ACKED);
+#endif
 		default:
 		{
 			static char soc_event[10] = {0};
@@ -69,6 +71,7 @@ static char* getStateDescription(cbm_bearer_state_enum state)
 {
 	switch (state)
 	{
+#ifdef LOG_DEBUG_FLAG
 		DESC_DEF(CBM_DEACTIVATED);
 		DESC_DEF(CBM_ACTIVATING);
 		DESC_DEF(CBM_ACTIVATED);
@@ -77,6 +80,7 @@ static char* getStateDescription(cbm_bearer_state_enum state)
 		DESC_DEF(CBM_GPRS_AUTO_DISC_TIMEOUT);
 		DESC_DEF(CBM_NWK_NEG_QOS_MODIFY);
 		DESC_DEF(CBM_WIFI_STA_INFO_MODIFY);
+#endif
 		default:
 		{
 			static char bearer_state[10] = {0};
@@ -93,7 +97,7 @@ static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
 
 	if (result == EAT_TRUE)
 	{
-		LOG_DEBUG("hostname notify:%s -> %d.%d.%d.%d.", setting.addr.domain, ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3], setting.port);
+		LOG_DEBUG("hostname notify:%s -> %d.%d.%d.%d.", setting.domain, ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3], setting.port);
 
         address.sock_type = SOC_SOCK_STREAM;
         address.addr_len = 4;
@@ -290,10 +294,10 @@ void socket_setup(void)
     address.addr_len = 4;
     if (setting.addr_type == ADDR_TYPE_IP)
     {
-        address.addr[0] = setting.addr.ipaddr[0];
-        address.addr[1] = setting.addr.ipaddr[1];
-        address.addr[2] = setting.addr.ipaddr[2];
-        address.addr[3] = setting.addr.ipaddr[3];
+        address.addr[0] = setting.ipaddr[0];
+        address.addr[1] = setting.ipaddr[1];
+        address.addr[2] = setting.ipaddr[2];
+        address.addr[3] = setting.ipaddr[3];
 
         LOG_DEBUG("ip: %d.%d.%d.%d:%d.", address.addr[0], address.addr[1], address.addr[2], address.addr[3], setting.port);
     }
@@ -303,7 +307,7 @@ void socket_setup(void)
     	u8 len = 0;
 
     	eat_soc_gethost_notify_register(hostname_notify_cb);
-    	rc = eat_soc_gethostbyname(setting.addr.domain, ipaddr, &len, 1234);
+    	rc = eat_soc_gethostbyname(setting.domain, ipaddr, &len, 1234);
     	if (rc == SOC_WOULDBLOCK)
     	{
     		LOG_INFO("eat_soc_gethostbyname wait callback.");
@@ -316,7 +320,7 @@ void socket_setup(void)
             address.addr[2] = ipaddr[2];
             address.addr[3] = ipaddr[3];
 
-            LOG_DEBUG("host:%s -> %d.%d.%d.%d:%d.", setting.addr.domain, ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3], setting.port);
+            LOG_DEBUG("host:%s -> %d.%d.%d.%d:%d.", setting.domain, ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3], setting.port);
     	}
     	else
     	{
