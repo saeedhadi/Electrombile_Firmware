@@ -211,6 +211,7 @@ static eat_bool gps_sendGps(u8 cmd)
     {
         //GPS is the same as before, do not send this msg
         ret = EAT_TRUE;
+         freeMsg(msg);
     }
 
     else
@@ -275,6 +276,7 @@ static eat_bool gps_sendCell(u8 cmd)
     {
         //GPS is the same as before, do not send this msg
         ret = EAT_TRUE;
+         freeMsg(msg);
     }
     else
     {
