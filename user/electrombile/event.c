@@ -308,6 +308,7 @@ static int event_threadMsg(const EatEvent_st* event)
     size_t i = 0;
     int rc = 0;
 
+    //check the message length
     if (msg->length + sizeof(MSG_THREAD) != msgLen)
     {
         LOG_ERROR("Message length error");
@@ -328,7 +329,7 @@ static int event_threadMsg(const EatEvent_st* event)
             }
             else
             {
-                LOG_ERROR("Message %d not processed!", msg->cmd);
+                LOG_ERROR("thread message %d not processed!", msg->cmd);
                 rc = -1;
                 break;
             }
