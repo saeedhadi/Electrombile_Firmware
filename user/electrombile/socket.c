@@ -97,7 +97,7 @@ static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
 
 	if (result == EAT_TRUE)
 	{
-		LOG_DEBUG("hostname notify:%s -> %d.%d.%d.%d.", setting.addr.domain, ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3], setting.port);
+		LOG_DEBUG("hostname notify:%s -> %d.%d.%d.%d.", setting.domain, ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3], setting.port);
 
         address.sock_type = SOC_SOCK_STREAM;
         address.addr_len = 4;
@@ -294,10 +294,10 @@ void socket_setup(void)
     address.addr_len = 4;
     if (setting.addr_type == ADDR_TYPE_IP)
     {
-        address.addr[0] = setting.addr.ipaddr[0];
-        address.addr[1] = setting.addr.ipaddr[1];
-        address.addr[2] = setting.addr.ipaddr[2];
-        address.addr[3] = setting.addr.ipaddr[3];
+        address.addr[0] = setting.ipaddr[0];
+        address.addr[1] = setting.ipaddr[1];
+        address.addr[2] = setting.ipaddr[2];
+        address.addr[3] = setting.ipaddr[3];
 
         LOG_DEBUG("ip: %d.%d.%d.%d:%d.", address.addr[0], address.addr[1], address.addr[2], address.addr[3], setting.port);
     }
@@ -307,7 +307,7 @@ void socket_setup(void)
     	u8 len = 0;
 
     	eat_soc_gethost_notify_register(hostname_notify_cb);
-    	rc = eat_soc_gethostbyname(setting.addr.domain, ipaddr, &len, 1234);
+    	rc = eat_soc_gethostbyname(setting.domain, ipaddr, &len, 1234);
     	if (rc == SOC_WOULDBLOCK)
     	{
     		LOG_INFO("eat_soc_gethostbyname wait callback.");
@@ -320,7 +320,7 @@ void socket_setup(void)
             address.addr[2] = ipaddr[2];
             address.addr[3] = ipaddr[3];
 
-            LOG_DEBUG("host:%s -> %d.%d.%d.%d:%d.", setting.addr.domain, ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3], setting.port);
+            LOG_DEBUG("host:%s -> %d.%d.%d.%d:%d.", setting.domain, ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3], setting.port);
     	}
     	else
     	{

@@ -21,6 +21,13 @@ SETTING setting;
 STORAGE storage;
 eat_bool updatertctime_flag = EAT_FALSE;
 
+
+void setting_reset(void);
+eat_bool storage_check(void);
+eat_bool storage_save(void);
+void convert_storage_to_setting(void);
+void convert_setting_to_storage(void);
+
 eat_bool vibration_fixed(void)
 {
     return setting.isVibrateFixed;
@@ -107,13 +114,13 @@ void setting_reset(void)
     /* Server configuration */
     #if 1
     setting.addr_type = ADDR_TYPE_DOMAIN;
-    strcpy(setting.addr.domain, "www.xiaoan110.com");
+    strcpy(setting.domain, "www.xiaoan110.com");
     #else
     setting.addr_type = ADDR_TYPE_IP;
-    setting.addr.ipaddr[0] = 121;
-    setting.addr.ipaddr[1] = 40;
-    setting.addr.ipaddr[2] = 117;
-    setting.addr.ipaddr[3] = 200;
+    setting.ipaddr[0] = 121;
+    setting.ipaddr[1] = 40;
+    setting.ipaddr[2] = 117;
+    setting.ipaddr[3] = 200;
     #endif
 
     setting.port = 9880;
@@ -199,17 +206,17 @@ void convert_storage_to_setting(void)
     if(ADDR_TYPE_DOMAIN == storage.addr_type)
     {
         setting.addr_type = ADDR_TYPE_DOMAIN;
-        strcpy(setting.addr.domain, storage.addr.domain);
+        strcpy(setting.domain, storage.addr.domain);
 
         LOG_DEBUG("server domain = %s:%d.", storage.addr.domain, storage.port);
     }
     else if(ADDR_TYPE_IP == storage.addr_type)
     {
         setting.addr_type = ADDR_TYPE_IP;
-        setting.addr.ipaddr[0] = storage.addr.ipaddr[0];
-        setting.addr.ipaddr[1] = storage.addr.ipaddr[1];
-        setting.addr.ipaddr[2] = storage.addr.ipaddr[2];
-        setting.addr.ipaddr[3] = storage.addr.ipaddr[3];
+        setting.ipaddr[0] = storage.addr.ipaddr[0];
+        setting.ipaddr[1] = storage.addr.ipaddr[1];
+        setting.ipaddr[2] = storage.addr.ipaddr[2];
+        setting.ipaddr[3] = storage.addr.ipaddr[3];
 
         LOG_DEBUG("server ip = %d.%d.%d.%d:%d.", storage.addr.ipaddr[0], storage.addr.ipaddr[1], storage.addr.ipaddr[2], storage.addr.ipaddr[3], storage.port);
     }
@@ -227,19 +234,19 @@ void convert_setting_to_storage(void)
     if(ADDR_TYPE_DOMAIN == setting.addr_type)
     {
         storage.addr_type = ADDR_TYPE_DOMAIN;
-        strcpy(storage.addr.domain, setting.addr.domain);
+        strcpy(storage.addr.domain, setting.domain);
 
-        LOG_DEBUG("server domain = %s:%d.", setting.addr.domain, setting.port);
+        LOG_DEBUG("server domain = %s:%d.", setting.domain, setting.port);
     }
     else if(ADDR_TYPE_IP == setting.addr_type)
     {
         storage.addr_type = ADDR_TYPE_IP;
-        storage.addr.ipaddr[0] = setting.addr.ipaddr[0];
-        storage.addr.ipaddr[1] = setting.addr.ipaddr[1];
-        storage.addr.ipaddr[2] = setting.addr.ipaddr[2];
-        storage.addr.ipaddr[3] = setting.addr.ipaddr[3];
+        storage.addr.ipaddr[0] = setting.ipaddr[0];
+        storage.addr.ipaddr[1] = setting.ipaddr[1];
+        storage.addr.ipaddr[2] = setting.ipaddr[2];
+        storage.addr.ipaddr[3] = setting.ipaddr[3];
 
-        LOG_DEBUG("server ip = %d.%d.%d.%d:%d.", setting.addr.ipaddr[0], setting.addr.ipaddr[1], setting.addr.ipaddr[2], setting.addr.ipaddr[3], setting.port);
+        LOG_DEBUG("server ip = %d.%d.%d.%d:%d.", setting.ipaddr[0], setting.ipaddr[1], setting.ipaddr[2], setting.ipaddr[3], setting.port);
     }
     storage.port = setting.port;
     storage.gps_send_timer_period = setting.gps_send_timer_period;
