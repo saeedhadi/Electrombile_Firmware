@@ -55,6 +55,58 @@ eat_bool setting_initial(void)
     eat_fs_Delete(SETITINGFILE_NAME);//TODO, for debug
     #endif
 
+    fh_open = eat_fs_Open(SETITINGFILE_NAME, FS_READ_WRITE);
+    if(EAT_FS_FILE_NOT_FOUND == fh_open)
+    {
+        LOG_INFO("file not exists.");
+        fh_open = eat_fs_Open(SETITINGFILE_NAME, FS_CREATE);
+        if(EAT_FS_NO_ERROR <= fh_open)
+        {
+            LOG_INFO("creat file success, fh=%d.", fh_open);
+            eat_fs_Close(fh_open);
+
+            convert_setting_to_storage();
+            storage_save();
+            ret = EAT_TRUE;
+        }
+        else
+        {
+            LOG_ERROR("creat file failed, fh=%d.", fh_open);
+        }
+    }
+    else if(EAT_FS_NO_ERROR <= fh_open)
+    {
+        LOG_INFO("open file success, fh=%d.", fh_open);
+
+        fh_read = eat_fs_Read(fh_open, &storage, sizeof(STORAGE), &readLen);
+        if (EAT_FS_NO_ERROR == fh_read)
+        {
+            LOG_DEBUG("read file success.");
+
+            eat_fs_Close(fh_open);
+
+            if(storage_check())
+            {
+                convert_storage_to_setting();
+            }
+            else
+            {
+                convert_setting_to_storage();
+                storage_save();
+            }
+
+            ret = EAT_TRUE;
+        }
+        else
+        {
+            LOG_ERROR("read file fail, and Return Error: %d, Readlen is %d!", fh_read, readLen);
+        }
+    }
+    else
+    {
+        LOG_ERROR("open file failed, fh=%d!", fh_open);
+    }
+
     return ret;
 }
 
