@@ -1,7 +1,7 @@
 /*
  * vibration.c
  *
- *  Created on: 2015Äê7ÔÂ1ÈÕ
+ *  Created on: 2015ï¿½ï¿½7ï¿½ï¿½1ï¿½ï¿½
  *      Author: jk
  */
 
@@ -94,7 +94,7 @@ static void move_alarm_timer_handler()
         }
         DigitalIntegrate(x_data, temp_data, MAX_MOVE_DATA_LEN,MOVE_TIMER_PERIOD/1000.0);
         DigitalIntegrate(temp_data, x_data, MAX_MOVE_DATA_LEN,MOVE_TIMER_PERIOD/1000.0);
-       for(i=0;i<MAX_MOVE_DATA_LEN;i++)
+        for(i=0;i<MAX_MOVE_DATA_LEN;i++)
         {
             if(x_data[0]<abs(x_data[i]))
             {
@@ -162,21 +162,21 @@ void app_vibration_thread(void *data)
         switch(event.event)
         {
             case EAT_EVENT_TIMER:
-				switch (event.data.timer.timer_id)
-				{
-    				case TIMER_VIBRATION:
-    					vibration_timer_handler();
-    					eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
-    					break;
-                            case TIMER_MOVE_ALARM:
-    					move_alarm_timer_handler();
+                switch (event.data.timer.timer_id)
+                {
+                    case TIMER_VIBRATION:
+                        vibration_timer_handler();
+                        eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
+                        break;
+                    case TIMER_MOVE_ALARM:
+                        move_alarm_timer_handler();
 
-    					break;
-    				default:
-    					LOG_ERROR("timer(%d) expire!", event.data.timer.timer_id);
-    					break;
-				}
-				break;
+                        break;
+                    default:
+                        LOG_ERROR("timer(%d) expire!", event.data.timer.timer_id);
+                        break;
+                }
+                break;
 
             default:
             	LOG_ERROR("event(%d) not processed!", event.event);
