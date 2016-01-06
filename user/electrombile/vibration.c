@@ -40,7 +40,7 @@ static void mma_ChangeDynamicRange(MMA_FULL_SCALE_EN mode);
 
 static u16 avoid_freq_count;
 static eat_bool avoid_freq_flag;
-
+eat_bool isMoved = EAT_FALSE;//“∆∂Ø±Í÷æ
 void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
 {
 	int i;
@@ -188,7 +188,7 @@ void app_vibration_thread(void *data)
 static void vibration_timer_handler(void)
 {
     static eat_bool isFirstTime = EAT_TRUE;
-    static eat_bool isMoved = EAT_TRUE;
+
     static int timerCount = 0;
 
     if(++avoid_freq_count == 30)

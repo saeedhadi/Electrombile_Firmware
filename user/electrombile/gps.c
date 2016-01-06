@@ -68,6 +68,7 @@ static float course = 0.0;
 
 static eat_bool isCellGet = EAT_FALSE;
 extern eat_bool updatertctime_flag;
+extern eat_bool isMoved;
 static short mcc = 0;//mobile country code
 static short mnc = 0;//mobile network code
 static char  cellNo = 0;//cell count
@@ -147,12 +148,14 @@ static void gps_timer_handler(u8 cmd)
         LOG_DEBUG("send gps.");
         gps_sendGps(cmd);
     }
-    else if(gps_isCellGet())
+
+ //暂时不用推送基站信息
+/*    else if(gps_isCellGet())
     {
         LOG_DEBUG("send cells.");
         gps_sendCell(cmd);
     }
-
+*/
     return;
 }
 
@@ -440,8 +443,8 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
         {
 
             distance = getdistance(pre_gps,gps);
-            if(distance <= 10 )//if the distance change 10m ,push the information of GPS
-            {
+            if(distance <= 10 ||isMoved == EAT_FALSE)//if the distance change 10m ,push the information of GPS
+            {//如果没有移动不上报gps
                 LOG_DEBUG("GPS is the same. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
                 return EAT_TRUE;
             }
