@@ -1,7 +1,7 @@
 /*
  * msg.h
  *
- *  Created on: 2015Äê7ÔÂ8ÈÕ
+ *  Created on: 2015ï¿½ï¿½7ï¿½ï¿½8ï¿½ï¿½
  *      Author: jk
  */
 
@@ -22,7 +22,7 @@
                   (((s) << 8) & 0xff00))
 #define ntohs(s) htons(s)
 
-void* alloc_msg(char cmd, size_t length);
+void* alloc_msg(char cmd, size_t length) __attribute__((malloc));
 void* alloc_rspMsg(const MSG_HEADER* pMsg);
 
 
