@@ -53,7 +53,7 @@ void log_hex(const char* data, int length)
         print("    ");
         for (j = i; j < i + 16 && j < length; j++)
         {
-            if (data[j] < 32)
+            if (data[j] < 32 || data[j] >= 127)
             {
                 print(".");
             }
