@@ -22,6 +22,8 @@
 #include "thread.h"
 #include "thread_msg.h"
 #include "timer.h"
+#include "seek.h"
+
 
 
 
@@ -35,6 +37,7 @@ typedef struct
 
 extern EatRtc_st GPStime;
 extern double mileage;
+extern int adcdata1;
 static eat_bool mileage_flag = EAT_FALSE;
 
 
@@ -604,4 +607,14 @@ void msg_heartbeat(void)
     socket_sendData(msg, msgLen);
 }
 
+eat_bool battery_getvalue(void)
+{
+    int value = 0;
+
+    eat_adc_get(EAT_ADC1, 0, adc_cb_proc);
+    value = adcdata1;
+    LOG_DEBUG("battery value: %d",value);
+
+    return EAT_TRUE;
+}
 

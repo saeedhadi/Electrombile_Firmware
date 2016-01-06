@@ -128,7 +128,8 @@ void app_main(void *data)
     eat_timer_start(TIMER_AT_CMD, setting.at_cmd_timer_period);
     eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
     eat_timer_start(TIMER_HEARTBEAT,setting.heartbeat_timer_period);
-    eat_timer_start(TIMER_RTC_UPDATE,10);
+    eat_timer_start(TIMER_FOR_TEST,2*1000);
+    eat_timer_start(TIMER_RTC_UPDATE,30*1000);
 
 
     while(EAT_TRUE)
