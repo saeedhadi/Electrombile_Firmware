@@ -59,7 +59,7 @@ void app_seek_thread(void *data)
     eat_gpio_setup(EAT_PIN43_GPIO19, EAT_GPIO_DIR_INPUT, EAT_GPIO_LEVEL_LOW);
     eat_gpio_setup(EAT_PIN50_NETLIGHT, EAT_GPIO_DIR_OUTPUT, EAT_GPIO_LEVEL_LOW);
 
-    eat_adc_get(EAT_PIN23_ADC1, ADC0_PERIOD, NULL);
+    eat_adc_get(EAT_ADC0, ADC0_PERIOD, NULL);
 
     while(EAT_TRUE)
     {
@@ -67,11 +67,14 @@ void app_seek_thread(void *data)
         switch(event.event)
         {
              case EAT_EVENT_ADC:
-                if (event.data.adc.pin == EAT_ADC0 && isSeekMode())
+                if (event.data.adc.pin == EAT_ADC0)
                 {
-                    unsigned int value = event.data.adc.v;
-                    LOG_INFO("EAT_ADC0 = %d", value);
-                    seek_sendValue(value);
+                    if (isSeekMode())
+                    {
+                        unsigned int value = event.data.adc.v;
+                        LOG_INFO("EAT_ADC0 = %d", value);
+                        seek_sendValue(value);
+                    }
                 }
                 else
                 {
