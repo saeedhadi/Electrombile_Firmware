@@ -1,7 +1,7 @@
 /*
  * data.c
  *
- *  Created on: 2015Äê7ÔÂ9ÈÕ
+ *  Created on: 2015ï¿½ï¿½7ï¿½ï¿½9ï¿½ï¿½
  *      Author: jk
  */
 
@@ -42,14 +42,14 @@ void set_client_state(eat_bool logined)
     data.logined = logined;
 }
 
-eat_bool seek_fixed(void)
+eat_bool isSeekMode(void)
 {
-    return data.isSeekFixed;
+    return data.isSeekMode;
 }
 
-void set_seek_state(eat_bool fixed)
+void setSeekMode(eat_bool fixed)
 {
-    data.isSeekFixed = fixed;
+    data.isSeekMode = fixed;
 }
 
 eat_bool get_autodefend_state(void)

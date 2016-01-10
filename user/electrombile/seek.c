@@ -67,7 +67,7 @@ void app_seek_thread(void *data)
         switch(event.event)
         {
              case EAT_EVENT_ADC:
-                if (event.data.adc.pin == EAT_ADC0 && seek_fixed())
+                if (event.data.adc.pin == EAT_ADC0 && isSeekMode())
                 {
                     unsigned int value = event.data.adc.v;
                     LOG_INFO("EAT_ADC0 = %d", value);

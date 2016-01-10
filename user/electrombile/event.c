@@ -128,7 +128,7 @@ static int event_timer(const EatEvent_st* event)
 
         case TIMER_SEEKAUTOOFF:
             LOG_INFO("TIMER_SEEKAUTOOFF expire!");
-            set_seek_state(EAT_FALSE);
+            setSeekMode(EAT_FALSE);
             break;
 
         case TIMER_RTC_UPDATE:
