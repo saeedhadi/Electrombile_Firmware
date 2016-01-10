@@ -607,14 +607,3 @@ void msg_heartbeat(void)
     socket_sendData(msg, msgLen);
 }
 
-eat_bool battery_getvalue(void)
-{
-    int value = 0;
-
-    eat_adc_get(EAT_ADC1, 0, adc_cb_proc);
-    value = adcdata1;
-    LOG_DEBUG("battery value: %d",value);
-
-    return EAT_TRUE;
-}
-

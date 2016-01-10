@@ -140,11 +140,6 @@ static int event_timer(const EatEvent_st* event)
                 eat_timer_start(TIMER_RTC_UPDATE, setting.timeupdate_timer_peroid);
             break;
 
-        case TIMER_FOR_TEST:
-            battery_getvalue();
-            eat_timer_start(TIMER_FOR_TEST, 2*1000);
-            break;
-
         default:
             LOG_ERROR ("timer(%d) not processed!", event->data.timer.timer_id);
             break;
