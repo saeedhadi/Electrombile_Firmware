@@ -9,45 +9,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <eat_periphery.h>
+
 #include "timer.h"
 #include "thread.h"
 #include "thread_msg.h"
 #include "log.h"
 #include "data.h"
-#include "setting.h"
-#include "protocol.h"
 #include "seek.h"
 
-static int adcdata0 = 0;
-static int adcdata1 = 0;
+#define ADC0_PERIOD (2000)  //unit: ms
 
-
-
-//ADC callback function
-void adc_cb_proc(EatAdc_st* adc)
-{
-    if(adc->pin == EAT_PIN23_ADC1)
-    {
-        adcdata0 = adc->v;
-        LOG_DEBUG("adcdata0=%d",adcdata0);
-    }
-    if(adc->pin == EAT_PIN24_ADC2)
-    {
-        adcdata1 = adc->v;
-        LOG_DEBUG("adcdata1=%d",adcdata1);
-
-    }
-}
-
-static eat_bool seek_getValue(int* value)
-{
-    eat_adc_get(EAT_PIN23_ADC1, 0, adc_cb_proc);
-
-    *value = adcdata0;
-
-    return EAT_TRUE;
-}
-
+#define EAT_ADC0 EAT_PIN23_ADC1
+#define EAT_ADC1 EAT_PIN24_ADC2
 
 static eat_bool seek_sendMsg2Main(MSG_THREAD* msg, u8 len)
 {
@@ -71,38 +45,8 @@ static eat_bool seek_sendValue(int value)
     seek = (SEEK_INFO*)msg->data;
     seek->intensity = value;
 
-    LOG_DEBUG("send seek: value(%f)", value);
+    LOG_DEBUG("send seek: value(%d)", value);
     return seek_sendMsg2Main(msg, msgLen);
-}
-
-static void seek_timer_handler(void)
-{
-    int ret = EAT_FALSE;
-    int value = 0;
-
-    if(EAT_TRUE == seek_fixed())
-    {
-        LOG_DEBUG("seek fixed.");
-
-        ret = seek_getValue(&value);
-        if(EAT_FALSE == ret)
-        {
-            LOG_ERROR("seek seek_getValue failed.");
-            return;
-        }
-
-        ret = seek_sendValue(value);
-        if(EAT_FALSE == ret)
-        {
-            LOG_ERROR("seek seek_sendValue failed.");
-            return;
-        }
-    }
-
-    //TO DO
-    //LOG_DEBUG("read EAT_PIN43_GPIO19 = %d.", eat_gpio_read(EAT_PIN43_GPIO19));
-
-    return;
 }
 
 
@@ -111,28 +55,27 @@ void app_seek_thread(void *data)
     EatEvent_st event;
 
     LOG_INFO("seek thread start.");
-    eat_timer_start(TIMER_SEEK, setting.seek_timer_period);
 
     eat_gpio_setup(EAT_PIN43_GPIO19, EAT_GPIO_DIR_INPUT, EAT_GPIO_LEVEL_LOW);
     eat_gpio_setup(EAT_PIN50_NETLIGHT, EAT_GPIO_DIR_OUTPUT, EAT_GPIO_LEVEL_LOW);
+
+    eat_adc_get(EAT_PIN23_ADC1, ADC0_PERIOD, NULL);
 
     while(EAT_TRUE)
     {
         eat_get_event_for_user(THREAD_SEEK, &event);
         switch(event.event)
         {
-            case EAT_EVENT_TIMER :
-                switch (event.data.timer.timer_id)
+             case EAT_EVENT_ADC:
+                if (event.data.adc.pin == EAT_ADC0 && seek_fixed())
                 {
-                    case TIMER_SEEK:
-                        //LOG_INFO("TIMER_SEEK expire!");
-                        seek_timer_handler();
-                        eat_timer_start(event.data.timer.timer_id, setting.seek_timer_period);
-                        break;
-
-                    default:
-                        LOG_ERROR("ERR: timer[%d] expire!", event.data.timer.timer_id);
-                        break;
+                    unsigned int value = event.data.adc.v;
+                    LOG_INFO("EAT_ADC0 = %d", value);
+                    seek_sendValue(value);
+                }
+                else
+                {
+                    LOG_ERROR("un-processed adc pin %d", event.data.adc.pin);
                 }
                 break;
 
