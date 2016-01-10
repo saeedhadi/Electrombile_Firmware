@@ -17,6 +17,7 @@
 #include "thread_msg.h"
 #include "setting.h"
 #include "client.h"
+#include "mma8652.h"
 
 
 static eat_bool vibration_sendAlarm(void);
@@ -40,7 +41,7 @@ static void mma_ChangeDynamicRange(MMA_FULL_SCALE_EN mode);
 
 static u16 avoid_freq_count;
 static eat_bool avoid_freq_flag;
-eat_bool isMoved = EAT_FALSE;//“∆∂Ø±Í÷æ
+eat_bool isMoved = EAT_FALSE;
 void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
 {
 	int i;
@@ -151,10 +152,20 @@ static void move_alarm_timer_handler()
 void app_vibration_thread(void *data)
 {
 	EatEvent_st event;
+	bool ret;
 
 	LOG_INFO("vibration thread start.");
 
-    mma_init();
+	ret = mma8652_init();
+	if (!ret)
+	{
+        LOG_ERROR("mma8652 init failed");
+	}
+	else
+	{
+	    mma8652_config();
+	}
+
 	eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
 	while(EAT_TRUE)
 	{
