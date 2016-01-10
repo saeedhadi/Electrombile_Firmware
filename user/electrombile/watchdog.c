@@ -11,9 +11,11 @@
 #include "watchdog.h"
 #include "log.h"
 
+#define REBOOT_TIMEOUT  60000   //60s
+
 void startWatchdog(void)
 {
-	eat_bool rc = eat_watchdog_start(60000, 0); //60s, reboot if over time
+	eat_bool rc = eat_watchdog_start(REBOOT_TIMEOUT, 0); //reboot if over time
     if(rc)
     {
         LOG_INFO("open watchdog success.");
