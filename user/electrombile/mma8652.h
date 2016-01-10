@@ -323,4 +323,6 @@ bool mma8652_standby(void);
 bool mma8652_active(void);
 
 
+void mma8652_config(void);
+
 #endif //MMA8652_H

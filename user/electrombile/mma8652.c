@@ -48,6 +48,7 @@ bool mma8652_active(void)
 		value | MMA8652_CTRL_REG1_ACTIVE);
 }
 
+//TODO: return bool instead of void
 void mma8652_config(void)
 {
     uint8_t value = 0;
