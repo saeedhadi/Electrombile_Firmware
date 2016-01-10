@@ -12,17 +12,14 @@
 
 
 #include "mma8652.h"
-#include "log.h"
 
 bool mma8652_i2c_init(void)
 {
     s32 ret = eat_i2c_open(EAT_I2C_OWNER_0, MMA8652_I2C_ADDR, MMA8652_SPEED_FAST_MODE);
     if (EAT_DEV_STATUS_OK != ret)
     {
-        LOG_ERROR("mma open i2c fail :ret=%d.", ret);
         return false;
     }
-    LOG_INFO("mma open i2c success.");
 
     return true;
 }
