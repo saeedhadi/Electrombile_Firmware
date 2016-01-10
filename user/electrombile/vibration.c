@@ -17,30 +17,19 @@
 #include "thread_msg.h"
 #include "setting.h"
 #include "client.h"
+#include "mma8652.h"
 
 
 static eat_bool vibration_sendAlarm(void);
 static void vibration_timer_handler(void);
 
-static void mma_init(void);
-static void mma_open(void);
-static int mma_read(const int readAddress);
-static int mma_write(const int writeAddress, int writeValue);
-static void mma_Standby(void);
-static void mma_Active(void);
-
-static eat_bool mma_WhoAmI(void);
-static void mma_ChangeDynamicRange(MMA_FULL_SCALE_EN mode);
-
-#define VIBRATION_TRESHOLD 100000000
 #define MAX_MOVE_DATA_LEN   500
 #define MOVE_TIMER_PERIOD    10
-#define MOVE_TRESHOLD   50;
 
 
 static u16 avoid_freq_count;
 static eat_bool avoid_freq_flag;
-eat_bool isMoved = EAT_FALSE;//“∆∂Ø±Í÷æ
+eat_bool isMoved = EAT_FALSE;
 void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
 {
 	int i;
@@ -55,16 +44,14 @@ void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
 
 static void move_alarm_timer_handler()
 {
-    char addbuf[2];
-    char readbuf[3];
+    unsigned char readbuf[3];
     int i;
     float tmp[3]={0};
     short temp;
     static float x_data[MAX_MOVE_DATA_LEN], y_data[MAX_MOVE_DATA_LEN], z_data[MAX_MOVE_DATA_LEN];
     float temp_data[MAX_MOVE_DATA_LEN];
     static int timerCount = 0;
-    addbuf[0] = MMA8X5X_OUT_X_MSB;
-    eat_i2c_read(EAT_I2C_OWNER_0, addbuf, 1, readbuf, 3);
+    bool ret = mma8652_i2c_register_read(MMA8652_REG_OUT_X_MSB, readbuf, 3);
     temp = readbuf[0]<<8;
     x_data[timerCount] = temp/256;
      temp = readbuf[1]<<8;
@@ -148,13 +135,24 @@ static void move_alarm_timer_handler()
 
 
 }
+
 void app_vibration_thread(void *data)
 {
 	EatEvent_st event;
+	bool ret;
 
 	LOG_INFO("vibration thread start.");
 
-    mma_init();
+	ret = mma8652_init();
+	if (!ret)
+	{
+        LOG_ERROR("mma8652 init failed");
+	}
+	else
+	{
+	    mma8652_config();
+	}
+
 	eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
 	while(EAT_TRUE)
 	{
@@ -191,14 +189,16 @@ static void vibration_timer_handler(void)
 
     static int timerCount = 0;
 
+    char transient_src = 0;
+
     if(++avoid_freq_count == 30)
     {
         avoid_freq_count = 0;
         avoid_freq_flag = EAT_FALSE;
     }
 
-
-    if(mma_read(MMA8X5X_TRANSIENT_SRC) & 0x40)
+    mma8652_i2c_register_read(MMA8652_REG_TRANSIENT_SRC, &transient_src, sizeof(transient_src));
+    if(transient_src & MMA8652_TRANSIENT_SRC_EA)
     {
         /* At the first time, the value of MMA8X5X_TRANSIENT_SRC is strangely 0x60.
          * Do not send alarm at the first time.
@@ -272,126 +272,5 @@ static eat_bool vibration_sendAlarm(void)
     LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
     avoid_freq_flag = EAT_TRUE;
     return sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, msgLen);
-}
-
-
-static void mma_init(void)
-{
-    mma_open();
-    //mma_WhoAmI();
-
-    mma_Standby();
-    //LOG_DEBUG("MMA8X5X_TRANSIENT_SRC = %02x", mma_read(MMA8X5X_TRANSIENT_SRC));
-
-    mma_write(MMA8X5X_CTRL_REG4, 0x20);
-    mma_write(MMA8X5X_CTRL_REG5, 0x20);
-    mma_write(MMA8X5X_TRANSIENT_CFG, 0x1e);
-    mma_write(MMA8X5X_TRANSIENT_THS, 0x01);
-    mma_write(MMA8X5X_HP_FILTER_CUTOFF, 0x03);
-    mma_write(MMA8X5X_TRANSIENT_COUNT, 0x40);
-    mma_write(MMA8X5X_CTRL_REG1, (mma_read(MMA8X5X_CTRL_REG1) | 0x02));
-    mma_Active();
-    //LOG_DEBUG("MMA8X5X_TRANSIENT_SRC = %02x", mma_read(MMA8X5X_TRANSIENT_SRC));
-}
-
-static void mma_open(void)
-{
-    s32 ret;
-
-    ret = eat_i2c_open(EAT_I2C_OWNER_0, 0x1D, 100);
-	if(EAT_DEV_STATUS_OK != ret)
-	{
-	    LOG_ERROR("mma open i2c fail :ret=%d.", ret);
-	}
-	LOG_INFO("mma open i2c success.");
-
-    return;
-}
-
-static int mma_read(const int readAddress)
-{
-    unsigned char readAddressBuff[1];
-    unsigned char readBuff[1];
-
-    readAddressBuff[0] = readAddress;
-    eat_i2c_read(EAT_I2C_OWNER_0, readAddressBuff, 1, readBuff, 1);
-
-    return readBuff[0];
-}
-
-static int mma_write(const int writeAddress, int writeValue)
-{
-    unsigned char write[2] = {0};
-
-    write[0] = writeAddress;
-    write[1] = writeValue;
-
-    return eat_i2c_write(EAT_I2C_OWNER_0, write, 2);
-}
-
-static void mma_Standby(void)
-{
-    mma_write(MMA8X5X_CTRL_REG1, (mma_read(MMA8X5X_CTRL_REG1) & ~0x01));
-
-    return;
-}
-
-static void mma_Active(void)
-{
-    mma_write(MMA8X5X_CTRL_REG1, (mma_read(MMA8X5X_CTRL_REG1) | 0x01));
-
-    return;
-}
-
-static eat_bool mma_WhoAmI(void)
-{
-    //Ox4a
-    if(0x4a == mma_read(MMA8X5X_WHO_AM_I))
-    {
-        LOG_DEBUG("mma get 0x4a.");
-        return EAT_TRUE;
-    }
-    else
-    {
-        LOG_ERROR("mma no 0x4a.");
-        return EAT_FALSE;
-    }
-}
-
-/* Full-scale selection
- * 00-2g
- * 01-4g
- * 10-8g
- * 11-reserved
- */
-static void mma_ChangeDynamicRange(MMA_FULL_SCALE_EN mode)
-{
-    mma_Standby();
-
-    switch(mode)
-    {
-        case MMA_FULL_SCALE_2G:
-            LOG_DEBUG("change dynamic range as 2g.");
-            mma_write(MMA8X5X_XYZ_DATA_CFG, (mma_read(MMA8X5X_XYZ_DATA_CFG) & ~0x03));
-            break;
-
-        case MMA_FULL_SCALE_4G:
-            LOG_DEBUG("change dynamic range as 4g.");
-            mma_write(MMA8X5X_XYZ_DATA_CFG, (mma_read(MMA8X5X_XYZ_DATA_CFG) & ~0x02));
-            mma_write(MMA8X5X_XYZ_DATA_CFG, (mma_read(MMA8X5X_XYZ_DATA_CFG) | 0x01));
-            break;
-
-        case MMA_FULL_SCALE_8G:
-            LOG_DEBUG("change dynamic range as 8g.");
-            mma_write(MMA8X5X_XYZ_DATA_CFG, (mma_read(MMA8X5X_XYZ_DATA_CFG) & ~0x01));
-            mma_write(MMA8X5X_XYZ_DATA_CFG, (mma_read(MMA8X5X_XYZ_DATA_CFG) | 0x02));
-            break;
-
-        default:
-            LOG_ERROR("unknown MMA_FULL_SCALE_EN!");
-            break;
-    }
-
-    mma_Active();
 }
 
