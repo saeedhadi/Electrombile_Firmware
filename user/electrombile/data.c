@@ -16,9 +16,6 @@ LOCAL_DATA data =
     EAT_FALSE,
     EAT_TRUE,
     5,
-    EAT_FALSE,
-    EAT_FALSE,
-    {0}
 };
 
 

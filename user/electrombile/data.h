@@ -10,8 +10,6 @@
 
 #include <eat_type.h>
 
-#include "protocol.h"
-
 typedef struct
 {
     eat_bool connected;     //is the socket connected to server
@@ -20,26 +18,18 @@ typedef struct
     eat_bool isSeekMode;
     eat_bool isAutodefendFixed;
     unsigned char AutodefendPeriod;
-
-    eat_bool isGpsFixed;
-    eat_bool isCellGet;
-    GPS gps;
-    CGI cgi;
-    CELL cells[MAX_CELL_NUM];
 }LOCAL_DATA;
-
-extern LOCAL_DATA data;
-
 
 eat_bool socket_conneted(void);
 eat_bool client_logined(void);
 eat_bool isSeekMode(void);
-eat_bool get_autodefend_state(void);
-unsigned char get_autodefend_period(void);
 
 void set_socket_state(eat_bool connected);
 void set_client_state(eat_bool logined);
-void setSeekMode(eat_bool fixed);
+
+//true means is in seek mode
+void setSeekMode(eat_bool);
+
 void set_autodefend_state(eat_bool fixed);
 void set_autodefend_period(unsigned char period);
 unsigned char get_autodefend_period(void);

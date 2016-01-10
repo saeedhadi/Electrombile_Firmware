@@ -37,7 +37,6 @@ typedef struct
 
 extern EatRtc_st GPStime;
 extern double mileage;
-extern int adcdata1;
 static eat_bool mileage_flag = EAT_FALSE;
 
 
@@ -118,62 +117,9 @@ int client_proc(const void* m, int msgLen)
 
 void client_loop(void)
 {
-    int i = 0;  //loop iterator
-
     if (socket_conneted())
     {
-        if (client_logined())
-        {
-            if (data.isGpsFixed)
-            {
-                MSG_GPS* msg = alloc_msg(CMD_GPS, sizeof(MSG_GPS));
-                if (!msg)
-                {
-                    LOG_ERROR("alloc GPS message failed!");
-                    return;
-                }
-
-                msg->gps.longitude = data.gps.longitude;
-                msg->gps.latitude = data.gps.latitude;
-                msg->gps.altitude = data.gps.altitude;
-                msg->gps.speed = data.gps.speed;
-                msg->gps.course = data.gps.course;
-
-                LOG_DEBUG("send GPS message.");
-
-                socket_sendData(msg, sizeof(MSG_GPS));
-
-                data.isGpsFixed = EAT_FALSE;
-            }
-            else if(data.isCellGet)
-            {
-                size_t msgLen = sizeof(MSG_HEADER) + sizeof(CGI) + sizeof(CELL) * data.cgi.cellNo;
-                MSG_HEADER* msg = alloc_msg(CMD_CELL, msgLen);
-                CGI* cgi = (CGI*)(msg + 1);
-                CELL* cell = (CELL*)(cgi + 1);
-                if (!msg)
-                {
-                    LOG_ERROR("alloc CELL message failed!");
-                    return;
-                }
-
-                cgi->mcc = htons(data.cgi.mcc);
-                cgi->mnc = htons(data.cgi.mnc);
-                cgi->cellNo = data.cgi.cellNo;
-                for (i = 0; i < data.cgi.cellNo; i++)
-                {
-                    cell[i].lac = htons(data.cells[i].lac);
-                    cell[i].cellid = htons(data.cells[i].cellid);
-                    cell[i].rxl= htons(data.cells[i].rxl);
-                }
-
-                LOG_DEBUG("send CELL message.");
-                socket_sendData(msg, msgLen);
-
-                data.isCellGet = EAT_FALSE;
-            }
-        }
-        else
+        if (!client_logined())
         {
             MSG_LOGIN_REQ* msg = alloc_msg(CMD_LOGIN, sizeof(MSG_LOGIN_REQ));
             u8 imei[IMEI_LENGTH] = {0};

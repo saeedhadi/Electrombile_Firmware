@@ -147,6 +147,59 @@ static int event_timer(const EatEvent_st* event)
     return 0;
 }
 
+static void sendGPS2Server(LOCAL_GPS* gps)
+{
+
+    if (gps->isGps)
+    {
+        MSG_GPS* msg = alloc_msg(CMD_GPS, sizeof(MSG_GPS));
+        if (!msg)
+        {
+            LOG_ERROR("alloc GPS message failed!");
+            return;
+        }
+
+        msg->gps.longitude = gps->gps.longitude;
+        msg->gps.latitude = gps->gps.latitude;
+        msg->gps.altitude = gps->gps.altitude;
+        msg->gps.speed = gps->gps.speed;
+        msg->gps.course = gps->gps.course;
+
+        LOG_DEBUG("send GPS message.");
+
+        socket_sendData(msg, sizeof(MSG_GPS));
+    }
+#if 0
+    else
+    {
+        size_t msgLen = sizeof(MSG_HEADER) + sizeof(CGI) + sizeof(CELL) * gps->cellInfo.cellNo;
+        MSG_HEADER* msg = alloc_msg(CMD_CELL, msgLen);
+        CGI* cgi = (CGI*)(msg + 1);
+        CELL* cell = (CELL*)(cgi + 1);
+        int i = 0;
+        if (!msg)
+        {
+            LOG_ERROR("alloc CELL message failed!");
+            return;
+        }
+
+        cgi->mcc = htons(gps->cellInfo.mcc);
+        cgi->mnc = htons(gps->cellInfo.mnc);
+        cgi->cellNo = gps->cellInfo.cellNo;
+        for (i = 0; i < gps->cellInfo.cellNo; i++)
+        {
+            cell[i].lac = htons(gps->cellInfo.cell[i].lac);
+            cell[i].cellid = htons(gps->cellInfo.cell[i].cellid);
+            cell[i].rxl= htons(gps->cellInfo.cell[i].rxl);
+        }
+
+        LOG_DEBUG("send CELL message.");
+        socket_sendData(msg, msgLen);
+
+        data.isCellGet = EAT_FALSE;
+    }
+#endif
+}
 static int threadCmd_GPS(const MSG_THREAD* msg)
 {
     LOCAL_GPS* gps = (LOCAL_GPS*) msg->data;
@@ -157,22 +210,8 @@ static int threadCmd_GPS(const MSG_THREAD* msg)
          return -1;
      }
 
-     if (gps->isGps)    //update the local GPS data
-     {
-         data.isGpsFixed = EAT_TRUE;
-         data.gps.latitude = gps->gps.latitude;
-         data.gps.longitude = gps->gps.longitude;
-         LOG_DEBUG("receive thread command CMD_GPS_UPDATE: lat(%f), lng(%f).", gps->gps.latitude, gps->gps.longitude);
-     }
-     else    //update local cell info
-     {
-         data.isCellGet = EAT_TRUE;
-         data.cgi.mcc = gps->cellInfo.mcc;
-         data.cgi.mnc = gps->cellInfo.mnc;
-         data.cgi.cellNo = gps->cellInfo.cellNo;
-         memcpy(data.cells, gps->cellInfo.cell, sizeof(CELL) * gps->cellInfo.cellNo);
-         LOG_DEBUG("receive thread command CMD_GPS_UPDATE: cellid(%x), lac(%d).", data.cells[0].cellid, data.cells[0].lac);
-     }
+     //just forward it to the server
+     sendGPS2Server(gps);
 
     return 0;
 }
