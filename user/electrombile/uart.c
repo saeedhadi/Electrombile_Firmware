@@ -1,7 +1,7 @@
 /*
  * uart.c
  *
- *  Created on: 2015Äê7ÔÂ8ÈÕ
+ *  Created on: 2015ï¿½ï¿½7ï¿½ï¿½8ï¿½ï¿½
  *      Author: jk
  */
 
@@ -34,6 +34,30 @@ int event_uart_ready_rd(const EatEvent_st* event)
 		return 0;
 	}
 
+
+    if (strstr(buf, "version"))
+    {
+        LOG_INFO("version = %s build time = %s, build No. = %s", eat_get_version(), eat_get_buildtime(), eat_get_buildno());
+        return 0;
+    }
+
+    if (strstr(buf, "imei"))
+    {
+        u8 imei[32] = {0};
+        eat_get_imei(imei, 31);
+        LOG_INFO("IMEI = %s", imei);
+        return 0;
+    }
+
+    if (strstr(buf, "imsi"))
+    {
+        u8 imsi[32] = {0};
+        eat_get_imsi(imsi, 31);
+        LOG_INFO("IMSI = %s", imsi);
+        return 0;
+    }
+
+#ifdef LOG_DEBUG_FLAG
 	if (strstr(buf, "reboot"))
 	{
 		eat_reset_module();
@@ -45,26 +69,6 @@ int event_uart_ready_rd(const EatEvent_st* event)
 		eat_power_down();
 		return 0;
 	}
-
-	if (strstr(buf, "version"))
-	{
-		LOG_INFO("%s", eat_get_version());
-		return 0;
-	}
-
-	if (strstr(buf, "build"))
-	{
-		LOG_INFO("build time = %s, build No. = %s", eat_get_buildtime(), eat_get_buildno());
-		return 0;
-	}
-
-    if (strstr(buf, "imei"))
-    {
-        u8 imei[16] = {0};
-        eat_get_imei(imei, 15);
-        LOG_INFO("IMEI = %s", imei);
-        return 0;
-    }
 
     if (strstr(buf, "rtc"))
     {
@@ -100,6 +104,7 @@ int event_uart_ready_rd(const EatEvent_st* event)
         eat_fs_Delete(SETITINGFILE_NAME);//TODO, for debug
         return 0;
     }
+#endif
 
 	return 0;
 }
