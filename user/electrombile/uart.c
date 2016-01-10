@@ -56,6 +56,21 @@ int event_uart_ready_rd(const EatEvent_st* event)
         LOG_INFO("IMSI = %s", imsi);
         return 0;
     }
+    if (strstr(buf, "chipid"))
+    {
+#define MAX_CHIPID_LEN  16
+        u8 chipid[MAX_CHIPID_LEN + 1] = {0};
+        u8 chipid_desc[MAX_CHIPID_LEN * 2 + 1] = {0}; //hex character
+        int i = 0; //loop var
+
+        eat_get_chipid(chipid, MAX_CHIPID_LEN);
+        for (i = 0; i < MAX_CHIPID_LEN; i++)
+        {
+            sprintf(chipid_desc + i * 2, "%02X", chipid[i]);
+        }
+        LOG_INFO("chipd = %s", chipid_desc);
+        return 0;
+    }
 
 #ifdef LOG_DEBUG_FLAG
 	if (strstr(buf, "reboot"))
