@@ -35,7 +35,6 @@ typedef struct
     MSG_PROC pfn;
 }MC_MSG_PROC;
 
-extern EatRtc_st GPStime;
 extern double mileage;
 static eat_bool mileage_flag = EAT_FALSE;
 
@@ -522,15 +521,18 @@ static void msg_mileage_send(MSG_MILEAGE_REQ msg_mileage)
 
 static time_t timestamp_get(void)
 {
-    struct tm stm;
-    memset(&stm,0,sizeof(stm));
-    eat_get_rtc(&GPStime);
-    stm.tm_year=GPStime.year + YEAROFFSET - 1900;
-    stm.tm_mon=GPStime.mon - 1;
-    stm.tm_mday=GPStime.day;
-    stm.tm_hour=GPStime.hour;
-    stm.tm_min=GPStime.min;
-    stm.tm_sec=GPStime.sec;
+    struct tm stm = {0};
+    EatRtc_st rtc = {0};
+
+    eat_get_rtc(&rtc);
+
+    stm.tm_year = rtc.year + YEAROFFSET - 1900;
+    stm.tm_mon = rtc.mon - 1;
+    stm.tm_mday = rtc.day;
+    stm.tm_hour = rtc.hour;
+    stm.tm_min = rtc.min;
+    stm.tm_sec = rtc.sec;
+
     return mktime(&stm);
 }
 
