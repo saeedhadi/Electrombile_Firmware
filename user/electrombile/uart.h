@@ -1,7 +1,7 @@
 /*
  * uart.h
  *
- *  Created on: 2015Äê7ÔÂ8ÈÕ
+ *  Created on: 2015/7/8
  *      Author: jk
  */
 
@@ -12,6 +12,6 @@
 
 int event_uart_ready_rd(const EatEvent_st* event);
 
-void print(const char* fmt, ...);
+void print(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
 
 #endif /* USER_ELECTROMBILE_UART_H_ */
