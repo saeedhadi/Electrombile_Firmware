@@ -19,7 +19,6 @@
 #include "tool.h"
 #include "version.h"
 #include "timer.h"
-#include "socket.h"
 
 static eat_bool ResetFlag = EAT_FALSE;
 
@@ -310,7 +309,7 @@ void app_sms_thread(void *data)
                 switch (event.data.timer.timer_id)
                 {
                     default:
-                    	LOG_ERROR("ERR: timer[%d] expire!");
+                    	LOG_ERROR("ERR: timer[%d] not handle!", event.data.timer.timer_id);
                         break;
                 }
                 break;
