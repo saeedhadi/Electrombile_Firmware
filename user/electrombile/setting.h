@@ -17,22 +17,7 @@ typedef enum
 	ADDR_TYPE_DOMAIN
 }ADDR_TYPE;
 
-typedef struct
-{
-	//Server configuration
-	ADDR_TYPE addr_type;
-	union
-	{
-		s8 domain[MAX_DOMAIN_NAME_LEN];
-		u8 ipaddr[4];
-	}addr;
-	u16 port;
 
-	//Timer configuration
-    u32 gps_send_timer_period;
-}STORAGE;
-
-#pragma anon_unions
 typedef struct
 {
     float voltage[40];
@@ -40,14 +25,14 @@ typedef struct
 
 }DumpVoltage;
 
-
+#pragma anon_unions
 typedef struct
 {
 	//Server configuration
 	ADDR_TYPE addr_type;
 	union
 	{
-		s8 domain[MAX_DOMAIN_NAME_LEN];
+		char domain[MAX_DOMAIN_NAME_LEN];
 		u8 ipaddr[4];
 	};
 	u16 port;
@@ -81,16 +66,18 @@ eat_bool vibration_fixed(void) __attribute__((always_inline));
 void set_vibration_state(eat_bool fixed) __attribute__((always_inline));
 
 
+eat_bool setting_restore(void);
+
 eat_bool updatertctime(void);
 void setting_dump_voltage_init(void);
 
 
-
 #define SETITINGFILE_NAME  L"C:\\setting.txt"
+
 #define MILEAGEFILE_NAME   L"C:\\mileage.txt"
 #define YEAROFFSET 1950
 
-/*                             60V电源 100k&3k分压 没有初始里程数据                        */
+/*                             60V鐢垫簮 100k&3k鍒嗗帇 娌℃湁鍒濆閲岀▼鏁版嵁                        */
 #define mileage_initial {{1.747600,1.735175,1.722750,1.710325,1.697900,\
                           1.685475,1.673050,1.660625,1.648200,1.635775,\
                           1.623350,1.610925,1.598500,1.586075,1.573650,\

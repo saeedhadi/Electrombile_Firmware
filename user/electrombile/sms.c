@@ -104,8 +104,8 @@ static void sms_server_proc(u8 *p, u8 *number)
                     setting.ipaddr[2] = (u8)ip[2];
                     setting.ipaddr[3] = (u8)ip[3];
                     setting.port = (u16)port;
-                    convert_setting_to_storage();
-                    storage_save();
+
+                    setting_save();
 
                     //eat_reset_module();//TO DO
                     ResetFlag = EAT_TRUE;
@@ -129,8 +129,8 @@ static void sms_server_proc(u8 *p, u8 *number)
                     setting.addr_type = ADDR_TYPE_DOMAIN;
                     strcpy(setting.domain, domainORip);
                     setting.port = (u16)port;
-                    convert_setting_to_storage();
-                    storage_save();
+
+                    setting_save();
 
                     //eat_reset_module();//TO DO
                     ResetFlag = EAT_TRUE;
@@ -185,8 +185,8 @@ static void sms_timer_proc(u8 *p, u8 *number)
             else if(timer_period <= 10)
             {
                 setting.gps_send_timer_period = 10000;
-                convert_setting_to_storage();
-                storage_save();
+
+                setting_save();
 
                 eat_timer_stop(TIMER_GPS_SEND);
                 eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
@@ -196,8 +196,8 @@ static void sms_timer_proc(u8 *p, u8 *number)
             else if(timer_period >= 21600)
             {
                 setting.gps_send_timer_period = 21600 * 1000;
-                convert_setting_to_storage();
-                storage_save();
+
+                setting_save();
 
                 eat_timer_stop(TIMER_GPS_SEND);
                 eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
@@ -207,8 +207,8 @@ static void sms_timer_proc(u8 *p, u8 *number)
             else
             {
                 setting.gps_send_timer_period = timer_period * 1000;
-                convert_setting_to_storage();
-                storage_save();
+
+                setting_save();
 
                 eat_timer_stop(TIMER_GPS_SEND);
                 eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);

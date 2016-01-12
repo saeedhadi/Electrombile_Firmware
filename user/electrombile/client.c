@@ -388,8 +388,8 @@ static int GPS_time_proc(const void* msg)
     else if(10 >= req->timer)
     {
         setting.gps_send_timer_period = 10 * 1000;
-        convert_setting_to_storage();
-        storage_save();
+
+        setting_save();
 
         eat_timer_stop(TIMER_GPS_SEND);
         eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
@@ -398,8 +398,8 @@ static int GPS_time_proc(const void* msg)
     else if(21600 <= req->timer)
     {
         setting.gps_send_timer_period = 21600 * 1000;
-        convert_setting_to_storage();
-        storage_save();
+
+        setting_save();
 
         eat_timer_stop(TIMER_GPS_SEND);
         eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
@@ -409,8 +409,8 @@ static int GPS_time_proc(const void* msg)
     else if((10 < req->timer)&&(21600 > req->timer))
     {
         setting.gps_send_timer_period = req->timer * 1000;
-        convert_setting_to_storage();
-        storage_save();
+
+        setting_save();
 
         eat_timer_stop(TIMER_GPS_SEND);
         eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
@@ -440,8 +440,8 @@ static int server_proc(const void* msg)
         setting.ipaddr[2] = (u8)ip[2];
         setting.ipaddr[3] = (u8)ip[3];
         setting.port = (u16)msg_server->port;
-        convert_setting_to_storage();
-        storage_save();
+
+        setting_save();
         LOG_INFO("server proc %s:%d successful!",msg_server->server,msg_server->port);
 
         eat_reset_module();
@@ -454,8 +454,8 @@ static int server_proc(const void* msg)
             setting.addr_type = ADDR_TYPE_DOMAIN;
             strcpy(setting.domain, msg_server->server);
             setting.port = (u16)msg_server->port;
-            convert_setting_to_storage();
-            storage_save();
+
+            setting_save();
             LOG_INFO("server proc %s:%d successful!",msg_server->server,msg_server->port);
 
             eat_reset_module();
