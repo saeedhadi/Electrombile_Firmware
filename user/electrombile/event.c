@@ -288,23 +288,26 @@ static int threadCmd_Location(const MSG_THREAD* msg)
 
     if (gps->isGps)    //update the local GPS data
     {
-        MSG_GPS* msg = alloc_msg(CMD_GPS, sizeof(MSG_GPS));
+        MSG_GPSLOCATION_RSP* msg = alloc_msg(CMD_LOCATION, sizeof(MSG_GPSLOCATION_RSP));
         if (!msg)
         {
             LOG_ERROR("alloc message failed!");
             return -1;
         }
-
+        msg->isGps= gps->isGps;
         msg->gps.longitude = gps->gps.longitude;
         msg->gps.latitude = gps->gps.latitude;
+        msg->gps.altitude = gps->gps.altitude;
+        msg->gps.speed = gps->gps.speed;
+        msg->gps.course = gps->gps.course;
 
-        LOG_DEBUG("send GPS message.");
-        socket_sendData(msg, sizeof(MSG_GPS));
+        LOG_DEBUG("send GPS_LOCATION message.");
+        socket_sendData(msg, sizeof(MSG_GPSLOCATION_RSP));
     }
     else    //update local cell info
     {
-        size_t msgLen = sizeof(MSG_HEADER) + sizeof(CGI) + sizeof(CELL) * gps->cellInfo.cellNo;
-        MSG_HEADER* msg = alloc_msg(CMD_CELL, msgLen);
+        size_t msgLen = sizeof(MSG_CELLLOCATION_HEADER) + sizeof(CGI) + sizeof(CELL) * gps->cellInfo.cellNo;
+        MSG_CELLLOCATION_HEADER* msg = alloc_msg(CMD_LOCATION, msgLen);
         CGI* cgi = (CGI*)(msg + 1);
         CELL* cell = (CELL*)(cgi + 1);
         int i = 0;
@@ -314,6 +317,7 @@ static int threadCmd_Location(const MSG_THREAD* msg)
             LOG_ERROR("alloc message failed!");
             return -1;
         }
+        msg->isGps = gps->isGps;
 
         cgi->mcc = htons(gps->cellInfo.mcc);
         cgi->mnc = htons(gps->cellInfo.mnc);

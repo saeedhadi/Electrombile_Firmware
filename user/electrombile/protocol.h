@@ -245,6 +245,20 @@ typedef struct
 
 typedef MSG_HEADER MSG_LOCATION;
 
+typedef struct
+{
+    MSG_HEADER header;
+    eat_bool isGps;
+    GPS gps;
+}__attribute__((__packed__)) MSG_GPSLOCATION_RSP;
+
+typedef struct
+{
+    MSG_HEADER header;
+    eat_bool isGps;
+}__attribute__((__packed__)) MSG_CELLLOCATION_HEADER;
+
+
 
 
 

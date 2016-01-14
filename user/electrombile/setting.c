@@ -15,6 +15,7 @@
 
 #include "setting.h"
 #include "log.h"
+#include "mileage.h"
 
 typedef struct
 {
@@ -33,8 +34,7 @@ typedef struct
 
 
 SETTING setting;
-DumpVoltage dump_voltage = mileage_initial;
-DumpVoltage mileage_storage = mileage_initial;
+
 eat_bool updatertctime_flag = EAT_FALSE;
 
 
@@ -66,7 +66,6 @@ static void setting_initial(void)
     setting.heartbeat_timer_period = 3*60*1000;
     setting.seekautooff_timer_peroid = 30*1000;
     setting.timeupdate_timer_peroid = 24 * 60 * 60 * 1000;      //24h * 60m * 60s * 1000ms
-    setting_dump_voltage_init();
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;
 
@@ -95,11 +94,7 @@ eat_bool setting_restore(void)
 
     LOG_INFO("restore setting from file");
 
-#if 0       //remove the old configuration file, just for debug
-    LOG_DEBUG("setting delete.");
-    eat_fs_Delete(SETITINGFILE_NAME);
-#endif
-
+    /*setting reload*/
     fh = eat_fs_Open(SETITINGFILE_NAME, FS_READ_ONLY);
     if(EAT_FS_FILE_NOT_FOUND == fh)
     {
@@ -159,15 +154,14 @@ eat_bool setting_restore(void)
 }
 
 
-
-
 eat_bool setting_save(void)
 {
-    FS_HANDLE fh_open, fh_write, fh_commit;
+    FS_HANDLE fh, rc;
     UINT writedLen;
     eat_bool ret = EAT_FALSE;
 
     STORAGE storage;
+
     if(ADDR_TYPE_DOMAIN == setting.addr_type)
     {
         storage.addr_type = ADDR_TYPE_DOMAIN;
@@ -191,66 +185,26 @@ eat_bool setting_save(void)
 
     LOG_INFO("save setting...");
 
-#error the following code must be re-written, refer to setting_restore, no need to call eat_fs_Commit. assign to LiChao
-    fh_open = eat_fs_Open(SETITINGFILE_NAME, FS_READ_WRITE);
-    if(EAT_FS_NO_ERROR <= fh_open)
+    fh = eat_fs_Open(SETITINGFILE_NAME, FS_READ_WRITE);
+    if(EAT_FS_NO_ERROR <= fh)
     {
-        LOG_INFO("open file success, fh=%d.", fh_open);
+        LOG_INFO("open file success, fh=%d.", fh);
 
-        fh_write = eat_fs_Write(fh_open, &storage, sizeof(STORAGE), &writedLen);
-        if(EAT_FS_NO_ERROR == fh_write && sizeof(STORAGE) == writedLen)
+        rc = eat_fs_Write(fh, &storage, sizeof(STORAGE), &writedLen);
+        if(EAT_FS_NO_ERROR == rc && sizeof(STORAGE) == writedLen)
         {
             LOG_DEBUG("write file success.");
-
-            fh_commit = eat_fs_Commit(fh_open);
-            if(EAT_FS_NO_ERROR == fh_commit)
-            {
-                LOG_DEBUG("commit file success.");
-                ret = EAT_TRUE;
-            }
-            else
-            {
-                LOG_ERROR("commit file failed, and Return Error is %d.", fh_commit);
-            }
         }
         else
         {
-            LOG_ERROR("write file failed, and Return Error is %d, writedLen is %d.", fh_write, writedLen);
+            LOG_ERROR("write file failed, and Return Error is %d, writedLen is %d.", rc, writedLen);
         }
-    }
-
-    fh_open = eat_fs_Open(MILEAGEFILE_NAME, FS_READ_WRITE);
-    if(EAT_FS_NO_ERROR <= fh_open)
-    {
-        LOG_INFO("open file success, fh=%d.", fh_open);
-
-        fh_write = eat_fs_Write(fh_open, &mileage_storage, sizeof(DumpVoltage), &writedLen);
-        if(EAT_FS_NO_ERROR == fh_write && sizeof(DumpVoltage) == writedLen)
-        {
-            LOG_DEBUG("write file success.");
-
-            fh_commit = eat_fs_Commit(fh_open);
-            if(EAT_FS_NO_ERROR == fh_commit)
-            {
-                LOG_DEBUG("commit file success.");
-                ret = EAT_TRUE;
-            }
-            else
-            {
-                LOG_ERROR("commit file failed, and Return Error is %d.", fh_commit);
-            }
-        }
-        else
-        {
-            LOG_ERROR("write file failed, and Return Error is %d, writedLen is %d.", fh_write, writedLen);
-        }
-
-        eat_fs_Close(fh_open);
     }
     else
     {
-        LOG_ERROR("open file failed, fh=%d.", fh_open);
+        LOG_ERROR("open file failed, fh=%d.", fh);
     }
+    eat_fs_Close(fh);
 
     return ret;
 }
@@ -262,7 +216,3 @@ eat_bool updatertctime()
     return updatertctime_flag;
 }
 
-void setting_dump_voltage_init(void)
-{
-
-}
