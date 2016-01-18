@@ -77,7 +77,6 @@ typedef struct
     float altitude;
     float speed;
     float course;
-
 }__attribute__((__packed__)) GPS;
 
 /*
@@ -209,7 +208,7 @@ typedef struct
 {
     MSG_HEADER header;
     int token;
-    unsigned char operator;
+    unsigned char operator;     // refer to DEFEND_TYPE
 }__attribute__((__packed__)) MSG_DEFEND_REQ;
 
 typedef struct
@@ -232,7 +231,7 @@ typedef struct
 {
     MSG_HEADER header;
     int token;
-    unsigned char operator;
+    unsigned char operator;     //refer to SEEK_TYPE
 }__attribute__((__packed__)) MSG_SEEK_REQ;
 
 typedef struct
@@ -242,20 +241,19 @@ typedef struct
     unsigned char result;
 }__attribute__((__packed__)) MSG_SEEK_RSP;
 
-
 typedef MSG_HEADER MSG_LOCATION;
 
 typedef struct
 {
     MSG_HEADER header;
-    eat_bool isGps;
+    char isGps;
     GPS gps;
 }__attribute__((__packed__)) MSG_GPSLOCATION_RSP;
 
 typedef struct
 {
     MSG_HEADER header;
-    eat_bool isGps;
+    char isGps;
 }__attribute__((__packed__)) MSG_CELLLOCATION_HEADER;
 
 
@@ -337,8 +335,6 @@ typedef struct
     MSG_HEADER header;
     char state;             //0 express OFF,1 express ON
 }__attribute__((__packed__)) MSG_AUTODEFEND_STATE_REQ;
-
-
 
 #pragma pack(pop)
 

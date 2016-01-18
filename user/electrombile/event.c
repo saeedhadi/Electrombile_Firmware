@@ -46,20 +46,20 @@ static char* getEventDescription(EatEvent_enum event)
 {
     switch (event)
     {
-#ifdef LOG_DEBUG_FLAG
-        DESC_DEF(EAT_EVENT_TIMER);
-        DESC_DEF(EAT_EVENT_KEY);
-        DESC_DEF(EAT_EVENT_INT);
-        DESC_DEF(EAT_EVENT_MDM_READY_RD);
-        DESC_DEF(EAT_EVENT_MDM_READY_WR);
-        DESC_DEF(EAT_EVENT_MDM_RI);
-        DESC_DEF(EAT_EVENT_UART_READY_RD);
-        DESC_DEF(EAT_EVENT_UART_READY_WR);
-        DESC_DEF(EAT_EVENT_ADC);
-        DESC_DEF(EAT_EVENT_UART_SEND_COMPLETE);
-        DESC_DEF(EAT_EVENT_USER_MSG);
-        DESC_DEF(EAT_EVENT_IME_KEY);
-#endif
+        #ifdef LOG_DEBUG_FLAG
+                DESC_DEF(EAT_EVENT_TIMER);
+                DESC_DEF(EAT_EVENT_KEY);
+                DESC_DEF(EAT_EVENT_INT);
+                DESC_DEF(EAT_EVENT_MDM_READY_RD);
+                DESC_DEF(EAT_EVENT_MDM_READY_WR);
+                DESC_DEF(EAT_EVENT_MDM_RI);
+                DESC_DEF(EAT_EVENT_UART_READY_RD);
+                DESC_DEF(EAT_EVENT_UART_READY_WR);
+                DESC_DEF(EAT_EVENT_ADC);
+                DESC_DEF(EAT_EVENT_UART_SEND_COMPLETE);
+                DESC_DEF(EAT_EVENT_USER_MSG);
+                DESC_DEF(EAT_EVENT_IME_KEY);
+        #endif
         default:
         {
             static char soc_event[10] = {0};

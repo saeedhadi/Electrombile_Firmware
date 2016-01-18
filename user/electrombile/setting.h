@@ -60,6 +60,8 @@ void set_vibration_state(eat_bool fixed) __attribute__((always_inline));
 
 
 eat_bool setting_restore(void);
+eat_bool setting_save(void);
+
 
 eat_bool updatertctime(void);
 

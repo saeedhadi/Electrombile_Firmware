@@ -13,6 +13,7 @@
 #include "thread.h"
 #include "log.h"
 #include "timer.h"
+#include "mileage.h"
 #include "data.h"
 #include "thread_msg.h"
 #include "setting.h"
@@ -28,7 +29,7 @@ static void vibration_timer_handler(void);
 
 
 static u16 avoid_freq_count;
-static eat_bool avoid_freq_flag;
+static eat_bool avoid_freq_flag = EAT_FALSE;
 eat_bool isMoved = EAT_FALSE;
 void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
 {
@@ -89,8 +90,13 @@ static void move_alarm_timer_handler()
             }
             if(x_data[i]>1||x_data[i]<-1)
             {
-                vibration_sendAlarm();
-                LOG_DEBUG("MOVE_TRESHOLD_X[%d]   = %f", i,x_data[i]);
+                mileagehandle(MILEAGE_START);
+                if(EAT_TRUE == vibration_fixed())
+                {
+                    vibration_sendAlarm();
+                    LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, x_data[i]);
+                }
+
                return;
             }
 
@@ -103,8 +109,12 @@ static void move_alarm_timer_handler()
         {
             if(y_data[i]>1||y_data[i]<-1)
             {
-                vibration_sendAlarm();
-                LOG_DEBUG("MOVE_TRESHOLD_Y[%d]   = %f",i, y_data[i]);
+                mileagehandle(MILEAGE_START);
+                if(EAT_TRUE == vibration_fixed())
+                {
+                    vibration_sendAlarm();
+                    LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, y_data[i]);
+                }
 
                 return;
             }
@@ -114,15 +124,19 @@ static void move_alarm_timer_handler()
             }
 
         }
-         LOG_DEBUG("MAX_Y  = %f", y_data[0]);
+        LOG_DEBUG("MAX_Y  = %f", y_data[0]);
         DigitalIntegrate(z_data, temp_data, MAX_MOVE_DATA_LEN,MOVE_TIMER_PERIOD/1000.0);
         DigitalIntegrate(temp_data, z_data, MAX_MOVE_DATA_LEN,MOVE_TIMER_PERIOD/1000.0);
         for(i=0;i<MAX_MOVE_DATA_LEN;i++)
         {
             if(z_data[i]>1||z_data[i]<-1)
             {
-                vibration_sendAlarm();
-                LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, z_data[i]);
+                mileagehandle(MILEAGE_START);
+                if(EAT_TRUE == vibration_fixed())
+                {
+                    vibration_sendAlarm();
+                    LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, z_data[i]);
+                }
                 return;
             }
             if(z_data[0]<abs(z_data[i]))
@@ -219,7 +233,7 @@ static void vibration_timer_handler(void)
         isMoved = EAT_FALSE;
     }
 
-    if(EAT_TRUE == vibration_fixed())
+    if(EAT_TRUE)
     {
         timerCount = 0;
 
@@ -247,7 +261,7 @@ static void vibration_timer_handler(void)
                 if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
                 {
                     LOG_INFO("vibration state auto locked.");
-                    mileagehandle(EAT_FALSE, EAT_TRUE);
+                    mileagehandle(MILEAGE_STOP);
                     send_autodefendstate_msg(EAT_FALSE);
                     set_vibration_state(EAT_TRUE);
 
