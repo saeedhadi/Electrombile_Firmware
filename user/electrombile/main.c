@@ -22,6 +22,7 @@
 #include "watchdog.h"
 #include "timer.h"
 #include "setting.h"
+#include "mileage.h"
 #include "log.h"
 #include "version.h"
 /********************************************************************

@@ -286,7 +286,7 @@ static int threadCmd_Location(const MSG_THREAD* msg)
         return -1;
     }
 
-    if (gps->isGps)    //update the local GPS data
+    if (gps->isGps) //update the local GPS data
     {
         MSG_GPSLOCATION_RSP* msg = alloc_msg(CMD_LOCATION, sizeof(MSG_GPSLOCATION_RSP));
         if (!msg)
@@ -329,7 +329,7 @@ static int threadCmd_Location(const MSG_THREAD* msg)
             cell[i].rxl= htons(gps->cellInfo.cell[i].rxl);
         }
 
-        LOG_DEBUG("send CELL message.");
+        LOG_DEBUG("send CELL_LOCATION message.");
         socket_sendData(msg, msgLen);
     }
 

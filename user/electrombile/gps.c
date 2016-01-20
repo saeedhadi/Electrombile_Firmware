@@ -33,6 +33,8 @@
 
 
 static void gps_timer_handler(u8 cmd);
+static void location_handler(u8 cmd);
+
 static void gps_at_read_handler(void);
 static eat_bool gps_sendGps(u8 cmd);
 static eat_bool gps_sendCell(u8 cmd);
@@ -125,7 +127,7 @@ void app_gps_thread(void *data)
                 {
                     case CMD_THREAD_LOCATION:
                         LOG_DEBUG("gps get CMD_THREAD_LOCATION.");
-                        gps_timer_handler(CMD_THREAD_LOCATION);
+                        location_handler(CMD_THREAD_LOCATION);
                         break;
                     default:
                         LOG_ERROR("cmd(%d) not processed!", msg->cmd);
@@ -148,16 +150,31 @@ static void gps_timer_handler(u8 cmd)
         LOG_DEBUG("send gps.");
         gps_sendGps(cmd);
     }
-
- //暂时不用推送基站信息
-/*    else if(gps_isCellGet())
+     //暂时不用推送基站信息
+    /*else if(gps_isCellGet())
     {
         LOG_DEBUG("send cells.");
         gps_sendCell(cmd);
     }
-*/
+    */
+
     return;
 }
+
+static void location_handler(u8 cmd)
+{
+    if(gps_isGpsFixed())
+    {
+        LOG_DEBUG("send location gps.");
+        gps_sendGps(cmd);
+    }
+    else
+    {
+        LOG_DEBUG("send location cell.");
+        gps_sendCell(cmd);
+    }
+}
+
 
 static eat_bool gps_isGpsFixed(void)
 {
@@ -206,9 +223,9 @@ static eat_bool gps_sendGps(u8 cmd)
 
     if(last_gps == 0 || msg->cmd == CMD_THREAD_LOCATION)
     {
-        LOG_DEBUG("the first cell.");
+        LOG_DEBUG("the first gps or active acquisition.");
 
-        cmp = EAT_FALSE;
+        cmp = EAT_FALSE; // 0 express send , 1 express do not send
     }
     else
     {
@@ -271,13 +288,7 @@ static eat_bool gps_sendCell(u8 cmd)
     {
         LOG_DEBUG("the first cell or active acquisition");
 
-        //last_gps = (LOCAL_GPS*)eat_mem_alloc(sizeof(LOCAL_GPS));
-
-        cmp = EAT_FALSE;
-    }
-    else
-    {
-        cmp = gps_DuplicateCheck(last_gps, gps);
+        cmp = EAT_FALSE; // 0 express send , 1 express do not send
     }
 
     if(EAT_TRUE == cmp)

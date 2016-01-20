@@ -28,7 +28,6 @@
 DumpVoltage mileage_storage = {0};
 static unsigned int adcvalue;               //use for mileage mileage initialization & detect the value of the ADC1
 static unsigned int adcvalue_start;         //Before starting the detection of electricity
-static unsigned int adcvalue_end;           //After the end of detection of electricity
 
 
 extern double mileage;
@@ -337,7 +336,6 @@ void mileagehandle(short MILEAGE_STATE)
 {
     static MSG_MILEAGE_REQ msg_mileage;
     static eat_bool mileage_flag = EAT_FALSE;
-    short i;
     time_t timestamp;
 
 
