@@ -20,6 +20,9 @@
 #include "client.h"
 #include "mma8652.h"
 
+#define EAT_ADC0 EAT_PIN23_ADC1
+#define EAT_ADC1 EAT_PIN24_ADC2
+#define ADC1_PERIOD 10  //ms
 
 static eat_bool vibration_sendAlarm(void);
 static void vibration_timer_handler(void);
@@ -91,6 +94,7 @@ static void move_alarm_timer_handler()
             if(x_data[i]>1||x_data[i]<-1)
             {
                 mileagehandle(MILEAGE_START);
+                detectvoltage_timer(DETECTVOLTAGE_STOP);
                 if(EAT_TRUE == vibration_fixed())
                 {
                     vibration_sendAlarm();
@@ -110,6 +114,7 @@ static void move_alarm_timer_handler()
             if(y_data[i]>1||y_data[i]<-1)
             {
                 mileagehandle(MILEAGE_START);
+                detectvoltage_timer(DETECTVOLTAGE_STOP);
                 if(EAT_TRUE == vibration_fixed())
                 {
                     vibration_sendAlarm();
@@ -132,6 +137,7 @@ static void move_alarm_timer_handler()
             if(z_data[i]>1||z_data[i]<-1)
             {
                 mileagehandle(MILEAGE_START);
+                detectvoltage_timer(DETECTVOLTAGE_STOP);
                 if(EAT_TRUE == vibration_fixed())
                 {
                     vibration_sendAlarm();
@@ -183,6 +189,11 @@ void app_vibration_thread(void *data)
                     case TIMER_MOVE_ALARM:
                         move_alarm_timer_handler();
 
+                        break;
+                    case TIMER_VOLTAGE_GET: //when  electric motor car stop,detect voltage 3min once
+                        LOG_INFO("TIMER_VOLTAGE_GET expire!");
+                        eat_adc_get(EAT_ADC1,ADC1_PERIOD,adc_voltage_proc);
+                        eat_timer_start(TIMER_RTC_UPDATE, setting.detectvolatge_timer_peroid);
                         break;
                     default:
                         LOG_ERROR("timer(%d) expire!", event.data.timer.timer_id);
@@ -261,8 +272,13 @@ static void vibration_timer_handler(void)
                 if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
                 {
                     LOG_INFO("vibration state auto locked.");
+
                     mileagehandle(MILEAGE_STOP);
+
+                    detectvoltage_timer(DETECTVOLTAGE_START);
+
                     send_autodefendstate_msg(EAT_FALSE);
+
                     set_vibration_state(EAT_TRUE);
 
                 }

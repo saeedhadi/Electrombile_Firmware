@@ -34,7 +34,12 @@ enum
     CMD_AUTODEFEND_PERIOD_SET = 0x0f,
     CMD_AUTODEFEND_PERIOD_GET = 0x10,
     CMD_MILEAGE = 0x11,
-    CMD_AUTODEFEND_STATE
+    CMD_BATTERY = 0X12,
+    CMD_DEFEND_ON = 0x13,
+    CMD_DEFEND_OFF = 0x14,
+    CMD_DEFEND_GET = 0x15,
+    CMD_AUTODEFEND_STATE = 0x16
+
 };
 
 enum
@@ -328,6 +333,13 @@ typedef struct
     int endtime;
     int mileage;
 }__attribute__((__packed__)) MSG_MILEAGE_REQ;
+
+typedef struct
+{
+    MSG_HEADER header;
+    char percent;
+    char miles;
+}__attribute__((__packed__)) MSG_BATTERY_RSP;
 
 
 typedef struct

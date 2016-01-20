@@ -51,6 +51,8 @@ static int autodefend_period_set(const void* msg);
 static int autodefend_period_get(const void* msg);
 static int server_proc(const void* msg);
 static int GPS_time_proc(const void* msg);
+static int battery_rsp(const void* msg);
+
 
 
 
@@ -70,6 +72,7 @@ static MC_MSG_PROC msgProcs[] =
     {CMD_AUTODEFEND_PERIOD_GET, autodefend_period_get},
     {CMD_SERVER, server_proc},
     {CMD_TIMER, GPS_time_proc},
+    {CMD_BATTERY, battery_rsp},
 };
 
 int client_proc(const void* m, int msgLen)
@@ -375,6 +378,22 @@ static int autodefend_period_get(const void* msg)
     return 0;
 }
 
+static int battery_rsp(const void* msg)
+{
+    MSG_BATTERY_RSP* req = (MSG_BATTERY_RSP*)msg;
+    MSG_BATTERY_RSP* rsp =NULL;
+
+    rsp = alloc_rspMsg(&req->header);
+    if (!rsp)
+	{
+		LOG_ERROR("alloc baterry rsp message failed!");
+		return -1;
+	}
+    rsp->miles = get_mileage();
+    rsp->percent = get_battery();
+    socket_sendData(rsp, sizeof(MSG_BATTERY_RSP));
+
+}
 static int GPS_time_proc(const void* msg)
 {
     MSG_GPSTIMER_REQ* req = (MSG_GPSTIMER_REQ*)msg;

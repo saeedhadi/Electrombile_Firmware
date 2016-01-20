@@ -8,12 +8,14 @@
 #include <eat_interface.h>
 #include <eat_uart.h>
 
+#include <eat_periphery.h>
+
 #include "setting.h"
 #include "log.h"
 #include "msg.h"
 #include "client.h"
 #include "socket.h"
-
+#include "timer.h"
 
 #include "mileage.h"
 
@@ -24,28 +26,34 @@
 
 
 DumpVoltage mileage_storage = {0};
-static unsigned int adcvalue;//init mileage
-static unsigned int adcvalue_start;//init mileage
-static unsigned int adcvalue_end;//init mileage
+static unsigned int adcvalue;               //use for mileage mileage initialization & detect the value of the ADC1
+static unsigned int adcvalue_start;         //Before starting the detection of electricity
+static unsigned int adcvalue_end;           //After the end of detection of electricity
 
 
 extern double mileage;
 
 
 static void msg_mileage_send(MSG_MILEAGE_REQ msg_mileage);
+static eat_bool mileage_reload(void);
+
 
 
 eat_bool mileage_restore(void)
 {
+
+    LOG_INFO("mileage initial...");
+    mileage_initial();
+    LOG_INFO("restore mileage from file");
+    return mileage_reload();
+}
+static eat_bool mileage_reload(void)
+{
+
+    DumpVoltage storage;
     FS_HANDLE fh;
     eat_bool ret = EAT_FALSE;
     int rc , i;
-
-    DumpVoltage storage;
-
-    mileage_initial();
-
-    LOG_INFO("restore mileage from file");
 
     /*mileage reload*/
     fh = eat_fs_Open(MILEAGEFILE_NAME, FS_READ_ONLY);
@@ -218,8 +226,9 @@ void adc_mileageend_proc(EatAdc_st* adc)
             if(mileage > mileage_storage.dump_mileage[start])
             {
                 mileage_storage.dump_mileage[start] = mileage;
-                mileage_save();
                 /*there to save the mileage surface*/
+                mileage_save();
+
             }
             else
             {
@@ -285,6 +294,43 @@ void adc_mileagestart_proc(EatAdc_st* adc)
     }
 }
 
+void adc_voltage_proc(EatAdc_st* adc)
+{
+    static short count = 0;
+    static int voltage[40] = {0};
+    int average_voltage = 0;
+
+    if(count < 40)
+    {
+        if(adc->pin == EAT_ADC1)
+        {
+            voltage[count] = adc->v;
+            count++;
+        }
+        else if(adc->pin == EAT_ADC0)
+        {
+            return;
+        }
+    }
+    else
+    {
+        for(count = 0;count <40;count++)
+        {
+            average_voltage += voltage[count];
+        }
+        average_voltage /= 40;
+
+        /*          存储40次电压平均值      */
+        adcvalue = average_voltage;
+
+        eat_adc_get(EAT_ADC1,NULL,NULL);
+        count = 0;
+        return;
+
+    }
+}
+
+
 
 
 void mileagehandle(short MILEAGE_STATE)
@@ -334,6 +380,84 @@ static void msg_mileage_send(MSG_MILEAGE_REQ msg_mileage)
     msg->mileage = (int)msg_mileage.mileage;
     LOG_INFO("send the mileage");
     socket_sendData(msg, msgLen);
+}
+
+char get_battery(void)
+{
+    int i = 0;
+    char ret;
+    float miles = 0 , dump_miles = 0;
+
+    while(mileage_storage.voltage[i++] > adcvalue/ADC_RELATIVE_VALUE);
+    if(i < 0 || i > MAX_MILEAGE_LEN)
+    {
+        LOG_INFO("get_mileage ERROR ! Voltage too low: %d",adcvalue);
+        return 0;
+    }
+    for(i-- ;i < MAX_MILEAGE_LEN;i++)
+    {
+        dump_miles += mileage_storage.dump_mileage[i];
+    }
+    for(i = 0;i < MAX_MILEAGE_LEN;i++)
+    {
+        miles += mileage_storage.dump_mileage[i];
+    }
+    ret = (char)((dump_miles / miles)*100);
+    return ret;
+
+}
+
+
+char get_mileage(void)
+{
+    int i =0;
+    float miles = 0;
+    char ret;
+    mileage_reload();
+    while(mileage_storage.voltage[i++] > adcvalue/ADC_RELATIVE_VALUE);
+    if(i < 0 || i > MAX_MILEAGE_LEN)
+    {
+        LOG_INFO("get_mileage ERROR ! Voltage too low: %d",adcvalue);
+        return 0;
+    }
+    for(i-- ;i < MAX_MILEAGE_LEN;i++)
+    {
+        miles += mileage_storage.dump_mileage[i];
+    }
+    miles /= 1000.f;
+    if((miles - (int)miles) > 0.5)
+    {
+        ret = (char)(miles+1);
+    }
+    else
+    {
+        ret = (char)(miles);
+    }
+    return ret;
+
+
+}
+
+
+/*
+*fun: when  electric motor car is stopping , detect voltage 3min once,
+*when electric motor car is starting , stop to detect voltage
+*para: short
+*value: DETECTVOLTAGE_START
+*       DETECTVOLTAGE_STOP
+*/
+void detectvoltage_timer(short operation)
+{
+    if(DETECTVOLTAGE_START == operation)
+    {
+        LOG_INFO("TIMER_VOLTAGE_GET start!");
+        eat_timer_start(TIMER_VOLTAGE_GET, setting.detectvolatge_timer_peroid);
+    }
+    else if(DETECTVOLTAGE_STOP == operation)
+    {
+        LOG_INFO("TIMER_VOLTAGE_GET stop!");
+        eat_timer_stop(TIMER_VOLTAGE_GET);
+    }
 }
 
 
