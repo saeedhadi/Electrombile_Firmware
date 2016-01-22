@@ -150,6 +150,10 @@ static void gps_timer_handler(u8 cmd)
         LOG_DEBUG("send gps.");
         gps_sendGps(cmd);
     }
+    else
+    {
+        LOG_INFO("GPS is not fixed.");
+    }
      //暂时不用推送基站信息
     /*else if(gps_isCellGet())
     {

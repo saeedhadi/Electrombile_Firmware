@@ -26,7 +26,7 @@
 
 
 DumpVoltage mileage_storage = {0};
-static unsigned int adcvalue;               //use for mileage mileage initialization & detect the value of the ADC1
+static unsigned int adcvalue;               //usually used to detect the value of the ADC1
 static unsigned int adcvalue_start;         //Before starting the detection of electricity
 
 
@@ -93,39 +93,9 @@ static eat_bool mileage_reload(void)
 
 void mileage_initial(void)
 {
-    int i;
     LOG_INFO("setting initial to default value.");
+    /*go to adc_mileageinit_proc to judge the type of the battery*/
     eat_adc_get(EAT_ADC1, NULL, adc_mileageinit_proc);
-
-    /*there to judge the type of the battery*/
-
-    if(adcvalue > 554)       //adcvalue>52V,assert 60V
-    {
-        LOG_INFO("the valtage is %d,assert 60V/TYPE BATTERY");
-        for(i = 0;i <MAX_MILEAGE_LEN;i++)
-        {
-            mileage_storage.dump_mileage[i] = 0;
-            mileage_storage.voltage[i] = (60-12*i/MAX_MILEAGE_LEN)*3/103;
-        }
-    }
-    else if(adcvalue > 426)   //adcvalue>40V,assert 48V
-    {
-        LOG_INFO("the valtage is %d,assert 48V/TYPE BATTERY");
-        for(i = 0;i <MAX_MILEAGE_LEN;i++)
-        {
-            mileage_storage.dump_mileage[i] = 0;
-            mileage_storage.voltage[i] = (48-12*i/MAX_MILEAGE_LEN)*3/103;
-        }
-    }
-    else if(adcvalue < 426)  //adcvalue<40,assert 36V
-    {
-        LOG_INFO("the valtage is %d,assert 36V/TYPE BATTERY");
-        for(i = 0;i <MAX_MILEAGE_LEN;i++)
-        {
-            mileage_storage.dump_mileage[i] = 0;
-            mileage_storage.voltage[i] = (36-12*i/MAX_MILEAGE_LEN)*3/103;
-        }
-    }
 }
 
 eat_bool mileage_save(void)
@@ -172,6 +142,8 @@ eat_bool mileage_save(void)
 
 void adc_mileageinit_proc(EatAdc_st* adc)
 {
+    unsigned int adcvalue;
+    int i;
     if(adc->pin == EAT_ADC1)
     {
         adcvalue = adc->v;
@@ -179,6 +151,33 @@ void adc_mileageinit_proc(EatAdc_st* adc)
     else if(adc->pin == EAT_ADC0)
     {
         return;
+    }
+    if(adcvalue > 554)       //adcvalue>52V,assert 60V
+    {
+        LOG_INFO("the valtage is %d,assert 60V/TYPE BATTERY");
+        for(i = 0;i <MAX_MILEAGE_LEN;i++)
+        {
+            mileage_storage.dump_mileage[i] = 0;
+            mileage_storage.voltage[i] = (63-12*i/MAX_MILEAGE_LEN)*3/103;
+        }
+    }
+    else if(adcvalue > 426)   //adcvalue>40V,assert 48V
+    {
+        LOG_INFO("the valtage is %d,assert 48V/TYPE BATTERY");
+        for(i = 0;i <MAX_MILEAGE_LEN;i++)
+        {
+            mileage_storage.dump_mileage[i] = 0;
+            mileage_storage.voltage[i] = (51-12*i/MAX_MILEAGE_LEN)*3/103;
+        }
+    }
+    else if(adcvalue < 426)  //adcvalue<40,assert 36V
+    {
+        LOG_INFO("the valtage is %d,assert 36V/TYPE BATTERY");
+        for(i = 0;i <MAX_MILEAGE_LEN;i++)
+        {
+            mileage_storage.dump_mileage[i] = 0;
+            mileage_storage.voltage[i] = (39-12*i/MAX_MILEAGE_LEN)*3/103;
+        }
     }
 }
 
@@ -379,6 +378,11 @@ static void msg_mileage_send(MSG_MILEAGE_REQ msg_mileage)
     LOG_INFO("send the mileage");
     socket_sendData(msg, msgLen);
 }
+/*
+*fun: get the dump battery
+*para: void
+*return:(char)dump_battery - x%
+*/
 
 char get_battery(void)
 {
@@ -405,7 +409,11 @@ char get_battery(void)
 
 }
 
-
+/*
+*fun: get the dump mileage
+*para: void
+*return:(char)dump_mileage - km
+*/
 char get_mileage(void)
 {
     int i =0;
@@ -457,23 +465,6 @@ void detectvoltage_timer(short operation)
         eat_timer_stop(TIMER_VOLTAGE_GET);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

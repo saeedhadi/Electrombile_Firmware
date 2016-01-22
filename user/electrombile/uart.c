@@ -15,6 +15,7 @@
 
 #include "uart.h"
 #include "log.h"
+#include "mileage.h"
 #include "setting.h"
 
 int event_uart_ready_rd(const EatEvent_st* event)
@@ -117,6 +118,12 @@ int event_uart_ready_rd(const EatEvent_st* event)
     {
         LOG_DEBUG("setting.txt deleted.");
         eat_fs_Delete(SETITINGFILE_NAME);//TODO, for debug
+        return 0;
+    }
+    if(strstr(buf, "deletemileage"))
+    {
+        LOG_DEBUG("mileage.txt deleted.");
+        eat_fs_Delete(MILEAGEFILE_NAME);//TODO, for debug
         return 0;
     }
 #endif
