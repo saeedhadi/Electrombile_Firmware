@@ -57,9 +57,8 @@ void app_seek_thread(void *data)
     LOG_INFO("seek thread start.");
 
     eat_gpio_setup(EAT_PIN43_GPIO19, EAT_GPIO_DIR_INPUT, EAT_GPIO_LEVEL_LOW);
-    eat_gpio_setup(EAT_PIN50_NETLIGHT, EAT_GPIO_DIR_OUTPUT, EAT_GPIO_LEVEL_LOW);
+    eat_gpio_setup(EAT_PIN55_ROW3, EAT_GPIO_DIR_OUTPUT, EAT_GPIO_LEVEL_HIGH);
 
-    eat_adc_get(EAT_ADC0, ADC0_PERIOD, NULL);
 
     while(EAT_TRUE)
     {
