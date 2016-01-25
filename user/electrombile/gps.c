@@ -213,7 +213,7 @@ static eat_bool gps_sendGps(u8 cmd)
         LOG_ERROR("alloc msg failed!");
         return EAT_FALSE;
     }
-    msg->cmd = cmd;//CMD_THREAD_GPS or CMD_THREAD_LOCATION
+    msg->cmd = cmd;             //CMD_THREAD_GPS or CMD_THREAD_LOCATION
     msg->length = sizeof(LOCAL_GPS);
 
     gps = (LOCAL_GPS*)msg->data;
@@ -229,7 +229,7 @@ static eat_bool gps_sendGps(u8 cmd)
     {
         LOG_DEBUG("the first gps or active acquisition.");
 
-        cmp = EAT_FALSE; // 0 express send , 1 express do not send
+        cmp = EAT_FALSE;        // 0 express send , 1 express do not send
     }
     else
     {

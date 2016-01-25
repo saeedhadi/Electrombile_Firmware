@@ -126,6 +126,12 @@ int event_uart_ready_rd(const EatEvent_st* event)
         eat_fs_Delete(MILEAGEFILE_NAME);//TODO, for debug
         return 0;
     }
+    if(strstr(buf, "deletelog"))
+    {
+        LOG_DEBUG("log.txt deleted.");
+        eat_fs_Delete(LOGFILE_NAME);//TODO, for debug
+        return 0;
+    }
 #endif
 
 	return 0;

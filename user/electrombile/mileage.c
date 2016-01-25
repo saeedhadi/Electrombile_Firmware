@@ -43,6 +43,7 @@ eat_bool mileage_restore(void)
 
     LOG_INFO("mileage initial...");
     mileage_initial();
+    eat_sleep(100);
     LOG_INFO("restore mileage from file");
     return mileage_reload();
 }
@@ -93,7 +94,7 @@ static eat_bool mileage_reload(void)
 
 void mileage_initial(void)
 {
-    LOG_INFO("setting initial to default value.");
+    LOG_INFO("milegae initial to default value.");
     /*go to adc_mileageinit_proc to judge the type of the battery*/
     eat_adc_get(EAT_ADC1, NULL, adc_mileageinit_proc);
 }
@@ -142,8 +143,9 @@ eat_bool mileage_save(void)
 
 void adc_mileageinit_proc(EatAdc_st* adc)
 {
-    unsigned int adcvalue;
+    u16 adcvalue;
     int i;
+
     if(adc->pin == EAT_ADC1)
     {
         adcvalue = adc->v;
@@ -152,6 +154,7 @@ void adc_mileageinit_proc(EatAdc_st* adc)
     {
         return;
     }
+
     if(adcvalue > 554)       //adcvalue>52V,assert 60V
     {
         LOG_INFO("the valtage is %d,assert 60V/TYPE BATTERY");

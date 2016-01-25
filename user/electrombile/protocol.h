@@ -10,35 +10,37 @@
 
 #define START_FLAG (0xAA55)
 #define IMEI_LENGTH 16
+#define MAX_CCID_LENGTH 20
 #define MAX_CELL_NUM 7
 #define TEL_NO_LENGTH 11
 
 
 enum
 {
-    CMD_WILD    = 0x00,
-    CMD_LOGIN   = 0x01,
-    CMD_GPS     = 0x02,
-    CMD_CELL    = 0x03,
-    CMD_PING    = 0x04,
-    CMD_ALARM   = 0x05,
-    CMD_SMS     = 0x06,
-    CMD_433     = 0x07,
-    CMD_DEFEND  = 0x08,
-    CMD_SEEK    = 0x09,
-	CMD_LOCATION= 0x0a,
-	CMD_SERVER  = 0x0b,
-	CMD_TIMER   = 0x0c,
-    CMD_AUTODEFEND_SWITCH_SET = 0x0d,
-    CMD_AUTODEFEND_SWITCH_GET = 0x0e,
-    CMD_AUTODEFEND_PERIOD_SET = 0x0f,
-    CMD_AUTODEFEND_PERIOD_GET = 0x10,
-    CMD_MILEAGE = 0x11,
-    CMD_BATTERY = 0X12,
-    CMD_DEFEND_ON = 0x13,
-    CMD_DEFEND_OFF = 0x14,
-    CMD_DEFEND_GET = 0x15,
-    CMD_AUTODEFEND_STATE = 0x16
+
+    CMD_WILD            =  0,
+    CMD_LOGIN           =  1,
+    CMD_PING            =  2,
+    CMD_GPS             =  3,
+    CMD_CELL            =  4,
+    CMD_ALARM           =  5,
+    CMD_SMS             =  6,
+    CMD_433             =  7,
+    CMD_DEFEND          =  8,
+    CMD_SEEK            =  9,
+    CMD_LOCATION        = 10,
+    CMD_SERVER          = 11,
+    CMD_TIMER           = 12,
+    CMD_AUTODEFEND_SWITCH_SET  = 13,
+    CMD_AUTODEFEND_SWITCH_GET  = 14,
+    CMD_AUTODEFEND_PERIOD_SET      = 15,
+    CMD_AUTODEFEND_PERIOD_GET      = 16,
+    CMD_MILEAGE       = 17,
+    CMD_BATTERY         = 18,
+    CMD_DEFEND_ON       = 19,
+    CMD_DEFEND_OFF      = 20,
+    CMD_DEFEND_GET      = 21,
+    CMD_AUTODEFEND_STATE   = 22
 
 };
 
@@ -67,7 +69,9 @@ typedef struct
 typedef struct
 {
     MSG_HEADER header;
+    char Version;
     char IMEI[IMEI_LENGTH];
+    char CCID[MAX_CCID_LENGTH];
 }__attribute__((__packed__)) MSG_LOGIN_REQ;
 
 typedef MSG_HEADER MSG_LOGIN_RSP;
@@ -268,7 +272,7 @@ typedef struct
 enum AUTODEFEND_SWITCH
 {
     AUTO_DEFEND_OFF,
-    AUTO_DEFEND_ON
+    AUTO_DEFEND_ON,
 };
 
 typedef struct

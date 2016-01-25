@@ -26,12 +26,13 @@
 
 static eat_bool vibration_sendAlarm(void);
 static void vibration_timer_handler(void);
+static void avoid_fre_send(eat_bool state);
+
 
 #define MAX_MOVE_DATA_LEN   500
 #define MOVE_TIMER_PERIOD    10
 
 
-static u16 avoid_freq_count;
 static eat_bool avoid_freq_flag = EAT_FALSE;
 eat_bool isMoved = EAT_FALSE;
 void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
@@ -216,11 +217,7 @@ static void vibration_timer_handler(void)
 
     char transient_src = 0;
 
-    if(++avoid_freq_count == 30)
-    {
-        avoid_freq_count = 0;
-        avoid_freq_flag = EAT_FALSE;
-    }
+    avoid_fre_send(EAT_TRUE);
 
     mma8652_i2c_register_read(MMA8652_REG_TRANSIENT_SRC, &transient_src, sizeof(transient_src));
     if(transient_src & MMA8652_TRANSIENT_SRC_EA)
@@ -251,39 +248,38 @@ static void vibration_timer_handler(void)
         if(isMoved && avoid_freq_flag == EAT_FALSE)
         {
 
-            avoid_freq_count = 0;
+            avoid_fre_send(EAT_FALSE);
             eat_timer_start(TIMER_MOVE_ALARM, MOVE_TIMER_PERIOD);
             //vibration_sendAlarm();  //bec use displacement judgement , there do not alarm
         }
     }
-    else
+
+    if(get_autodefend_state())
     {
-        if(get_autodefend_state())
+        if(isMoved)
         {
-            if(isMoved)
+            timerCount = 0;
+            LOG_INFO("timerCount = 0 now !");
+        }
+        else
+        {
+            timerCount++;
+
+            if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
             {
-                timerCount = 0;
-                LOG_INFO("timerCount = 0 now !");
-            }
-            else
-            {
-                timerCount++;
+                LOG_INFO("vibration state auto locked.");
 
-                if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
-                {
-                    LOG_INFO("vibration state auto locked.");
+                mileagehandle(MILEAGE_STOP);
 
-                    mileagehandle(MILEAGE_STOP);
+                detectvoltage_timer(DETECTVOLTAGE_START);
 
-                    detectvoltage_timer(DETECTVOLTAGE_START);
+                send_autodefendstate_msg(EAT_FALSE);
 
-                    send_autodefendstate_msg(EAT_FALSE);
+                set_vibration_state(EAT_TRUE);
 
-                    set_vibration_state(EAT_TRUE);
-
-                }
             }
         }
+
     }
 
     return;
@@ -303,4 +299,22 @@ static eat_bool vibration_sendAlarm(void)
     avoid_freq_flag = EAT_TRUE;
     return sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, msgLen);
 }
+static void avoid_fre_send(eat_bool state)
+{
+    static u16 avoid_freq_count;
+
+    if(state == EAT_TRUE)
+    {
+        if(++avoid_freq_count == 30)
+        {
+            avoid_freq_count = 0;
+            avoid_freq_flag = EAT_FALSE;
+        }
+    }
+    else
+    {
+        avoid_freq_count = 0;
+    }
+}
+
 

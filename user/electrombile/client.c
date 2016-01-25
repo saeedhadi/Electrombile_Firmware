@@ -207,7 +207,6 @@ static int defend(const void* msg)
     		LOG_DEBUG("set defend switch off.");
 
     		set_vibration_state(EAT_FALSE);
-            mileagehandle(MILEAGE_START);
     		break;
 
     	case DEFEND_GET:
@@ -392,6 +391,8 @@ static int battery_rsp(const void* msg)
     rsp->miles = get_mileage();
     rsp->percent = get_battery();
     socket_sendData(rsp, sizeof(MSG_BATTERY_RSP));
+
+    return 0;
 
 }
 static int GPS_time_proc(const void* msg)
