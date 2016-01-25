@@ -241,7 +241,7 @@ static void vibration_timer_handler(void)
         isMoved = EAT_FALSE;
     }
 
-    if(EAT_TRUE)
+    if(EAT_TRUE == vibration_fixed())
     {
         timerCount = 0;
 
@@ -253,33 +253,34 @@ static void vibration_timer_handler(void)
             //vibration_sendAlarm();  //bec use displacement judgement , there do not alarm
         }
     }
-
-    if(get_autodefend_state())
+    else
     {
-        if(isMoved)
+        if(get_autodefend_state())
         {
-            timerCount = 0;
-            LOG_INFO("timerCount = 0 now !");
-        }
-        else
-        {
-            timerCount++;
-
-            if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
+            if(isMoved)
             {
-                LOG_INFO("vibration state auto locked.");
+                timerCount = 0;
+                LOG_INFO("timerCount = 0 now !");
+            }
+            else
+            {
+                timerCount++;
 
-                mileagehandle(MILEAGE_STOP);
+                if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
+                {
+                    LOG_INFO("vibration state auto locked.");
 
-                detectvoltage_timer(DETECTVOLTAGE_START);
+                    mileagehandle(MILEAGE_STOP);
 
-                send_autodefendstate_msg(EAT_FALSE);
+                    detectvoltage_timer(DETECTVOLTAGE_START);
 
-                set_vibration_state(EAT_TRUE);
+                    send_autodefendstate_msg(EAT_FALSE);
 
+                    set_vibration_state(EAT_TRUE);
+
+                }
             }
         }
-
     }
 
     return;
