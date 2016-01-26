@@ -36,6 +36,7 @@ typedef struct
 }THREAD_MSG_PROC;
 
 
+extern EatRtc_st GPStime;
 
 
 #define DESC_DEF(x) case x:\
@@ -128,6 +129,15 @@ static int event_timer(const EatEvent_st* event)
         case TIMER_SEEKAUTOOFF:
             LOG_INFO("TIMER_SEEKAUTOOFF expire!");
             setSeekMode(EAT_FALSE);
+            break;
+
+        case TIMER_RTC_UPDATE:
+            LOG_INFO("TIMER_RTC_UPDATE expire!");
+            updatertctime();
+            if(1980 == GPStime.year+YEAROFFSET )//if not catch the gps time , wait 30s and catch it again
+                eat_timer_start(TIMER_RTC_UPDATE, 30*1000);
+            else
+                eat_timer_start(TIMER_RTC_UPDATE, setting.timeupdate_timer_peroid);
             break;
 
         default:
@@ -388,7 +398,6 @@ static EVENT_PROC eventProcs[] =
     {EAT_EVENT_UART_READY_WR,       EAT_NULL},
     {EAT_EVENT_UART_SEND_COMPLETE,  EAT_NULL},
     {EAT_EVENT_USER_MSG,            event_threadMsg},
-    {EAT_EVENT_ADC,                 EAT_NULL},
 };
 
 
@@ -410,6 +419,7 @@ int event_proc(EatEvent_st* event)
             else
             {
                 LOG_ERROR("event(%s) not processed!", getEventDescription(event->event));
+                return -1;
             }
         }
     }
