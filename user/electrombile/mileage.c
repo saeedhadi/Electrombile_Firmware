@@ -96,7 +96,7 @@ void mileage_initial(void)
 {
     LOG_INFO("milegae initial to default value.");
     /*go to adc_mileageinit_proc to judge the type of the battery*/
-    eat_adc_get(EAT_ADC1, NULL, adc_mileageinit_proc);
+    eat_adc_get(EAT_ADC1, ADC1_PERIOD, adc_mileageinit_proc);
 }
 
 eat_bool mileage_save(void)
@@ -145,15 +145,26 @@ void adc_mileageinit_proc(EatAdc_st* adc)
 {
     u16 adcvalue;
     int i;
+    static u16 value[40],count = 0;
 
     if(adc->pin == EAT_ADC1)
     {
-        adcvalue = adc->v;
+        value[count] = adc->v;
+        count++;
+        if(count < 40)
+            return;
     }
     else if(adc->pin == EAT_ADC0)
     {
         return;
     }
+    /*40 个存储值 取平均数*/
+    for(i = 0;i < 40;i++)
+    {
+        adcvalue += value[i];
+    }
+    adcvalue /= 40;
+    count = 0;
 
     if(adcvalue > 554)       //adcvalue>52V,assert 60V
     {
@@ -182,6 +193,8 @@ void adc_mileageinit_proc(EatAdc_st* adc)
             mileage_storage.voltage[i] = (39-12*i/MAX_MILEAGE_LEN)*3/103;
         }
     }
+    /*end this detect*/
+    eat_adc_get(EAT_ADC1,NULL,NULL);
 }
 
 void adc_mileageend_proc(EatAdc_st* adc)
