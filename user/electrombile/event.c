@@ -410,6 +410,7 @@ int event_proc(EatEvent_st* event)
             else
             {
                 LOG_ERROR("event(%s) not processed!", getEventDescription(event->event));
+                return -1;
             }
         }
     }

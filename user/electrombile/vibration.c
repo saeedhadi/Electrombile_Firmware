@@ -32,6 +32,7 @@ static void avoid_fre_send(eat_bool state);
 #define MAX_MOVE_DATA_LEN   500
 #define MOVE_TIMER_PERIOD    10
 
+#define MOVE_THRESHOLD 5
 
 static eat_bool avoid_freq_flag = EAT_FALSE;
 eat_bool isMoved = EAT_FALSE;
@@ -93,9 +94,9 @@ static void move_alarm_timer_handler()
         {
             if(x_data[0]<abs(x_data[i]))
             {
-                x_data[0] = x_data[i];
+                x_data[0] = abs(x_data[i]);
             }
-            if(x_data[i]>1||x_data[i]<-1)
+            if(x_data[i] > MOVE_THRESHOLD)
             {
                 mileagehandle(MILEAGE_START);
                 detectvoltage_timer(DETECTVOLTAGE_STOP);
@@ -115,7 +116,7 @@ static void move_alarm_timer_handler()
         DigitalIntegrate(temp_data, y_data, MAX_MOVE_DATA_LEN,MOVE_TIMER_PERIOD/1000.0);
         for(i=0;i<MAX_MOVE_DATA_LEN;i++)
         {
-            if(y_data[i]>1||y_data[i]<-1)
+            if(y_data[i] > MOVE_THRESHOLD)
             {
                 mileagehandle(MILEAGE_START);
                 detectvoltage_timer(DETECTVOLTAGE_STOP);
@@ -129,7 +130,7 @@ static void move_alarm_timer_handler()
             }
             if(y_data[0]<abs(y_data[i]))
             {
-                y_data[0] = y_data[i];
+                y_data[0] = abs(y_data[i]);
             }
 
         }
@@ -138,7 +139,7 @@ static void move_alarm_timer_handler()
         DigitalIntegrate(temp_data, z_data, MAX_MOVE_DATA_LEN,MOVE_TIMER_PERIOD/1000.0);
         for(i=0;i<MAX_MOVE_DATA_LEN;i++)
         {
-            if(z_data[i]>1||z_data[i]<-1)
+            if(z_data[i] > MOVE_THRESHOLD)
             {
                 mileagehandle(MILEAGE_START);
                 detectvoltage_timer(DETECTVOLTAGE_STOP);
@@ -151,7 +152,7 @@ static void move_alarm_timer_handler()
             }
             if(z_data[0]<abs(z_data[i]))
             {
-                z_data[0] = z_data[i];
+                z_data[0] = abs(z_data[i]);
             }
         }
         LOG_DEBUG("MAX_z  = %f", z_data[0]);
