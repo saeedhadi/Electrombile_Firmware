@@ -20,7 +20,6 @@ enum CMD
     CMD_THREAD_LOCATION,
 };
 
-#pragma pack(push,1)
 
 typedef struct
 {
@@ -53,7 +52,7 @@ typedef struct
         CELL_INFO cellInfo;
     };
 }LOCAL_GPS;
-#pragma pack(pop)
+
 
 MSG_THREAD* allocMsg(u8 len);
 void freeMsg(MSG_THREAD* msg);
