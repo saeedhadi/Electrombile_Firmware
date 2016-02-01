@@ -8,13 +8,10 @@
 #ifndef USER_ELECTROMBILE_CLIENT_H_
 #define USER_ELECTROMBILE_CLIENT_H_
 
-#include <time.h>
-
-
 int client_proc(const void* m, int msgLen);
 void client_loop(void);
 void msg_heartbeat(void);
-time_t timestamp_get(void);
+
 
 void send_autodefendstate_msg(eat_bool state);
 
