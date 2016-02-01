@@ -474,7 +474,7 @@ void detectvoltage_timer(short operation)
     if(DETECTVOLTAGE_START == operation)
     {
         LOG_INFO("TIMER_VOLTAGE_GET start!");
-        eat_timer_start(TIMER_VOLTAGE_GET, setting.detectvolatge_timer_peroid);
+//        eat_timer_start(TIMER_VOLTAGE_GET, setting.detectvolatge_timer_peroid);
     }
     else if(DETECTVOLTAGE_STOP == operation)
     {

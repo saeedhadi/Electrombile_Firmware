@@ -63,7 +63,6 @@ static void setting_initial(void)
     setting.heartbeat_timer_period = 3*60*1000;
     setting.seekautooff_timer_peroid = 30*1000;
     setting.timeupdate_timer_peroid = 24 * 60 * 60 * 1000;      //24h * 60m * 60s * 1000ms
-    setting.detectvolatge_timer_peroid = 3*60*1000;             //3min*60s*1000ms
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;
 

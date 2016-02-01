@@ -43,7 +43,6 @@ typedef struct
         u32 heartbeat_timer_period;
         u32 seekautooff_timer_peroid;
         u32 timeupdate_timer_peroid;
-        u32 detectvolatge_timer_peroid;
     };
 
     //Switch configuration
