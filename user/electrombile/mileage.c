@@ -16,6 +16,7 @@
 #include "client.h"
 #include "socket.h"
 #include "timer.h"
+#include "rtc.h"
 
 #include "mileage.h"
 
@@ -143,7 +144,7 @@ eat_bool mileage_save(void)
 
 void adc_mileageinit_proc(EatAdc_st* adc)
 {
-    u16 adcvalue;
+    u16 adcvalue = 0;
     int i;
     static u16 value[40],count = 0;
 
@@ -158,7 +159,7 @@ void adc_mileageinit_proc(EatAdc_st* adc)
     {
         return;
     }
-    /*40 ¸ö´æ´¢Öµ È¡Æ½¾ùÊý*/
+    /*40 ï¿½ï¿½ï¿½æ´¢Öµ È¡Æ½ï¿½ï¿½ï¿½ï¿½*/
     for(i = 0;i < 40;i++)
     {
         adcvalue += value[i];
@@ -219,7 +220,7 @@ void adc_mileageend_proc(EatAdc_st* adc)
     }
     else
     {
-        /*          ¼ÆËã×îÖÕµçÑ¹Öµ&&ÐÞ¸Ä±í          */
+        /*          ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½Ñ¹Öµ&&ï¿½Þ¸Ä±ï¿½          */
         for(count = 0;count <40;count++)
         {
             average_voltage += voltage[count];
@@ -230,12 +231,12 @@ void adc_mileageend_proc(EatAdc_st* adc)
         while(average_voltage/ADC_RELATIVE_VALUE > mileage_storage.voltage[end++]);
         --start;
         --end;
-        if(start > end)//Æô³ÌµçÑ¹Ð¡ÓÚ½áÊøµçÑ¹
+        if(start > end)//ï¿½ï¿½ï¿½Ìµï¿½Ñ¹Ð¡ï¿½Ú½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¹
         {
             LOG_INFO("data is invalid , abort...");
             /*abort this mileage data*/
         }
-        else if(start == end)//Æô³ÌµçÑ¹µÈÓÚ½áÊøµçÑ¹
+        else if(start == end)//ï¿½ï¿½ï¿½Ìµï¿½Ñ¹ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¹
         {
             if(mileage > mileage_storage.dump_mileage[start])
             {
@@ -298,7 +299,7 @@ void adc_mileagestart_proc(EatAdc_st* adc)
         }
         average_voltage /= 40;
 
-        /*          ±ê¼ÇÐÐ³Ì³õÊ¼µçÑ¹Öµ      */
+        /*          ï¿½ï¿½ï¿½ï¿½Ð³Ì³ï¿½Ê¼ï¿½ï¿½Ñ¹Öµ      */
         adcvalue_start = average_voltage;
 
         eat_adc_get(EAT_ADC1,NULL,NULL);
@@ -334,7 +335,7 @@ void adc_voltage_proc(EatAdc_st* adc)
         }
         average_voltage /= 40;
 
-        /*          ´æ´¢40´ÎµçÑ¹Æ½¾ùÖµ      */
+        /*          ï¿½æ´¢40ï¿½Îµï¿½Ñ¹Æ½ï¿½ï¿½Öµ      */
         adcvalue = average_voltage;
 
         eat_adc_get(EAT_ADC1,NULL,NULL);
@@ -354,7 +355,7 @@ void mileagehandle(short MILEAGE_STATE)
     time_t timestamp;
 
 
-    timestamp = timestamp_get();
+    timestamp = rtc_getTimestamp();
     LOG_DEBUG("timestamp:%ld",timestamp);
 
     if(MILEAGE_START == MILEAGE_STATE && mileage_flag == EAT_FALSE)

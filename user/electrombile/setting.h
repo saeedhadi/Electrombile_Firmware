@@ -64,16 +64,7 @@ eat_bool setting_restore(void);
 eat_bool setting_save(void);
 
 
-eat_bool updatertctime(void);
-
-
-
 #define SETITINGFILE_NAME  L"C:\\setting.txt"
-
-#define YEAROFFSET 1950
-
-
-
 
 
 

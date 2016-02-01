@@ -179,7 +179,7 @@ void app_vibration_thread(void *data)
 	}
 
 	eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
-    eat_timer_start(TIMER_RTC_UPDATE,30*1000);
+
 	while(EAT_TRUE)
 	{
         eat_get_event_for_user(THREAD_VIBRATION, &event);
@@ -199,15 +199,7 @@ void app_vibration_thread(void *data)
                     case TIMER_VOLTAGE_GET: //when  electric motor car stop,detect voltage 3min once
                         LOG_INFO("TIMER_VOLTAGE_GET expire!");
                         eat_adc_get(EAT_ADC1,ADC1_PERIOD,adc_voltage_proc);
-                        eat_timer_start(TIMER_RTC_UPDATE, setting.detectvolatge_timer_peroid);
-                        break;
-                    case TIMER_RTC_UPDATE:
-                        LOG_INFO("TIMER_RTC_UPDATE expire!");
-                        updatertctime();
-                        if(1980 == GPStime.year+YEAROFFSET )    //if not catch the gps time , wait 30s and catch it again
-                            eat_timer_start(TIMER_RTC_UPDATE, 30*1000);
-                        else
-                            eat_timer_start(TIMER_RTC_UPDATE, setting.timeupdate_timer_peroid);
+                        eat_timer_start(TIMER_VOLTAGE_GET, setting.detectvolatge_timer_peroid);
                         break;
 
                     default:

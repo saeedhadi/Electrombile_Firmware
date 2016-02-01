@@ -35,9 +35,6 @@ typedef struct
 
 SETTING setting;
 
-eat_bool updatertctime_flag = EAT_FALSE;
-
-
 static void setting_initial(void)
 {
     LOG_INFO("setting initial to default value.");
@@ -208,12 +205,5 @@ eat_bool setting_save(void)
     eat_fs_Close(fh);
 
     return ret;
-}
-
-
-eat_bool updatertctime()
-{
-    updatertctime_flag = EAT_TRUE;
-    return updatertctime_flag;
 }
 
