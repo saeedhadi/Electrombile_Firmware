@@ -93,8 +93,7 @@ endif
 
 #CORE提供的SYM文件名
 #ifeq ($(strip $(HARDWARE_PLATFORM)),SIM800H)
-    SRC_CORE_SYM_FILE = $(PROJ)_EAT_PCB01_gprs_MT6261_S00_limit.sym
-#    SRC_CORE_SYM_FILE = $(PROJ)_EAT_PCB01_gprs_MT6260_S00.sym
+    SRC_CORE_SYM_FILE = $(PROJ)_BT_EAT_PCB01_gprs_MT6261_S00_limit.sym
     CORE_BIN_DIR = $(CORE_DIR)/$(PROJ)_EMBEDDEDAT
     CORE_BIN_CFG_FILE = $(PROJ)_EAT.cfg
 #else
