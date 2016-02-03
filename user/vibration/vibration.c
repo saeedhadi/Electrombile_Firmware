@@ -16,7 +16,6 @@
 #include "data.h"
 #include "thread_msg.h"
 #include "setting.h"
-#include "client.h"
 #include "mma8652.h"
 
 static eat_bool vibration_sendAlarm(void);

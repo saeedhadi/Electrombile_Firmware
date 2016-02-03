@@ -15,7 +15,6 @@
 
 #include "setting.h"
 #include "log.h"
-#include "mileage.h"
 
 typedef struct
 {

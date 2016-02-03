@@ -91,7 +91,7 @@ SRC_SCAT_FILE = scat_SIM800C32.txt
 HARDWARE_PLATFORM = SIM800C
 endif
 
-#CORE提供的SYM文件名
+#CORE锟结供锟斤拷SYM锟侥硷拷锟斤拷
 #ifeq ($(strip $(HARDWARE_PLATFORM)),SIM800H)
     SRC_CORE_SYM_FILE = $(PROJ)_BT_EAT_PCB01_gprs_MT6261_S00_limit.sym
     CORE_BIN_DIR = $(CORE_DIR)/$(PROJ)_EMBEDDEDAT
@@ -135,11 +135,11 @@ SCAT_FLAG = --scatter $(CORE_DIR)\$(SRC_SCAT_FILE) #$(OUTPUT_BIN_DIR)\$(SCATTER_
 
 #head file dir
 CORE_INC=$(PROJ_HOME)/$(CORE_DIR)/inc
-SRC_INC = $(foreach n,$(SRC_OPEN_MODE_NAME) ,-I$(PROJ_HOME)/$(SRC_DIR)/$(n) )
+#SRC_INC = $(foreach n,$(SRC_OPEN_MODE_NAME) ,-I$(PROJ_HOME)/$(SRC_DIR)/$(n) )
 
 INC_FLAG =-I$(INC_PATH)
 INC_FLAG += -I$(CORE_INC)
-INC_FLAG += $(SRC_INC)
+#INC_FLAG += $(SRC_INC)
 
 #Core lib
 CORE_LIB = $(CORE_DIR)\core.lib \

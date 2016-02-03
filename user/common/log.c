@@ -13,10 +13,6 @@
 #include "uart.h"
 #include "data.h"
 #include "log.h"
-#include "client.h"
-
-
-
 
 
 void log_hex(const char* data, int length)
