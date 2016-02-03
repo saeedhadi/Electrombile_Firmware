@@ -15,6 +15,7 @@
 #include "timer.h"
 #include "mileage.h"
 #include "data.h"
+#include "tool.h"
 #include "thread_msg.h"
 #include "setting.h"
 #include "client.h"
@@ -22,6 +23,8 @@
 
 #define EAT_ADC0 EAT_PIN23_ADC1
 #define EAT_ADC1 EAT_PIN24_ADC2
+
+#define READ_BUFF_SIZE 2048
 #define ADC1_PERIOD 10  //ms
 
 static eat_bool vibration_sendAlarm(void);
@@ -36,8 +39,9 @@ static void avoid_fre_send(eat_bool state);
 
 static eat_bool avoid_freq_flag = EAT_FALSE;
 eat_bool isMoved = EAT_FALSE;
-
 extern EatRtc_st GPStime;
+
+
 
 void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
 {
@@ -160,14 +164,55 @@ static void move_alarm_timer_handler()
 
 
 }
+void BT_at_read_handler()
+{
+    unsigned char *buf_p1 = NULL;
+    unsigned char *buf_p2 = NULL;
+    unsigned char  buf[READ_BUFF_SIZE] = {0};  //ï¿½ï¿½ï¿½Ú¶ï¿½È¡ATÖ¸ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦
+    unsigned int len = 0;
+    unsigned int count = 0, cellCount = 0;
+    static double gpstimes = 0.0;
+    int _mcc = 0;
+    int _mnc = 0;
+    int lac = 0;
+    int cellid = 0;
+    int rxl = 0;
+
+    len = eat_modem_read(buf, READ_BUFF_SIZE);
+    LOG_DEBUG("modem read, len=%d, buf=\r\n%s", len, buf);
+
+    buf_p1 = tool_StrstrAndReturnEndPoint(buf, "AT+BTPOWER=1\r\r\n");
+    if(NULL != buf_p1)
+    {
+        buf_p2 = (unsigned char*)strstr(buf_p1, "OK");
+        if(buf_p1 == buf_p2)
+        {
+            LOG_DEBUG("turn on BT power OK.");
+        }
+    }
+        /*
+        +BTSCAN: 0,1,"hongmi",9c:99:a0:3b:67:b8,-58
+        +BTSCAN: 1
+        */
+    buf_p1 = tool_StrstrAndReturnEndPoint(buf, "+BTSCAN: ");
+    if(NULL != buf_p1)
+    {
+       buf_p2 = tool_StrstrAndReturnEndPoint(buf, "hongmi");//¸Ä³ÉappÐÞ¸ÄµÄÊÖ»úÃû³Æ
+       if(NULL != buf_p2)
+        {
+            set_vibration_state(EAT_FALSE);
+           LOG_DEBUG("set defend switch off.");
+       }       
+    }
+}
 
 void app_vibration_thread(void *data)
 {
 	EatEvent_st event;
 	bool ret;
-
+         static int number=0;
 	LOG_INFO("vibration thread start.");
-
+      
 	ret = mma8652_init();
 	if (!ret)
 	{
@@ -177,9 +222,9 @@ void app_vibration_thread(void *data)
 	{
 	    mma8652_config();
 	}
-
+       tool_modem_write("AT+BTPOWER=1\n");
 	eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
-    eat_timer_start(TIMER_RTC_UPDATE,30*1000);
+       eat_timer_start(TIMER_RTC_UPDATE,30*1000);
 	while(EAT_TRUE)
 	{
         eat_get_event_for_user(THREAD_VIBRATION, &event);
@@ -190,6 +235,13 @@ void app_vibration_thread(void *data)
                 {
                     case TIMER_VIBRATION:
                         vibration_timer_handler();
+                        
+                       // if(get_ScanCompletion_state())
+                       if(number++>20)
+                        {       LOG_DEBUG("BTSCAN.");
+                                 number = 0 ;
+                                 tool_modem_write("AT+BTSCAN=1,2\n");
+                        }
                         eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
                         break;
                     case TIMER_MOVE_ALARM:
@@ -215,7 +267,10 @@ void app_vibration_thread(void *data)
                         break;
                 }
                 break;
-
+            case EAT_EVENT_MDM_READY_RD:
+                LOG_DEBUG("BT AT read.");
+                BT_at_read_handler();
+                break;
             default:
             	LOG_ERROR("event(%d) not processed!", event.event);
                 break;
@@ -320,7 +375,7 @@ static void avoid_fre_send(eat_bool state)
 
     if(state == EAT_TRUE)
     {
-        if(++avoid_freq_count == 30)
+        if(++avoid_freq_count == 10)
         {
             avoid_freq_count = 0;
             avoid_freq_flag = EAT_FALSE;
