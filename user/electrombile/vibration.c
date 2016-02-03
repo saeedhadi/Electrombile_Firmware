@@ -13,16 +13,11 @@
 #include "thread.h"
 #include "log.h"
 #include "timer.h"
-#include "mileage.h"
 #include "data.h"
 #include "thread_msg.h"
 #include "setting.h"
 #include "client.h"
 #include "mma8652.h"
-
-#define EAT_ADC0 EAT_PIN23_ADC1
-#define EAT_ADC1 EAT_PIN24_ADC2
-#define ADC1_PERIOD 10  //ms
 
 static eat_bool vibration_sendAlarm(void);
 static void vibration_timer_handler(void);
@@ -36,8 +31,6 @@ static void avoid_fre_send(eat_bool state);
 
 static eat_bool avoid_freq_flag = EAT_FALSE;
 eat_bool isMoved = EAT_FALSE;
-
-extern EatRtc_st GPStime;
 
 void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
 {
@@ -98,8 +91,6 @@ static void move_alarm_timer_handler()
             }
             if(x_data[i] > MOVE_THRESHOLD)
             {
-                mileagehandle(MILEAGE_START);
-                detectvoltage_timer(DETECTVOLTAGE_STOP);
                 if(EAT_TRUE == vibration_fixed())
                 {
                     vibration_sendAlarm();
@@ -118,8 +109,6 @@ static void move_alarm_timer_handler()
         {
             if(y_data[i] > MOVE_THRESHOLD)
             {
-                mileagehandle(MILEAGE_START);
-                detectvoltage_timer(DETECTVOLTAGE_STOP);
                 if(EAT_TRUE == vibration_fixed())
                 {
                     vibration_sendAlarm();
@@ -141,8 +130,6 @@ static void move_alarm_timer_handler()
         {
             if(z_data[i] > MOVE_THRESHOLD)
             {
-                mileagehandle(MILEAGE_START);
-                detectvoltage_timer(DETECTVOLTAGE_STOP);
                 if(EAT_TRUE == vibration_fixed())
                 {
                     vibration_sendAlarm();
@@ -179,7 +166,7 @@ void app_vibration_thread(void *data)
 	}
 
 	eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
-    eat_timer_start(TIMER_RTC_UPDATE,30*1000);
+
 	while(EAT_TRUE)
 	{
         eat_get_event_for_user(THREAD_VIBRATION, &event);
@@ -194,20 +181,6 @@ void app_vibration_thread(void *data)
                         break;
                     case TIMER_MOVE_ALARM:
                         move_alarm_timer_handler();
-
-                        break;
-                    case TIMER_VOLTAGE_GET: //when  electric motor car stop,detect voltage 3min once
-                        LOG_INFO("TIMER_VOLTAGE_GET expire!");
-                        eat_adc_get(EAT_ADC1,ADC1_PERIOD,adc_voltage_proc);
-                        eat_timer_start(TIMER_RTC_UPDATE, setting.detectvolatge_timer_peroid);
-                        break;
-                    case TIMER_RTC_UPDATE:
-                        LOG_INFO("TIMER_RTC_UPDATE expire!");
-                        updatertctime();
-                        if(1980 == GPStime.year+YEAROFFSET )    //if not catch the gps time , wait 30s and catch it again
-                            eat_timer_start(TIMER_RTC_UPDATE, 30*1000);
-                        else
-                            eat_timer_start(TIMER_RTC_UPDATE, setting.timeupdate_timer_peroid);
                         break;
 
                     default:
@@ -283,10 +256,6 @@ static void vibration_timer_handler(void)
                 if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
                 {
                     LOG_INFO("vibration state auto locked.");
-
-                    mileagehandle(MILEAGE_STOP);
-
-                    detectvoltage_timer(DETECTVOLTAGE_START);
 
                     send_autodefendstate_msg(EAT_FALSE);
 

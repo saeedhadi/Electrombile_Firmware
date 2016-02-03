@@ -44,10 +44,8 @@ void mileagehandle(short MILEAGE_STATE);
 void adc_mileageinit_proc(EatAdc_st* adc);
 void adc_mileagestart_proc(EatAdc_st* adc);
 void adc_mileageend_proc(EatAdc_st* adc);
-void detectvoltage_timer(short operation);
+
 void adc_voltage_proc(EatAdc_st* adc);
-
-
 
 
 

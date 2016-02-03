@@ -43,7 +43,6 @@ typedef struct
         u32 heartbeat_timer_period;
         u32 seekautooff_timer_peroid;
         u32 timeupdate_timer_peroid;
-        u32 detectvolatge_timer_peroid;
     };
 
     //Switch configuration
@@ -64,16 +63,7 @@ eat_bool setting_restore(void);
 eat_bool setting_save(void);
 
 
-eat_bool updatertctime(void);
-
-
-
 #define SETITINGFILE_NAME  L"C:\\setting.txt"
-
-#define YEAROFFSET 1950
-
-
-
 
 
 

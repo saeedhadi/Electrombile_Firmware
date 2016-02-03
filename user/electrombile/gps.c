@@ -21,6 +21,7 @@
 #include "setting.h"
 #include "protocol.h"
 #include "tool.h"
+#include "rtc.h"
 
 #define TIMER_GPS_PERIOD (30 * 1000)
 #define EARTH_RADIUS 6378137 //radius of our earth unit :  m
@@ -69,14 +70,13 @@ static float course = 0.0;
 
 
 static eat_bool isCellGet = EAT_FALSE;
-extern eat_bool updatertctime_flag;
 extern eat_bool isMoved;
 static short mcc = 0;//mobile country code
 static short mnc = 0;//mobile network code
 static char  cellNo = 0;//cell count
 static CELL  cells[7] = {0};
 static LOCAL_GPS last_gps_info;
-EatRtc_st GPStime = {0};
+
 double mileage = 0.f;
 
 static LOCAL_GPS* last_gps =&last_gps_info;//gps sent for the last time
@@ -85,8 +85,8 @@ static LOCAL_GPS* last_gps =&last_gps_info;//gps sent for the last time
 void app_gps_thread(void *data)
 {
     EatEvent_st event;
-	MSG_THREAD* msg;
-	u8 msgLen;
+	MSG_THREAD* msg = 0;
+	u8 msgLen = 0;
 
     LOG_INFO("gps thread start.");
 
@@ -154,7 +154,7 @@ static void gps_timer_handler(u8 cmd)
     {
         LOG_INFO("GPS is not fixed.");
     }
-     //ÔÝÊ±²»ÓÃÍÆËÍ»ùÕ¾ÐÅÏ¢
+     //ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í»ï¿½Õ¾ï¿½ï¿½Ï¢
     /*else if(gps_isCellGet())
     {
         LOG_DEBUG("send cells.");
@@ -363,10 +363,9 @@ static void gps_at_read_handler(void)
     if(NULL != buf_p1)
     {
         count = sscanf(buf_p1, "%*d,%d,%lf,%f,%f,%f,%f,%f,%*s",&isGpsFixed,&gpstimes, &latitude, &longitude,&altitude,&speed,&course);
-        if(updatertctime_flag)// update the rtc time once day
+        if(!rtc_synced())// update the rtc time once day
         {
-            set_rtctime(gpstimes);
-            LOG_INFO("GPStime set:%04d,%02d,%02d,%02d:%02d:%02d",GPStime.year+YEAROFFSET,GPStime.mon,GPStime.day,GPStime.hour,GPStime.min,GPStime.sec);
+            rtc_update(gpstimes);
         }
         if(7 != count)
         {
@@ -459,7 +458,7 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
 
             distance = getdistance(pre_gps,gps);
             if(distance <= 10 ||isMoved == EAT_FALSE)//if the distance change 10m ,push the information of GPS
-            {//Èç¹ûÃ»ÓÐÒÆ¶¯²»ÉÏ±¨gps
+            {//ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½Ï±ï¿½gps
                 LOG_DEBUG("GPS is the same. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
                 return EAT_TRUE;
             }
@@ -536,33 +535,3 @@ static long double getdistance(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)  //get distan
 
     return s ;
 }
-
-void set_rtctime(double time)
-{
-
-    GPSTIME gpstime;
-
-    gpstime.year = (short)(time/10000000000);
-    time -= gpstime.year * 10000000000;
-    gpstime.mon = (short)(time/100000000);
-    time -= gpstime.mon * 100000000;
-    gpstime.day = (short)(time/1000000);
-    time -= gpstime.day * 1000000;
-    gpstime.hour = (short)(time/10000);
-    time -= gpstime.hour * 10000;
-    gpstime.min = (short)(time/100);
-    time -= gpstime.min * 100;
-    gpstime.sec = (short)(time);
-    GPStime.year = gpstime.year-YEAROFFSET;//bec GPStime.year:[0:127]
-    GPStime.mon = gpstime.mon;
-    GPStime.day = gpstime.day;
-    GPStime.hour = gpstime.hour;
-    GPStime.min = gpstime.min;
-    GPStime.sec = gpstime.sec;
-
-    eat_set_rtc(&GPStime);
-    updatertctime_flag = EAT_FALSE;
-}
-
-
-

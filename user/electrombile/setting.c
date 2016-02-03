@@ -35,9 +35,6 @@ typedef struct
 
 SETTING setting;
 
-eat_bool updatertctime_flag = EAT_FALSE;
-
-
 static void setting_initial(void)
 {
     LOG_INFO("setting initial to default value.");
@@ -66,7 +63,6 @@ static void setting_initial(void)
     setting.heartbeat_timer_period = 3*60*1000;
     setting.seekautooff_timer_peroid = 30*1000;
     setting.timeupdate_timer_peroid = 24 * 60 * 60 * 1000;      //24h * 60m * 60s * 1000ms
-    setting.detectvolatge_timer_peroid = 3*60*1000;             //3min*60s*1000ms
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;
 
@@ -208,12 +204,5 @@ eat_bool setting_save(void)
     eat_fs_Close(fh);
 
     return ret;
-}
-
-
-eat_bool updatertctime()
-{
-    updatertctime_flag = EAT_TRUE;
-    return updatertctime_flag;
 }
 

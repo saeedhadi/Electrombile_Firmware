@@ -500,25 +500,6 @@ void msg_wild(const void* m, int len)
 }
 
 
-
-
-time_t timestamp_get(void)
-{
-    struct tm stm = {0};
-    EatRtc_st rtc = {0};
-
-    eat_get_rtc(&rtc);
-
-    stm.tm_year = rtc.year + YEAROFFSET - 1900;
-    stm.tm_mon = rtc.mon - 1;
-    stm.tm_mday = rtc.day;
-    stm.tm_hour = rtc.hour;
-    stm.tm_min = rtc.min;
-    stm.tm_sec = rtc.sec;
-
-    return mktime(&stm);
-}
-
 void send_autodefendstate_msg(eat_bool state)
 {
     u8 msgLen = sizeof(MSG_HEADER) + sizeof(char);

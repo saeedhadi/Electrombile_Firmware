@@ -10,7 +10,6 @@
 
 #include "watchdog.h"
 #include "log.h"
-#include "mileage.h"
 
 #define REBOOT_TIMEOUT  60000   //60s
 
@@ -38,7 +37,7 @@ void stopWatchdog(void)
     }
     else
     {
-        LOG_ERROR("stop watchdog fail!");
+        LOG_ERROR("stop watchdog fail: %d!", rc);
     }
 
     return;
