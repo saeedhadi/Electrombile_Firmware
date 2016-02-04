@@ -99,27 +99,12 @@ static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
 	{
 		LOG_DEBUG("hostname notify:%s -> %d.%d.%d.%d.", setting.domain, ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3], setting.port);
 
-        address.sock_type = SOC_SOCK_STREAM;
-        address.addr_len = 4;
-        address.port = setting.port;
-        address.addr[0] = ip_addr[0];
-        address.addr[1] = ip_addr[1];
-        address.addr[2] = ip_addr[2];
-        address.addr[3] = ip_addr[3];
-
-        rc = eat_soc_connect(socket_id, &address);
-        if(rc >= 0)
-        {
-        	LOG_INFO("socket id of new connection is :%d.", rc);
-        }
-        else if (rc == SOC_WOULDBLOCK)
-        {
-         	LOG_INFO("Connection is in progressing...", socket_id);
-        }
-        else
-        {
-         	LOG_ERROR("Connect return error:%d!", rc);
-        }
+		socket_connect2IP(ip_addr);
+		fsm_run(EVT_HOSTNAME2IP);
+	}
+	else
+	{
+	    LOG_ERROR("hostname_notify_cb error:%d", result);
 	}
 
     return;
@@ -169,8 +154,7 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
             LOG_INFO("SOC_CLOSE.");
 
             eat_soc_close(socket_id);
-            set_socket_state(EAT_FALSE);
-            set_client_state(EAT_FALSE);
+//TODO: run the fsm
 
             eat_timer_start(TIMER_SOCKET, setting.socket_timer_period);
             break;
@@ -238,8 +222,7 @@ int socket_init(void)
     return SUCCESS;
 }
 
-
-int socket_connect()
+int socket_connect2IP(u8 ip_addr[4])
 {
     s8 rc = SOC_SUCCESS;
 
@@ -247,42 +230,14 @@ int socket_connect()
 
     address.sock_type = SOC_SOCK_STREAM;
     address.addr_len = 4;
-    if (setting.addr_type == ADDR_TYPE_IP)
-    {
-        address.addr[0] = setting.ipaddr[0];
-        address.addr[1] = setting.ipaddr[1];
-        address.addr[2] = setting.ipaddr[2];
-        address.addr[3] = setting.ipaddr[3];
 
-        LOG_DEBUG("ip: %d.%d.%d.%d:%d.", address.addr[0], address.addr[1], address.addr[2], address.addr[3], setting.port);
-    }
-    else
-    {
-        u8 ipaddr[4] = {0};
-        u8 len = 0;
+    address.addr[0] = ip_addr[0];
+    address.addr[1] = ip_addr[1];
+    address.addr[2] = ip_addr[2];
+    address.addr[3] = ip_addr[3];
 
-        eat_soc_gethost_notify_register(hostname_notify_cb);
-        rc = eat_soc_gethostbyname(setting.domain, ipaddr, &len, 1234);
-        if (rc == SOC_WOULDBLOCK)
-        {
-            LOG_INFO("eat_soc_gethostbyname wait callback.");
-            return ERR_WAITING_HOSTNAME2IP;
-        }
-        else if (rc == SOC_SUCCESS)
-        {
-            address.addr[0] = ipaddr[0];
-            address.addr[1] = ipaddr[1];
-            address.addr[2] = ipaddr[2];
-            address.addr[3] = ipaddr[3];
+    LOG_DEBUG("ip: %d.%d.%d.%d:%d.", address.addr[0], address.addr[1], address.addr[2], address.addr[3], setting.port);
 
-            LOG_DEBUG("host:%s -> %d.%d.%d.%d:%d.", setting.domain, ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3], setting.port);
-        }
-        else
-        {
-            LOG_ERROR("eat_soc_gethostbyname error!");
-            return ERR_GET_HOSTBYNAME_FAILED;
-        }
-    }
 
     address.port = setting.port;                /* TCP server port */
     rc = eat_soc_connect(socket_id, &address);
@@ -301,6 +256,40 @@ int socket_connect()
         LOG_ERROR("Connect return error:%d!", rc);
         return ERR_SOCKET_FAILED;
     }
+}
+
+int socket_connect()
+{
+    s8 rc = SOC_SUCCESS;
+
+    if (setting.addr_type == ADDR_TYPE_IP)
+    {
+        return socket_connect2IP(setting.ipaddr);
+    }
+    else
+    {
+        u8 ipaddr[4] = {0};
+        u8 len = 0;
+
+        eat_soc_gethost_notify_register(hostname_notify_cb);
+        rc = eat_soc_gethostbyname(setting.domain, ipaddr, &len, 1234);
+        if (rc == SOC_WOULDBLOCK)
+        {
+            LOG_INFO("eat_soc_gethostbyname wait callback.");
+            return ERR_WAITING_HOSTNAME2IP;
+        }
+        else if (rc == SOC_SUCCESS)
+        {
+            LOG_DEBUG("host:%s -> %d.%d.%d.%d:%d.", setting.domain, ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3], setting.port);
+            return socket_connect2IP(ipaddr);
+        }
+        else
+        {
+            LOG_ERROR("eat_soc_gethostbyname error!");
+            return ERR_GET_HOSTBYNAME_FAILED;
+        }
+    }
+
 }
 
 int socket_setup(void)

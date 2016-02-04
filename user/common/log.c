@@ -183,6 +183,8 @@ void log_remote(const char* fmt, ...) //when socket connected,LOG_remote;else LO
 
     length = strlen(buf);
 
+    //TODO: send via socket
+/*
     if (socket_conneted())
     {
         cmd_Wild(buf, length);
@@ -191,6 +193,8 @@ void log_remote(const char* fmt, ...) //when socket connected,LOG_remote;else LO
     {
         eat_trace("%s", buf);
     }
+
+*/
 }
 
 void log_file(const char* fmt, ...)

@@ -12,32 +12,9 @@
 LOCAL_DATA data =
 {
     EAT_FALSE,
-    EAT_FALSE,
-    EAT_FALSE,
     EAT_TRUE,
     5,
 };
-
-
-eat_bool socket_conneted(void)
-{
-    return data.connected;
-}
-
-void set_socket_state(eat_bool connected)
-{
-    data.connected = connected;
-}
-
-eat_bool client_logined(void)
-{
-    return data.logined;
-}
-
-void set_client_state(eat_bool logined)
-{
-    data.logined = logined;
-}
 
 eat_bool isSeekMode(void)
 {

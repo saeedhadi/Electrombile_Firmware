@@ -9,6 +9,5 @@
 #define USER_ELECTROMBILE_CLIENT_H_
 
 int client_proc(const void* m, int msgLen);
-void client_loop(void);
 
 #endif /* USER_ELECTROMBILE_CLIENT_H_ */

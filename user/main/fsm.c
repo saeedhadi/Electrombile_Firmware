@@ -16,18 +16,70 @@
 #include "error.h"
 #include "modem.h"
 #include "request.h"
+#include "socket.h"
 
+
+#define DESC_DEF(x) case x:\
+                        return #x
 
 static STATUS status = STS_INITIAL;
 
+static char* fsm_getStateName(STATUS sts)
+{
+    switch (sts)
+    {
+#ifdef LOG_DEBUG_FLAG
+        DESC_DEF(STS_INITIAL);
+        DESC_DEF(STS_WAIT_GPRS);
+        DESC_DEF(STS_WAIT_BEARER);
+        DESC_DEF(STS_WAIT_SOCKET);
+        DESC_DEF(STS_WAIT_IPADDR);
+        DESC_DEF(STS_WAIT_LOGIN);
+        DESC_DEF(STS_RUNNING);
+#endif
+        default:
+        {
+            static char status_name[10] = {0};
+            sprintf(status_name, "%d", status);
+            return status_name;
+        }
+    }
+}
+
+static char* fsm_getEventName(EVENT event)
+{
+    switch (event)
+    {
+#ifdef LOG_DEBUG_FLAG
+        DESC_DEF(EVT_LOOP);
+        DESC_DEF(EVT_CALL_READY);
+        DESC_DEF(EVT_GPRS_ATTACHED);
+        DESC_DEF(EVT_BEARER_HOLD);
+        DESC_DEF(EVT_HOSTNAME2IP);
+        DESC_DEF(EVT_SOCKET_CONNECTED);
+        DESC_DEF(EVT_LOGINED);
+        DESC_DEF(EVT_HEARTBEAT_LOSE);
+        DESC_DEF(EVT_SOCKET_DISCONNECTED);
+#endif
+        default:
+        {
+            static char status_name[10] = {0};
+            sprintf(status_name, "%d", status);
+            return status_name;
+        }
+    }
+}
+
 static void fsm_trans(STATUS sts)
 {
+    LOG_DEBUG("state: %s -> %s", fsm_getStateName(status), fsm_getStateName(sts));
+
     status = sts;
 }
 
 static void start_mainloop(void)
 {
-    eat_timer_start(TIMER_AT_CMD, setting.at_cmd_timer_period);
+    eat_timer_start(TIMER_LOOP, setting.at_cmd_timer_period);
 }
 
 typedef int ACTION(void);
@@ -64,10 +116,6 @@ int action_GprsAttached(void)
 
     case ERR_WAITING_HOSTNAME2IP:
         fsm_trans(STS_WAIT_IPADDR);
-        break;
-
-    case ERR_SOCKET_CONNECTED:
-        fsm_trans(STS_WAIT_LOGIN);
         break;
 
     default:
@@ -123,6 +171,11 @@ int action_logined(void)
     return 0;
 }
 
+int action_hostname2ip(void)
+{
+    fsm_trans(STS_WAIT_SOCKET);
+}
+
 int action_loop(void)
 {
 #define MAX_SOCKET_RETRY_TIMES  5
@@ -156,13 +209,13 @@ int action_loop(void)
 
 ACTION* state_transitions[STS_MAX][EVT_MAX] =
 {
-                     /* EVT_LOOP        EVT_CALL_READY      EVT_GPRS_ATTACHED       EVT_BEARER_HOLD    EVT_HOSTNAME2IP      EVT_SOCKET_CONNECTED    EVT_LOGINED  EVT_HEARTBEAT_LOSE  EVT_SOCKET_DISCONNECTED */
-/* STS_INITIAL      */  {NULL,          action_CallReady,   NULL,           NULL,           NULL,       NULL,       NULL},
+                     /* EVT_LOOP        EVT_CALL_READY      EVT_GPRS_ATTACHED       EVT_BEARER_HOLD     EVT_HOSTNAME2IP     EVT_SOCKET_CONNECTED    EVT_LOGINED  EVT_HEARTBEAT_LOSE  EVT_SOCKET_DISCONNECTED */
+/* STS_INITIAL      */  {NULL,          action_CallReady, },
 /* STS_WAIT_GPRS    */  {action_loop,   NULL,               action_GprsAttached,},
 /* STS_WAIT_BEARER  */  {NULL,          NULL,               NULL,                   action_BearHold,},
 /* STS_WAIT_SOCKET  */  {NULL,          NULL,               NULL,                   NULL,               NULL,               action_SocketConnected,},
-/* STS_WAIT_IPADDR  */  {NULL,},
-/* STS_WAIT_LOGIN   */  {NULL,          NULL,               NULL,                   NULL,               NULL,       NULL,   NULL,                   action_logined},
+/* STS_WAIT_IPADDR  */  {NULL,          NULL,               NULL,                   NULL,               action_hostname2ip,},
+/* STS_WAIT_LOGIN   */  {NULL,          NULL,               NULL,                   NULL,               NULL,               NULL,                   action_logined},
 /* STS_RUNNING      */   {NULL,},
 };
 
@@ -170,7 +223,7 @@ int fsm_run(EVENT event)
 {
     ACTION* action = state_transitions[status][event];
 
-    LOG_DEBUG("run FSM State(%d), Event(%d)", status, event);
+    LOG_DEBUG("run FSM State(%s), Event(%s)", fsm_getStateName(status), fsm_getEventName(event));
     if (action)
     {
         return action();

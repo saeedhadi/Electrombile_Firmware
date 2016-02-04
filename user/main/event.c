@@ -106,17 +106,13 @@ static int event_timer(const EatEvent_st* event)
             eat_timer_start(event->data.timer.timer_id, setting.watchdog_timer_period);
             break;
 
-        case TIMER_AT_CMD:
-            LOG_INFO("TIMER_AT_CMD expire.");
-            modem_ReadGPRSStatus();
+        case TIMER_LOOP:
+            LOG_INFO("TIMER_LOOP expire.");
+//            modem_ReadGPRSStatus();
+            fsm_run(EVT_LOOP);
             eat_timer_start(event->data.timer.timer_id, setting.at_cmd_timer_period);
             break;
 
-        case TIMER_GPS_SEND:
-            LOG_INFO("TIMER_GPS_SEND expire.");
-            eat_timer_start(event->data.timer.timer_id, setting.gps_send_timer_period);
-            client_loop();
-            break;
 
         case TIMER_SOCKET:
             LOG_INFO("TIMER_SOCKET expire.");

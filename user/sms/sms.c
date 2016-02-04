@@ -178,8 +178,6 @@ static void sms_timer_proc(u8 *p, u8 *number)
         {
             if(0 == timer_period)
             {
-                eat_timer_stop(TIMER_GPS_SEND);
-
                 sprintf(ack_message, "SET TIMER to 0 OK");
             }
             else if(timer_period <= 10)
@@ -187,9 +185,6 @@ static void sms_timer_proc(u8 *p, u8 *number)
                 setting.gps_send_timer_period = 10000;
 
                 setting_save();
-
-                eat_timer_stop(TIMER_GPS_SEND);
-                eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
 
                 sprintf(ack_message, "SET TIMER to 10 OK");
             }
@@ -199,9 +194,6 @@ static void sms_timer_proc(u8 *p, u8 *number)
 
                 setting_save();
 
-                eat_timer_stop(TIMER_GPS_SEND);
-                eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
-
                 sprintf(ack_message, "SET TIMER to 21600 OK");
             }
             else
@@ -209,9 +201,6 @@ static void sms_timer_proc(u8 *p, u8 *number)
                 setting.gps_send_timer_period = timer_period * 1000;
 
                 setting_save();
-
-                eat_timer_stop(TIMER_GPS_SEND);
-                eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
 
                 sprintf(ack_message, "SET TIMER to %d OK", timer_period);
             }
