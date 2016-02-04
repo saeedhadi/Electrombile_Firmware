@@ -108,16 +108,10 @@ static int event_timer(const EatEvent_st* event)
 
         case TIMER_LOOP:
             LOG_INFO("TIMER_LOOP expire.");
-//            modem_ReadGPRSStatus();
             fsm_run(EVT_LOOP);
             eat_timer_start(event->data.timer.timer_id, setting.at_cmd_timer_period);
             break;
 
-
-        case TIMER_SOCKET:
-            LOG_INFO("TIMER_SOCKET expire.");
-            socket_init();
-            break;
 
         case TIMER_HEARTBEAT:
             LOG_INFO("TIMER_HEARTBEAT expire!");
@@ -396,7 +390,7 @@ int event_proc(EatEvent_st* event)
 {
     int i = 0;
 
-    LOG_DEBUG("event: %s.", getEventDescription(event->event));
+    LOG_DEBUG("event: %s happened", getEventDescription(event->event));
 
     for (i = 0; i < sizeof(eventProcs) / sizeof(eventProcs[0]); i++)
     {

@@ -36,10 +36,8 @@ typedef struct
     {
         u32 watchdog_timer_period;
         u32 at_cmd_timer_period;
-        u32 gps_send_timer_period;
         u32 vibration_timer_period;
         u32 seek_timer_period;
-        u32 socket_timer_period;
         u32 heartbeat_timer_period;
         u32 seekautooff_timer_peroid;
         u32 timeupdate_timer_peroid;

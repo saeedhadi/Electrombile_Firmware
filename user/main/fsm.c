@@ -176,6 +176,11 @@ int action_hostname2ip(void)
     fsm_trans(STS_WAIT_SOCKET);
 }
 
+int action_reconnect(void)
+{
+    fsm_trans(STS_WAIT_SOCKET);
+}
+
 int action_loop(void)
 {
 #define MAX_SOCKET_RETRY_TIMES  5
@@ -209,16 +214,17 @@ int action_loop(void)
 
 ACTION* state_transitions[STS_MAX][EVT_MAX] =
 {
-                     /* EVT_LOOP        EVT_CALL_READY      EVT_GPRS_ATTACHED       EVT_BEARER_HOLD     EVT_HOSTNAME2IP     EVT_SOCKET_CONNECTED    EVT_LOGINED  EVT_HEARTBEAT_LOSE  EVT_SOCKET_DISCONNECTED */
+                     /* EVT_LOOP        EVT_CALL_READY      EVT_GPRS_ATTACHED       EVT_BEARER_HOLD     EVT_HOSTNAME2IP     EVT_SOCKET_CONNECTED    EVT_LOGINED     EVT_HEARTBEAT_LOSE  EVT_SOCKET_DISCONNECTED */
 /* STS_INITIAL      */  {NULL,          action_CallReady, },
 /* STS_WAIT_GPRS    */  {action_loop,   NULL,               action_GprsAttached,},
 /* STS_WAIT_BEARER  */  {NULL,          NULL,               NULL,                   action_BearHold,},
 /* STS_WAIT_SOCKET  */  {NULL,          NULL,               NULL,                   NULL,               NULL,               action_SocketConnected,},
 /* STS_WAIT_IPADDR  */  {NULL,          NULL,               NULL,                   NULL,               action_hostname2ip,},
-/* STS_WAIT_LOGIN   */  {NULL,          NULL,               NULL,                   NULL,               NULL,               NULL,                   action_logined},
-/* STS_RUNNING      */   {NULL,},
+/* STS_WAIT_LOGIN   */  {NULL,          NULL,               NULL,                   NULL,               NULL,               NULL,                   action_logined, NULL,               action_reconnect},
+/* STS_RUNNING      */  {NULL,          NULL,               NULL,                   NULL,               NULL,               NULL,                   NULL,           NULL,               action_reconnect},
 };
 
+//根据当前状态和出发事件，查找状态转换表，决定执行动作，在每个动作里面决定状态迁移
 int fsm_run(EVENT event)
 {
     ACTION* action = state_transitions[status][event];

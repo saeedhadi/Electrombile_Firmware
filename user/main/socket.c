@@ -153,10 +153,10 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
         case SOC_CLOSE:
             LOG_INFO("SOC_CLOSE.");
 
-            eat_soc_close(socket_id);
-//TODO: run the fsm
+//            eat_soc_close(socket_id);
 
-            eat_timer_start(TIMER_SOCKET, setting.socket_timer_period);
+            fsm_run(EVT_SOCKET_DISCONNECTED);
+
             break;
 
         case SOC_ACKED:

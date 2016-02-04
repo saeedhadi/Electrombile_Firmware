@@ -156,6 +156,7 @@ static void sms_server_proc(u8 *p, u8 *number)
     return;
 }
 
+//TODO: fix the gps upload timer
 static void sms_timer_proc(u8 *p, u8 *number)
 {
     unsigned char *ptr1;
@@ -166,7 +167,7 @@ static void sms_timer_proc(u8 *p, u8 *number)
     ptr1 = tool_StrstrAndReturnEndPoint(p, "TIMER?");
     if(NULL != ptr1)
     {
-        sprintf(ack_message, "TIMER:%u", (setting.gps_send_timer_period / 1000));
+        sprintf(ack_message, "TIMER:%u", (30 * 1000 / 1000));
         eat_send_text_sms(number, ack_message);
     }
 
@@ -182,7 +183,7 @@ static void sms_timer_proc(u8 *p, u8 *number)
             }
             else if(timer_period <= 10)
             {
-                setting.gps_send_timer_period = 10000;
+//                setting.gps_send_timer_period = 10000;
 
                 setting_save();
 
@@ -190,7 +191,7 @@ static void sms_timer_proc(u8 *p, u8 *number)
             }
             else if(timer_period >= 21600)
             {
-                setting.gps_send_timer_period = 21600 * 1000;
+//                setting.gps_send_timer_period = 21600 * 1000;
 
                 setting_save();
 
@@ -198,7 +199,7 @@ static void sms_timer_proc(u8 *p, u8 *number)
             }
             else
             {
-                setting.gps_send_timer_period = timer_period * 1000;
+//                setting.gps_send_timer_period = timer_period * 1000;
 
                 setting_save();
 

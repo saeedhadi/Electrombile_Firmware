@@ -55,10 +55,8 @@ static void setting_initial(void)
     /* Timer configuration */
     setting.watchdog_timer_period = 50000;
     setting.at_cmd_timer_period = 5000;
-    setting.gps_send_timer_period = 30 * 1000;
     setting.vibration_timer_period = 1000;
     setting.seek_timer_period = 2000;
-    setting.socket_timer_period = 60000;
     setting.heartbeat_timer_period = 3*60*1000;
     setting.seekautooff_timer_peroid = 30*1000;
     setting.timeupdate_timer_peroid = 24 * 60 * 60 * 1000;      //24h * 60m * 60s * 1000ms
@@ -134,7 +132,8 @@ eat_bool setting_restore(void)
 
         if(storage.gps_send_timer_period >= 10 * 1000 && storage.gps_send_timer_period <= 6* 60 * 60 * 1000)
         {
-            setting.gps_send_timer_period = storage.gps_send_timer_period;
+            //FIXME: change it
+//            setting.gps_send_timer_period = storage.gps_send_timer_period;
         }
 
         ret = EAT_TRUE;
@@ -176,7 +175,8 @@ eat_bool setting_save(void)
         LOG_DEBUG("server ip = %d.%d.%d.%d:%d.", setting.ipaddr[0], setting.ipaddr[1], setting.ipaddr[2], setting.ipaddr[3], setting.port);
     }
     storage.port = setting.port;
-    storage.gps_send_timer_period = setting.gps_send_timer_period;
+    //FIXME: change it
+//    storage.gps_send_timer_period = setting.gps_send_timer_period;
 
 
     LOG_INFO("save setting...");
