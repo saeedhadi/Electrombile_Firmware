@@ -33,8 +33,8 @@ void rtc_update(double time)
     g_isRtcSync = EAT_TRUE;
 
 
-    rtc.year = (short)(time/10000000000) - -YEAROFFSET;
-    time -= rtc.year * 10000000000;
+    rtc.year = (short)(time/10000000000) - YEAROFFSET;
+    time -= (rtc.year + YEAROFFSET) * 10000000000;
     rtc.mon = (short)(time/100000000);
     time -= rtc.mon * 100000000;
     rtc.day = (short)(time/1000000);
