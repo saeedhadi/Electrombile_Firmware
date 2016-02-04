@@ -8,6 +8,7 @@
 #ifndef USER_MAIN_REQUEST_H_
 #define USER_MAIN_REQUEST_H_
 
+int cmd_Login(void);
 int cmd_SMS(const void* msg);
 void cmd_Heartbeat(void);
 

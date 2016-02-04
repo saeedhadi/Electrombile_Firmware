@@ -14,6 +14,28 @@
 #include "log.h"
 #include "socket.h"
 
+int cmd_Login(void)
+{
+    MSG_LOGIN_REQ* msg = alloc_msg(CMD_LOGIN, sizeof(MSG_LOGIN_REQ));
+    u8 imei[IMEI_LENGTH] = {0};
+
+    if (!msg)
+    {
+        LOG_ERROR("alloc login message failed!");
+        return -1;
+    }
+
+    eat_get_imei(imei, IMEI_LENGTH);
+    imei[IMEI_LENGTH-1] = '0';
+
+    memcpy(msg->IMEI, imei, IMEI_LENGTH);
+
+    LOG_DEBUG("send login message.");
+    socket_sendData(msg, sizeof(MSG_LOGIN_REQ));
+
+    return 0;
+}
+
 void cmd_Heartbeat(void)
 {
     u8 msgLen = sizeof(MSG_HEADER) + sizeof(short);

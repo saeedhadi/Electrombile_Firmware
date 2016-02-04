@@ -20,6 +20,7 @@
 #include "data.h"
 #include "client.h"
 #include "modem.h"
+#include "fsm.h"
 
 typedef int (*EVENT_FUNC)(const EatEvent_st* event);
 typedef struct
@@ -82,9 +83,14 @@ static int event_mod_ready_rd(const EatEvent_st* event)
 	}
     LOG_DEBUG("modem recv: %s", buf);
 
+    if (modem_IsCallReady(buf))
+    {
+        fsm_run(EVT_CALL_READY);
+    }
+
 	if (modem_IsGPRSAttached(buf))
 	{
-		socket_init();
+        fsm_run(EVT_GPRS_ATTACHED);
 	}
 
 	return 0;
