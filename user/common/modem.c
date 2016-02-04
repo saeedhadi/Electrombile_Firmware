@@ -39,7 +39,7 @@ static eat_bool modem_cmd(const unsigned char *cmd)
     }
 }
 
-eat_bool modem_ReadGPRSStatus()
+eat_bool modem_ReadGPRSStatus(void)
 {
     unsigned char* cmd = AT_CGATT MODEM_READ_CMD NEALINE;
 

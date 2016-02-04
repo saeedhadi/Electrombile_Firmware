@@ -8,9 +8,9 @@
 #ifndef USER_INC_MODEM_H_
 #define USER_INC_MODEM_H_
 
-eat_bool modem_ReadGPRSStatus();
+eat_bool modem_ReadGPRSStatus(void);
 
-eat_bool modem_IsGPRSAttached();
+eat_bool modem_IsGPRSAttached(char* modem_rsp);
 
 
 #endif /* USER_INC_MODEM_H_ */
