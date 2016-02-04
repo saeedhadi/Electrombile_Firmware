@@ -115,7 +115,8 @@ void app_main(void *data)
     APP_InitRegions();//Init app RAM
     APP_init_clib(); //C library initialize, second step
 
-    LOG_INFO("app_main ENTRY: version:%s, SIMCOM(version:%s, buildno=%s, buildtime=%s.", VERSION_STR, eat_get_version(), eat_get_buildno(), eat_get_buildtime());
+    LOG_INFO("booting: version:%s, build_time=%s %s. core(version:%s, buildno=%s, buildtime=%s)",
+            VERSION_STR, __DATE__, __TIME__, eat_get_version(), eat_get_buildno(), eat_get_buildtime());
 
     rc = eat_mem_init(s_memPool, EAT_MEM_MAX_SIZE);
     if (!rc)
