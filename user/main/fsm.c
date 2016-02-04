@@ -195,7 +195,10 @@ int action_loop(void)
     case STS_WAIT_SOCKET:
         if (socket_retry_times++ < MAX_SOCKET_RETRY_TIMES)
         {
-            socket_connect();
+            if (socket_connect() == ERR_WAITING_HOSTNAME2IP)
+            {
+                fsm_trans(STS_WAIT_IPADDR);
+            }
         }
         else
         {
@@ -218,7 +221,7 @@ ACTION* state_transitions[STS_MAX][EVT_MAX] =
 /* STS_INITIAL      */  {NULL,          action_CallReady, },
 /* STS_WAIT_GPRS    */  {action_loop,   NULL,               action_GprsAttached,},
 /* STS_WAIT_BEARER  */  {NULL,          NULL,               NULL,                   action_BearHold,},
-/* STS_WAIT_SOCKET  */  {NULL,          NULL,               NULL,                   NULL,               NULL,               action_SocketConnected,},
+/* STS_WAIT_SOCKET  */  {action_loop,   NULL,               NULL,                   NULL,               NULL,               action_SocketConnected,},
 /* STS_WAIT_IPADDR  */  {NULL,          NULL,               NULL,                   NULL,               action_hostname2ip,},
 /* STS_WAIT_LOGIN   */  {NULL,          NULL,               NULL,                   NULL,               NULL,               NULL,                   action_logined, NULL,               action_reconnect},
 /* STS_RUNNING      */  {NULL,          NULL,               NULL,                   NULL,               NULL,               NULL,                   NULL,           NULL,               action_reconnect},
