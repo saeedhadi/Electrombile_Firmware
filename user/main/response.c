@@ -13,6 +13,7 @@
 #include "thread_msg.h"
 #include "thread.h"
 #include "socket.h"
+#include "fsm.h"
 
 //TODO: the following header file should be removed
 #include "timer.h"
@@ -25,7 +26,7 @@ int cmd_Login_rsp(const void* msg)
 {
     LOG_DEBUG("get login respond.");
 
-    set_client_state(EAT_TRUE);
+    fsm_run(EVT_LOGINED);
 
     return 0;
 }
@@ -285,39 +286,24 @@ int cmd_Timer_rsp(const void* msg)
     }
     else if(10 >= req->timer)
     {
-        setting.gps_send_timer_period = 10 * 1000;
-
         setting_save();
 
-        eat_timer_stop(TIMER_GPS_SEND);
-        eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
-        LOG_INFO("SET TIMER to %d OK!",setting.gps_send_timer_period);
     }
     else if(21600 <= req->timer)
     {
-        setting.gps_send_timer_period = 21600 * 1000;
-
         setting_save();
 
-        eat_timer_stop(TIMER_GPS_SEND);
-        eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
-
-        LOG_INFO("SET TIMER to %d OK!",setting.gps_send_timer_period);
     }
     else if((10 < req->timer)&&(21600 > req->timer))
     {
-        setting.gps_send_timer_period = req->timer * 1000;
 
         setting_save();
 
-        eat_timer_stop(TIMER_GPS_SEND);
-        eat_timer_start(TIMER_GPS_SEND, setting.gps_send_timer_period);
-
-        LOG_INFO("SET TIMER to %d OK", setting.gps_send_timer_period);
     }
     rsp = alloc_rspMsg(&req->header);
 
-    rsp->result = setting.gps_send_timer_period;
+    //TODO: fix the gps upload time
+    rsp->result = 30;
     socket_sendData(rsp,sizeof(MSG_GPSTIMER_RSP));
 
     return 0;

@@ -1,7 +1,7 @@
 /*
  * socket.h
  *
- *  Created on: 2015Äê7ÔÂ8ÈÕ
+ *  Created on: 2015ï¿½ï¿½7ï¿½ï¿½8ï¿½ï¿½
  *      Author: jk
  */
 
@@ -9,8 +9,9 @@
 #define USER_ELECTROMBILE_SOCKET_H_
 
 
-void socket_init(void);
-void socket_setup(void);
+int socket_init(void);
+int socket_setup(void);
+int socket_connect();
 void socket_close(void);
 s32 socket_sendData(void* data, s32 len);
 

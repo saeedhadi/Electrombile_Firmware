@@ -169,7 +169,7 @@ void adc_mileageinit_proc(EatAdc_st* adc)
 
     if(adcvalue > 554)       //adcvalue>52V,assert 60V
     {
-        LOG_INFO("the valtage is %d,assert 60V/TYPE BATTERY");
+        LOG_INFO("the valtage is %d,assert 60V/TYPE BATTERY", adcvalue);
         for(i = 0;i <MAX_MILEAGE_LEN;i++)
         {
             mileage_storage.dump_mileage[i] = 0;
@@ -178,7 +178,7 @@ void adc_mileageinit_proc(EatAdc_st* adc)
     }
     else if(adcvalue > 426)   //adcvalue>40V,assert 48V
     {
-        LOG_INFO("the valtage is %d,assert 48V/TYPE BATTERY");
+        LOG_INFO("the valtage is %d,assert 48V/TYPE BATTERY", adcvalue);
         for(i = 0;i <MAX_MILEAGE_LEN;i++)
         {
             mileage_storage.dump_mileage[i] = 0;
@@ -187,7 +187,7 @@ void adc_mileageinit_proc(EatAdc_st* adc)
     }
     else if(adcvalue < 426)  //adcvalue<40,assert 36V
     {
-        LOG_INFO("the valtage is %d,assert 36V/TYPE BATTERY");
+        LOG_INFO("the valtage is %d,assert 36V/TYPE BATTERY", adcvalue);
         for(i = 0;i <MAX_MILEAGE_LEN;i++)
         {
             mileage_storage.dump_mileage[i] = 0;
@@ -195,7 +195,7 @@ void adc_mileageinit_proc(EatAdc_st* adc)
         }
     }
     /*end this detect*/
-    eat_adc_get(EAT_ADC1,NULL,NULL);
+    eat_adc_get(EAT_ADC1, 0, NULL);
 }
 
 void adc_mileageend_proc(EatAdc_st* adc)

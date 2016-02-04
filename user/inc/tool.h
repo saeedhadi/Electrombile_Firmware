@@ -1,12 +1,14 @@
 /*
  * tool.h
  *
- *  Created on: 2015Äê10ÔÂ16ÈÕ
+ *  Created on: 2015ï¿½ï¿½10ï¿½ï¿½16ï¿½ï¿½
  *      Author: jk
  */
 
 #ifndef ELECTROMBILE_FIRMWARE_TOOL_H
 #define ELECTROMBILE_FIRMWARE_TOOL_H
+
+//TODO: this file will replaced by modem.h and utils.h
 
 eat_bool tool_modem_write(const unsigned char *data);
 unsigned char *tool_StrstrAndReturnEndPoint(char *str1, const char *str2);

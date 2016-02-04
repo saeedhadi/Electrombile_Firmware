@@ -20,6 +20,7 @@
 #include "data.h"
 #include "client.h"
 #include "modem.h"
+#include "fsm.h"
 
 typedef int (*EVENT_FUNC)(const EatEvent_st* event);
 typedef struct
@@ -82,9 +83,14 @@ static int event_mod_ready_rd(const EatEvent_st* event)
 	}
     LOG_DEBUG("modem recv: %s", buf);
 
+    if (modem_IsCallReady(buf))
+    {
+        fsm_run(EVT_CALL_READY);
+    }
+
 	if (modem_IsGPRSAttached(buf))
 	{
-		socket_init();
+        fsm_run(EVT_GPRS_ATTACHED);
 	}
 
 	return 0;
@@ -100,22 +106,12 @@ static int event_timer(const EatEvent_st* event)
             eat_timer_start(event->data.timer.timer_id, setting.watchdog_timer_period);
             break;
 
-        case TIMER_AT_CMD:
-            LOG_INFO("TIMER_AT_CMD expire.");
-            modem_ReadGPRSStatus();
+        case TIMER_LOOP:
+            LOG_INFO("TIMER_LOOP expire.");
+            fsm_run(EVT_LOOP);
             eat_timer_start(event->data.timer.timer_id, setting.at_cmd_timer_period);
             break;
 
-        case TIMER_GPS_SEND:
-            LOG_INFO("TIMER_GPS_SEND expire.");
-            eat_timer_start(event->data.timer.timer_id, setting.gps_send_timer_period);
-            client_loop();
-            break;
-
-        case TIMER_SOCKET:
-            LOG_INFO("TIMER_SOCKET expire.");
-            socket_init();
-            break;
 
         case TIMER_HEARTBEAT:
             LOG_INFO("TIMER_HEARTBEAT expire!");
@@ -394,7 +390,7 @@ int event_proc(EatEvent_st* event)
 {
     int i = 0;
 
-    LOG_DEBUG("event: %s.", getEventDescription(event->event));
+    LOG_DEBUG("event: %s happened", getEventDescription(event->event));
 
     for (i = 0; i < sizeof(eventProcs) / sizeof(eventProcs[0]); i++)
     {

@@ -96,31 +96,3 @@ int client_proc(const void* m, int msgLen)
     return -1;
 }
 
-void client_loop(void)
-{
-    if (socket_conneted())
-    {
-        if (!client_logined())
-        {
-            MSG_LOGIN_REQ* msg = alloc_msg(CMD_LOGIN, sizeof(MSG_LOGIN_REQ));
-            u8 imei[IMEI_LENGTH] = {0};
-
-            if (!msg)
-            {
-                LOG_ERROR("alloc login message failed!");
-                return;
-            }
-
-            eat_get_imei(imei, IMEI_LENGTH);
-            imei[IMEI_LENGTH-1] = '0';
-
-            memcpy(msg->IMEI, imei, IMEI_LENGTH);
-
-            LOG_DEBUG("send login message.");
-            socket_sendData(msg, sizeof(MSG_LOGIN_REQ));
-        }
-
-    }
-
-}
-
