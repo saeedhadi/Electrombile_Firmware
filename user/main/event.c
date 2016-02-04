@@ -73,7 +73,6 @@ static int event_mod_ready_rd(const EatEvent_st* event)
 {
 	u8 buf[256] = {0};
 	u16 len = 0;
-	u8* buf_ptr = NULL;
 
 	len = eat_modem_read(buf, 256);
 	if (!len)
@@ -120,7 +119,7 @@ static int event_timer(const EatEvent_st* event)
 
         case TIMER_HEARTBEAT:
             LOG_INFO("TIMER_HEARTBEAT expire!");
-            msg_heartbeat();
+            cmd_Heartbeat();
             eat_timer_start(TIMER_HEARTBEAT, setting.heartbeat_timer_period);
             break;
 

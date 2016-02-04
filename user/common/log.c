@@ -185,7 +185,7 @@ void log_remote(const char* fmt, ...) //when socket connected,LOG_remote;else LO
 
     if (socket_conneted())
     {
-        msg_wild(buf, length);
+        cmd_Wild(buf, length);
     }
     else
     {

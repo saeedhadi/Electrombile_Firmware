@@ -310,7 +310,7 @@ static void vibration_timer_handler(void)
                 {
                     LOG_INFO("vibration state auto locked.");
 
-                    send_autodefendstate_msg(EAT_FALSE);
+                    cmd_Autodefendstate(EAT_FALSE);
 
                     set_vibration_state(EAT_TRUE);
 
