@@ -46,6 +46,18 @@ eat_bool modem_ReadGPRSStatus(void)
     return modem_cmd(cmd);
 }
 
+eat_bool modem_IsCallReady(char* modem_rsp)
+{
+    char* ptr = strstr((const char *) modem_rsp, "Call Ready");
+
+    if (ptr)
+    {
+        return EAT_TRUE;
+    }
+
+    return EAT_FALSE;
+}
+
 eat_bool modem_IsGPRSAttached(char* modem_rsp)
 {
     char* ptr = strstr((const char *) modem_rsp, "+CGATT: 1");

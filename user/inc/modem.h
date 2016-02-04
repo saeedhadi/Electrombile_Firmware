@@ -10,6 +10,8 @@
 
 eat_bool modem_ReadGPRSStatus(void);
 
+eat_bool modem_IsCallReady(char* modem_rsp);
+
 eat_bool modem_IsGPRSAttached(char* modem_rsp);
 
 
