@@ -19,7 +19,7 @@
 #include "msg.h"
 #include "data.h"
 #include "client.h"
-#include "tool.h"
+#include "modem.h"
 
 typedef int (*EVENT_FUNC)(const EatEvent_st* event);
 typedef struct
@@ -83,8 +83,7 @@ static int event_mod_ready_rd(const EatEvent_st* event)
 	}
     LOG_DEBUG("modem recv: %s", buf);
 
-	buf_ptr = (u8*) strstr((const char *) buf, "+CGATT: 1");
-	if (buf_ptr != NULL)
+	if (modem_IsGPRSAttached(buf))
 	{
 		socket_init();
 	}
@@ -104,7 +103,7 @@ static int event_timer(const EatEvent_st* event)
 
         case TIMER_AT_CMD:
             LOG_INFO("TIMER_AT_CMD expire.");
-            tool_modem_write("AT+CGATT?\n");
+            modem_ReadGPRSStatus();
             eat_timer_start(event->data.timer.timer_id, setting.at_cmd_timer_period);
             break;
 
