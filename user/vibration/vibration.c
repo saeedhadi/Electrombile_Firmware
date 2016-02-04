@@ -222,10 +222,10 @@ void app_vibration_thread(void *data)
                         vibration_timer_handler();
                         
                        // if(get_ScanCompletion_state())
-                       if(number++>20)
+                       if(number++>30)
                         {       LOG_DEBUG("BTSCAN.");
                                  number = 0 ;
-                                 tool_modem_write("AT+BTSCAN=1,2\n");
+                                 tool_modem_write("AT+BTSCAN=1,10\n");
                         }
                         eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
                         break;
