@@ -123,6 +123,9 @@ void app_main(void *data)
     	LOG_ERROR("eat memory initial error:%d!", rc);
         return;
     }
+
+    log_initial();
+
     setting_restore();
     mileage_restore();
     startWatchdog();

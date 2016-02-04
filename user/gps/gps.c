@@ -19,7 +19,6 @@
 #include "thread_msg.h"
 #include "log.h"
 #include "setting.h"
-#include "protocol.h"
 #include "tool.h"
 #include "rtc.h"
 

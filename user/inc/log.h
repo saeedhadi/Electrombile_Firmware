@@ -41,16 +41,11 @@
 #define LOG_REMOTE(fmt, ...)
 #endif
 
-#define LOGFILE_NAME  L"C:\\log_file.txt"
-#define READ_WHOLE_FILE 0
-
+void log_initial(void);
 
 void log_hex(const char* data, int length);
 void log_remote(const char* fmt, ...)__attribute__((format(printf, 1, 2)));
 void log_file(const char* fmt, ...)__attribute__((format(printf, 1, 2)));
-void read_file(unsigned short *filename);
-
-
 
 
 #endif /* USER_ELECTROMBILE_LOG_H_ */
