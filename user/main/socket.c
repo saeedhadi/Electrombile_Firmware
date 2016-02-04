@@ -115,7 +115,7 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
     u8 buffer[128] = {0};
     s32 rc = 0;
 
-    LOG_DEBUG("SOCKET notify:s(%d), socketid(%d), event(%s).", s, socket_id, getEventDescription(event));
+    LOG_DEBUG("SOCKET notify:socketid(%d), event(%s).", s, getEventDescription(event));
 
     switch (event)
     {
