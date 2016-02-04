@@ -10,9 +10,6 @@
 
 #include <eat_interface.h>
 
-typedef int (*CMD_ACTION)(const char* cmdString, unsigned short length);
-int regist_cmd(const char* cmd, CMD_ACTION action);
-
 int event_uart_ready_rd(const EatEvent_st* event);
 
 void print(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
