@@ -321,7 +321,7 @@ static void gps_at_read_handler(void)
     unsigned char  buf[READ_BUFF_SIZE] = {0};  //���ڶ�ȡATָ�����Ӧ
     unsigned int len = 0;
     unsigned int count = 0, cellCount = 0;
-    static double gpstimes = 0.0;
+    double gpstimes = 0.0;
     int _mcc = 0;
     int _mnc = 0;
     int lac = 0;
@@ -362,7 +362,8 @@ static void gps_at_read_handler(void)
     if(NULL != buf_p1)
     {
         count = sscanf(buf_p1, "%*d,%d,%lf,%f,%f,%f,%f,%f,%*s",&isGpsFixed,&gpstimes, &latitude, &longitude,&altitude,&speed,&course);
-        if(!rtc_synced())// update the rtc time once day
+        //TODO: update the RTC once a day
+//        if(!rtc_synced())
         {
             rtc_update(gpstimes);
         }
