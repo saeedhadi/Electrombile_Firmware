@@ -136,15 +136,15 @@ static CMD_MAP cmd_map[MAX_CMD_NUMBER] =
 int debug_proc(const unsigned char* cmdString, unsigned short length)
 {
     int i = 0;
-    for (i = 0; i < MAX_CMD_NUMBER; i++)
+    for (i = 0; i < MAX_CMD_NUMBER && cmd_map[i].action; i++)
     {
-        if (cmd_map[i].cmd != NULL && strstr(cmdString, cmd_map[i].cmd))
+        if (strstr(cmdString, cmd_map[i].cmd))
         {
             return cmd_map[i].action(cmdString, length);
         }
     }
 
-    LOG_INFO("CMD %s not processed", cmdString);
+    LOG_INFO("CMD not processed");
 
     return 0;
 }
@@ -155,7 +155,7 @@ int regist_cmd(const unsigned char* cmd, CMD_ACTION action)
     int i = 0;
 
     //寻找第一个空位命令
-    while (i < MAX_CMD_NUMBER && cmd_map[i++].cmd);
+    while (i < MAX_CMD_NUMBER && cmd_map[i++].action);
 
     if ( i >= MAX_CMD_NUMBER)
     {
