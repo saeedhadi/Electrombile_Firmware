@@ -21,9 +21,49 @@ typedef struct
     CMD_ACTION  action;
 }CMD_MAP;
 
+#define DBG_OUT(fmt, ...) eat_trace("[DEBUG]>"fmt, ##__VA_ARGS__)
+
+static int cmd_debug(const unsigned char* cmdString, unsigned short length);
+static int cmd_version(const unsigned char* cmdString, unsigned short length);
+static int cmd_imei(const unsigned char* cmdString, unsigned short length);
+static int cmd_imsi(const unsigned char* cmdString, unsigned short length);
+static int cmd_chipid(const unsigned char* cmdString, unsigned short length);
+static int cmd_reboot(const unsigned char* cmdString, unsigned short length);
+static int cmd_halt(const unsigned char* cmdString, unsigned short length);
+static int cmd_rtc(const unsigned char* cmdString, unsigned short length);
+static int cmd_AT(const unsigned char* cmdString, unsigned short length);
+
+static CMD_MAP cmd_map[MAX_CMD_NUMBER] =
+{
+        {"debug",       cmd_debug},
+        {"version",     cmd_version},
+        {"imei",        cmd_imei},
+        {"imsi",        cmd_imsi},
+        {"chipid",      cmd_chipid},
+#ifdef LOG_DEBUG_FLAG
+        {"reboot",      cmd_reboot},
+        {"halt",        cmd_halt},
+        {"rtc",         cmd_rtc},
+        {"AT",          cmd_AT},
+#endif
+};
+
+
+static int cmd_debug(const unsigned char* cmdString, unsigned short length)
+{
+    int i = 0;
+    DBG_OUT("support cmd:");
+    for (i = 0; i < MAX_CMD_NUMBER && cmd_map[i].action; i++)
+    {
+        DBG_OUT("\t%s\t%p", cmd_map[i].cmd, cmd_map[i].action);
+    }
+
+    return 0;
+}
+
 static int cmd_version(const unsigned char* cmdString, unsigned short length)
 {
-    LOG_INFO("version = %s build time = %s, build No. = %s", eat_get_version(), eat_get_buildtime(), eat_get_buildno());
+    DBG_OUT("version = %s build time = %s, build No. = %s", eat_get_version(), eat_get_buildtime(), eat_get_buildno());
     return 0;
 }
 
@@ -31,7 +71,7 @@ static int cmd_imei(const unsigned char* cmdString, unsigned short length)
 {
     u8 imei[32] = {0};
     eat_get_imei(imei, 31);
-    LOG_INFO("IMEI = %s", imei);
+    DBG_OUT("IMEI = %s", imei);
     return 0;
  }
 
@@ -39,7 +79,7 @@ static int cmd_imsi(const unsigned char* cmdString, unsigned short length)
 {
     u8 imsi[32] = {0};
     eat_get_imsi(imsi, 31);
-    LOG_INFO("IMSI = %s", imsi);
+    DBG_OUT("IMSI = %s", imsi);
     return 0;
 
 }
@@ -56,7 +96,7 @@ static int cmd_chipid(const unsigned char* cmdString, unsigned short length)
     {
         sprintf(chipid_desc + i * 2, "%02X", chipid[i]);
     }
-    LOG_INFO("chipd = %s", chipid_desc);
+    DBG_OUT("chipd = %s", chipid_desc);
     return 0;
 }
 
@@ -78,11 +118,11 @@ static int cmd_rtc(const unsigned char* cmdString, unsigned short length)
     eat_bool result = eat_get_rtc(&rtc);
     if (result)
     {
-        LOG_INFO("RTC timer: %d-%02d-%02d %02d:%02d:%02d", rtc.year, rtc.mon, rtc.day, rtc.hour, rtc.min, rtc.sec);
+        DBG_OUT("%d-%02d-%02d %02d:%02d:%02d", rtc.year, rtc.mon, rtc.day, rtc.hour, rtc.min, rtc.sec);
     }
     else
     {
-        LOG_ERROR("Get rtc time failed:%d", result);
+        LOG_ERROR("get rtc time failed:%d", result);
     }
 
     return 0;
@@ -118,22 +158,6 @@ static int cmd_AT(const unsigned char* cmdString, unsigned short length)
     }
 #endif
 
-
-static CMD_MAP cmd_map[MAX_CMD_NUMBER] =
-{
-        {"version",     cmd_version},
-        {"imei",        cmd_imei},
-        {"imsi",        cmd_imsi},
-        {"chipid",      cmd_chipid},
-#ifdef LOG_DEBUG_FLAG
-        {"reboot",      cmd_reboot},
-        {"halt",        cmd_halt},
-        {"rtc",         cmd_rtc},
-        {"AT",          cmd_AT},
-#endif
-};
-
-
 int debug_proc(const unsigned char* cmdString, unsigned short length)
 {
     int i = 0;
@@ -156,7 +180,7 @@ int regist_cmd(const unsigned char* cmd, CMD_ACTION action)
     int i = 0;
 
     //寻找第一个空位命令
-    while (i < MAX_CMD_NUMBER && cmd_map[i++].action);
+    while (i < MAX_CMD_NUMBER && cmd_map[i].action) i++;
 
     if ( i >= MAX_CMD_NUMBER)
     {
@@ -167,5 +191,6 @@ int regist_cmd(const unsigned char* cmd, CMD_ACTION action)
     strncpy(cmd_map[i].cmd, cmd, MAX_CMD_LENGTH);
     cmd_map[i].action = action;
 
+    LOG_INFO("register cmd %s(%p) at position %d success", cmd, action, i);
     return 0;
 }
