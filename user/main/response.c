@@ -4,6 +4,7 @@
  *  Created on: 2016年2月4日
  *      Author: jk
  */
+#include <string.h>
 
 #include <eat_interface.h>
 

@@ -11,7 +11,7 @@
 
 int socket_init(void);
 int socket_setup(void);
-int socket_connect();
+int socket_connect(void);
 void socket_close(void);
 s32 socket_sendData(void* data, s32 len);
 

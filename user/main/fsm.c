@@ -174,11 +174,15 @@ int action_logined(void)
 int action_hostname2ip(void)
 {
     fsm_trans(STS_WAIT_SOCKET);
+
+    return 0;
 }
 
 int action_reconnect(void)
 {
     fsm_trans(STS_WAIT_SOCKET);
+
+    return 0;
 }
 
 int action_loop(void)

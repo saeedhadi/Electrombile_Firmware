@@ -21,6 +21,7 @@
 #include "client.h"
 #include "modem.h"
 #include "fsm.h"
+#include "request.h"
 
 typedef int (*EVENT_FUNC)(const EatEvent_st* event);
 typedef struct

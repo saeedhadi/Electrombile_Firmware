@@ -92,9 +92,6 @@ static char* getStateDescription(cbm_bearer_state_enum state)
 
 static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
 {
-    sockaddr_struct address={SOC_SOCK_STREAM};
-    s8 rc = SOC_SUCCESS;
-
 	if (result == EAT_TRUE)
 	{
 		LOG_DEBUG("hostname notify:%s -> %d.%d.%d.%d.", setting.domain, ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3], setting.port);
