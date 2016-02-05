@@ -11,6 +11,7 @@
 
 #include "debug.h"
 #include "log.h"
+#include "rtc.h"
 
 #define MAX_CMD_LENGTH (16)
 #define MAX_CMD_NUMBER  (32)
@@ -119,7 +120,7 @@ static int cmd_rtc(const unsigned char* cmdString, unsigned short length)
     eat_bool result = eat_get_rtc(&rtc);
     if (result)
     {
-        DBG_OUT("%d-%02d-%02d %02d:%02d:%02d", rtc.year + RTC_BASE, rtc.mon, rtc.day, rtc.hour, rtc.min, rtc.sec);
+        DBG_OUT("RTC:%d-%02d-%02d %02d:%02d:%02d UTC, timestamp:%d", rtc.year + RTC_BASE, rtc.mon, rtc.day, rtc.hour, rtc.min, rtc.sec, rtc_getTimestamp());
     }
     else
     {
