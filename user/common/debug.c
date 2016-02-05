@@ -92,6 +92,7 @@ static int cmd_AT(const unsigned char* cmdString, unsigned short length)
 {
     //forward AT command to modem
     eat_modem_write(cmdString, length);
+    eat_modem_write("\n", 1);
     return 0;
 }
 
