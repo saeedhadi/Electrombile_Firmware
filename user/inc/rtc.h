@@ -14,7 +14,7 @@
 
 eat_bool rtc_synced(void);
 
-void rtc_update(double time);
+void rtc_update(long long time);
 
 time_t rtc_getTimestamp(void);
 

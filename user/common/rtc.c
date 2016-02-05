@@ -25,25 +25,33 @@ eat_bool rtc_synced(void)
     return g_isRtcSync;
 }
 
-//the parameter is in the format of double: 20150327014838.000
-void rtc_update(double time)
+//the parameter is in the format: 20150327014838
+void rtc_update(long long time)
 {
     EatRtc_st rtc = {0};
 
-    g_isRtcSync = EAT_TRUE;
+    rtc.year = time / 10000000000 - YEAROFFSET;
+    time %= 10000000000;
 
+    //SIM808启动后GPS未定位时的默认时间为19800106000012,rtc.year存储的是和YEAROFFSET差值,如果大于30则说明GPS时间同步了
+    if (rtc.year > 30)
+    {
+        g_isRtcSync = EAT_TRUE;
+    }
 
-    rtc.year = (short)(time/10000000000) - YEAROFFSET;
-    time -= (rtc.year + YEAROFFSET) * 10000000000;
-    rtc.mon = (short)(time/100000000);
-    time -= rtc.mon * 100000000;
-    rtc.day = (short)(time/1000000);
-    time -= rtc.day * 1000000;
-    rtc.hour = (short)(time/10000);
-    time -= rtc.hour * 10000;
-    rtc.min = (short)(time/100);
-    time -= rtc.min * 100;
-    rtc.sec = (short)(time);
+    rtc.mon = time / 100000000;
+    time %= 100000000;
+
+    rtc.day = time / 1000000;
+    time %= 1000000;
+
+    rtc.hour = time / 10000;
+    time %= 10000;
+
+    rtc.min = time / 100;
+    time %= 100;
+
+    rtc.sec = time;
 
     LOG_INFO("set RTC to:%4d-%02d-%02d,%02d:%02d:%02d",
             rtc.year+YEAROFFSET,
