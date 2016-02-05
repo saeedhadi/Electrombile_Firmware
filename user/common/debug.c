@@ -114,11 +114,12 @@ static int cmd_halt(const unsigned char* cmdString, unsigned short length)
 
 static int cmd_rtc(const unsigned char* cmdString, unsigned short length)
 {
+    const int RTC_BASE = 1954;
     EatRtc_st rtc = {0};
     eat_bool result = eat_get_rtc(&rtc);
     if (result)
     {
-        DBG_OUT("%d-%02d-%02d %02d:%02d:%02d", rtc.year, rtc.mon, rtc.day, rtc.hour, rtc.min, rtc.sec);
+        DBG_OUT("%d-%02d-%02d %02d:%02d:%02d", rtc.year + RTC_BASE, rtc.mon, rtc.day, rtc.hour, rtc.min, rtc.sec);
     }
     else
     {

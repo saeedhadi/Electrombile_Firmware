@@ -15,7 +15,7 @@
 
 //TODO: update the RTC once a day
 
-#define YEAROFFSET 1950
+#define YEAROFFSET 1954
 
 
 static eat_bool g_isRtcSync = EAT_FALSE;
