@@ -22,26 +22,26 @@
 #define DESC_DEF(x) case x:\
                         return #x
 
-static STATUS status = STS_INITIAL;
+static STATE status = STATE_INITIAL;
 
-static char* fsm_getStateName(STATUS sts)
+static char* fsm_getStateName(STATE sts)
 {
     switch (sts)
     {
 #ifdef LOG_DEBUG_FLAG
-        DESC_DEF(STS_INITIAL);
-        DESC_DEF(STS_WAIT_GPRS);
-        DESC_DEF(STS_WAIT_BEARER);
-        DESC_DEF(STS_WAIT_SOCKET);
-        DESC_DEF(STS_WAIT_IPADDR);
-        DESC_DEF(STS_WAIT_LOGIN);
-        DESC_DEF(STS_RUNNING);
+        DESC_DEF(STATE_INITIAL);
+        DESC_DEF(STATE_WAIT_GPRS);
+        DESC_DEF(STATE_WAIT_BEARER);
+        DESC_DEF(STATE_WAIT_SOCKET);
+        DESC_DEF(STATE_WAIT_IPADDR);
+        DESC_DEF(STATE_WAIT_LOGIN);
+        DESC_DEF(STATE_RUNNING);
 #endif
         default:
         {
-            static char status_name[10] = {0};
-            sprintf(status_name, "%d", status);
-            return status_name;
+            static char state_name[10] = {0};
+            sprintf(state_name, "%d", status);
+            return state_name;
         }
     }
 }
@@ -63,14 +63,14 @@ static char* fsm_getEventName(EVENT event)
 #endif
         default:
         {
-            static char status_name[10] = {0};
-            sprintf(status_name, "%d", status);
-            return status_name;
+            static char event_name[10] = {0};
+            sprintf(event_name, "%d", status);
+            return event_name;
         }
     }
 }
 
-static void fsm_trans(STATUS sts)
+static void fsm_trans(STATE sts)
 {
     LOG_DEBUG("state: %s -> %s", fsm_getStateName(status), fsm_getStateName(sts));
 
@@ -88,7 +88,7 @@ int action_CallReady(void)
 {
     modem_ReadGPRSStatus();
 
-    fsm_trans(STS_WAIT_GPRS);
+    fsm_trans(STATE_WAIT_GPRS);
 
     start_mainloop();
 
@@ -103,19 +103,19 @@ int action_GprsAttached(void)
     switch (rc)
     {
     case SUCCESS:
-        fsm_trans(STS_WAIT_BEARER);
+        fsm_trans(STATE_WAIT_BEARER);
         break;
 
     case ERR_SOCKET_WAITING:
-        fsm_trans(STS_WAIT_SOCKET);
+        fsm_trans(STATE_WAIT_SOCKET);
         break;
 
     case ERR_SOCKET_CONNECTED:
-        fsm_trans(STS_WAIT_LOGIN);
+        fsm_trans(STATE_WAIT_LOGIN);
         break;
 
     case ERR_WAITING_HOSTNAME2IP:
-        fsm_trans(STS_WAIT_IPADDR);
+        fsm_trans(STATE_WAIT_IPADDR);
         break;
 
     default:
@@ -136,16 +136,16 @@ int action_BearHold(void)
     switch (rc)
     {
     case ERR_SOCKET_WAITING:
-        fsm_trans(STS_WAIT_SOCKET);
+        fsm_trans(STATE_WAIT_SOCKET);
         break;
 
     case ERR_WAITING_HOSTNAME2IP:
-        fsm_trans(STS_WAIT_IPADDR);
+        fsm_trans(STATE_WAIT_IPADDR);
         break;
 
     case ERR_SOCKET_CONNECTED:
         cmd_Login();
-        fsm_trans(STS_WAIT_LOGIN);
+        fsm_trans(STATE_WAIT_LOGIN);
 
         break;
     default:
@@ -159,28 +159,28 @@ int action_SocketConnected(void)
 {
     cmd_Login();
 
-    fsm_trans(STS_WAIT_LOGIN);
+    fsm_trans(STATE_WAIT_LOGIN);
 
     return 0;
 }
 
 int action_logined(void)
 {
-    fsm_trans(STS_RUNNING);
+    fsm_trans(STATE_RUNNING);
 
     return 0;
 }
 
 int action_hostname2ip(void)
 {
-    fsm_trans(STS_WAIT_SOCKET);
+    fsm_trans(STATE_WAIT_SOCKET);
 
     return 0;
 }
 
 int action_reconnect(void)
 {
-    fsm_trans(STS_WAIT_SOCKET);
+    fsm_trans(STATE_WAIT_SOCKET);
 
     return 0;
 }
@@ -192,22 +192,23 @@ int action_loop(void)
 
     switch (status)
     {
-    case STS_WAIT_GPRS:
+    case STATE_WAIT_GPRS:
         modem_ReadGPRSStatus();
         break;
 
-    case STS_WAIT_SOCKET:
+    case STATE_WAIT_SOCKET:
+        //TODO: maybe the retry of connect is unnecessary here
         if (socket_retry_times++ < MAX_SOCKET_RETRY_TIMES)
         {
             if (socket_connect() == ERR_WAITING_HOSTNAME2IP)
             {
-                fsm_trans(STS_WAIT_IPADDR);
+                fsm_trans(STATE_WAIT_IPADDR);
             }
         }
         else
         {
             socket_retry_times = 0;
-            fsm_trans(STS_WAIT_GPRS);
+            fsm_trans(STATE_WAIT_GPRS);
         }
         break;
 
@@ -219,7 +220,7 @@ int action_loop(void)
     return 0;
 }
 
-ACTION* state_transitions[STS_MAX][EVT_MAX] =
+ACTION* state_transitions[STATE_MAX][EVT_MAX] =
 {
                      /* EVT_LOOP        EVT_CALL_READY      EVT_GPRS_ATTACHED       EVT_BEARER_HOLD     EVT_HOSTNAME2IP     EVT_SOCKET_CONNECTED    EVT_LOGINED     EVT_HEARTBEAT_LOSE  EVT_SOCKET_DISCONNECTED */
 /* STS_INITIAL      */  {NULL,          action_CallReady, },
