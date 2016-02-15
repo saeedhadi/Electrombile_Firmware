@@ -90,6 +90,44 @@ static char* getStateDescription(cbm_bearer_state_enum state)
 	}
 }
 
+
+int socket_connect2IP(u8 ip_addr[4])
+{
+    s8 rc = SOC_SUCCESS;
+
+    sockaddr_struct address={SOC_SOCK_STREAM};
+
+    address.sock_type = SOC_SOCK_STREAM;
+    address.addr_len = 4;
+
+    address.addr[0] = ip_addr[0];
+    address.addr[1] = ip_addr[1];
+    address.addr[2] = ip_addr[2];
+    address.addr[3] = ip_addr[3];
+
+    LOG_DEBUG("ip: %d.%d.%d.%d:%d.", address.addr[0], address.addr[1], address.addr[2], address.addr[3], setting.port);
+
+
+    address.port = setting.port;                /* TCP server port */
+    rc = eat_soc_connect(socket_id, &address);
+    if(rc >= 0)
+    {
+        LOG_INFO("socket id of new connection is :%d.", rc);
+        return ERR_SOCKET_CONNECTED;
+    }
+    else if (rc == SOC_WOULDBLOCK)
+    {
+        LOG_INFO("Connection is in progressing...");
+        return ERR_SOCKET_WAITING;
+    }
+    else
+    {
+        LOG_ERROR("Connect return error:%d!", rc);
+        return ERR_SOCKET_FAILED;
+    }
+}
+
+
 static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
 {
 	if (result == EAT_TRUE)
@@ -217,42 +255,6 @@ int socket_init(void)
     }
 
     return SUCCESS;
-}
-
-int socket_connect2IP(u8 ip_addr[4])
-{
-    s8 rc = SOC_SUCCESS;
-
-    sockaddr_struct address={SOC_SOCK_STREAM};
-
-    address.sock_type = SOC_SOCK_STREAM;
-    address.addr_len = 4;
-
-    address.addr[0] = ip_addr[0];
-    address.addr[1] = ip_addr[1];
-    address.addr[2] = ip_addr[2];
-    address.addr[3] = ip_addr[3];
-
-    LOG_DEBUG("ip: %d.%d.%d.%d:%d.", address.addr[0], address.addr[1], address.addr[2], address.addr[3], setting.port);
-
-
-    address.port = setting.port;                /* TCP server port */
-    rc = eat_soc_connect(socket_id, &address);
-    if(rc >= 0)
-    {
-        LOG_INFO("socket id of new connection is :%d.", rc);
-        return ERR_SOCKET_CONNECTED;
-    }
-    else if (rc == SOC_WOULDBLOCK)
-    {
-        LOG_INFO("Connection is in progressing...");
-        return ERR_SOCKET_WAITING;
-    }
-    else
-    {
-        LOG_ERROR("Connect return error:%d!", rc);
-        return ERR_SOCKET_FAILED;
-    }
 }
 
 int socket_connect()
