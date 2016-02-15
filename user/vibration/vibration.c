@@ -155,13 +155,6 @@ void BT_at_read_handler()
     unsigned char *buf_p2 = NULL;
     unsigned char  buf[READ_BUFF_SIZE] = {0};  //���ڶ�ȡATָ�����Ӧ
     unsigned int len = 0;
-    unsigned int count = 0, cellCount = 0;
-    static double gpstimes = 0.0;
-    int _mcc = 0;
-    int _mnc = 0;
-    int lac = 0;
-    int cellid = 0;
-    int rxl = 0;
 
     len = eat_modem_read(buf, READ_BUFF_SIZE);
     LOG_DEBUG("modem read, len=%d, buf=\r\n%s", len, buf);
@@ -255,7 +248,7 @@ static void vibration_timer_handler(void)
 
     static int timerCount = 0;
 
-    char transient_src = 0;
+    uint8_t transient_src = 0;
 
     avoid_fre_send(EAT_TRUE);
 
@@ -310,6 +303,7 @@ static void vibration_timer_handler(void)
                 {
                     LOG_INFO("vibration state auto locked.");
 
+#warning cannot call cmd_Autodefendstate directly, because it is in the main thread, it should be replaced by thread message
                     cmd_Autodefendstate(EAT_FALSE);
 
                     set_vibration_state(EAT_TRUE);
