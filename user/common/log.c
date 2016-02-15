@@ -17,6 +17,7 @@
 #define LOGFILE_NAME  L"C:\\log_file.txt"
 
 //TODO: this function need to be refactored
+#warning this function must be refactored
 int cmd_catlog(const char* cmdString, unsigned short length)
 {
     FS_HANDLE fh_open,fh_read;
@@ -123,6 +124,15 @@ void log_initial(void)
     regist_cmd("catlog", cmd_catlog);
 }
 
+/*
+ * The hex log is in the following format:
+ *
+ *     0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F      0123456789ABCDEF
+ * 01  aa 55 01 00 00 00 25 00 38 36 35 30 36 37 30 32     .U....%.86506702
+ * 02  30 34 39 30 31 36 38 30 00 00 00 00 00 00 00 00     04901680........
+ * 03  00 00 00 00 00 00 00 00 00 00 00 00                 ............
+ *
+ */
 void log_hex(const char* data, int length)
 {
     int i = 0, j = 0;
