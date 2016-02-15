@@ -18,6 +18,7 @@ enum CMD
     CMD_THREAD_VIBRATE,
     CMD_THREAD_SEEK,
     CMD_THREAD_LOCATION,
+    CMD_THREAD_AUTOLOCK,
 };
 
 
@@ -52,6 +53,12 @@ typedef struct
         CELL_INFO cellInfo;
     };
 }LOCAL_GPS;
+
+
+typedef struct
+{
+    char state;
+}AUTOLOCK_INFO;
 
 
 MSG_THREAD* allocMsg(u8 len);
