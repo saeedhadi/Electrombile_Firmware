@@ -12,6 +12,7 @@
 #include "debug.h"
 #include "log.h"
 #include "rtc.h"
+#include "version.h"
 
 #define MAX_CMD_LENGTH (16)
 #define MAX_CMD_NUMBER  (32)
@@ -64,7 +65,7 @@ static int cmd_debug(const unsigned char* cmdString, unsigned short length)
 
 static int cmd_version(const unsigned char* cmdString, unsigned short length)
 {
-    DBG_OUT("version = %s build time = %s, build No. = %s", eat_get_version(), eat_get_buildtime(), eat_get_buildno());
+    DBG_OUT("version:%s(%s %s) core:%s(buildNo:%s@%s)", VERSION_STR, __DATE__, __TIME__, eat_get_version(), eat_get_buildno(), eat_get_buildtime());
     return 0;
 }
 
