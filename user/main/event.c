@@ -102,26 +102,26 @@ static int event_timer(const EatEvent_st* event)
     switch (event->data.timer.timer_id)
     {
         case TIMER_WATCHDOG:
-            LOG_INFO("TIMER_WATCHDOG expire.");
+            LOG_DEBUG("TIMER_WATCHDOG expire.");
             feedWatchdog();
             eat_timer_start(event->data.timer.timer_id, setting.watchdog_timer_period);
             break;
 
         case TIMER_LOOP:
-            LOG_INFO("TIMER_LOOP expire.");
+            LOG_DEBUG("TIMER_LOOP expire.");
             fsm_run(EVT_LOOP);
             eat_timer_start(event->data.timer.timer_id, setting.at_cmd_timer_period);
             break;
 
 
         case TIMER_HEARTBEAT:
-            LOG_INFO("TIMER_HEARTBEAT expire!");
+            LOG_DEBUG("TIMER_HEARTBEAT expire!");
             cmd_Heartbeat();
             eat_timer_start(TIMER_HEARTBEAT, setting.heartbeat_timer_period);
             break;
 
         case TIMER_SEEKAUTOOFF:
-            LOG_INFO("TIMER_SEEKAUTOOFF expire!");
+            LOG_DEBUG("TIMER_SEEKAUTOOFF expire!");
             setSeekMode(EAT_FALSE);
             break;
 
