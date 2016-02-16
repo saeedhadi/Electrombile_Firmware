@@ -134,7 +134,7 @@ static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
 	{
 		LOG_DEBUG("hostname notify:%s -> %d.%d.%d.%d.", setting.domain, ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3], setting.port);
 
-		socket_connect2IP(ip_addr);
+		socket_connect2IP(ip_addr); //TODO:this should be done in function action_hostname2ip
 		fsm_run(EVT_HOSTNAME2IP);
 	}
 	else
