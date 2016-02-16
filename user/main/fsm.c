@@ -79,7 +79,7 @@ static void fsm_trans(STATE sts)
 
 static void start_mainloop(void)
 {
-    eat_timer_start(TIMER_LOOP, setting.at_cmd_timer_period);
+    eat_timer_start(TIMER_LOOP, setting.main_loop_timer_period);
 }
 
 typedef int ACTION(void);
@@ -190,6 +190,8 @@ int action_loop(void)
 #define MAX_SOCKET_RETRY_TIMES  5
     static int socket_retry_times = 0;
 
+    static unsigned int heartbeat_times = 1;
+
     switch (status)
     {
     case STATE_WAIT_GPRS:
@@ -212,6 +214,19 @@ int action_loop(void)
         }
         break;
 
+    case STATE_RUNNING:
+        /*
+         * 利用主循环定时器来构造心跳包的定时器：主循环为10s，每次心跳定时器计数，达到3分钟就发心跳包
+         * 这个地方用static变量来实现不是很严密，有可能中途socket断链了，但该计数器没有清零
+         * 不过没有大的影响，心跳包不需要那么精确
+         */
+        if (heartbeat_times++ % (3 * 60 / 5) == 0)  // the loop timer is 5 seconds, the heartbeat timer is 3 minutes
+        {
+            LOG_DEBUG("send heart beat");
+            cmd_Heartbeat();
+        }
+        break;
+
     default:
         //TODO:xxx
         break;
@@ -222,14 +237,14 @@ int action_loop(void)
 
 ACTION* state_transitions[STATE_MAX][EVT_MAX] =
 {
-                     /* EVT_LOOP        EVT_CALL_READY      EVT_GPRS_ATTACHED       EVT_BEARER_HOLD     EVT_HOSTNAME2IP     EVT_SOCKET_CONNECTED    EVT_LOGINED     EVT_HEARTBEAT_LOSE  EVT_SOCKET_DISCONNECTED */
-/* STS_INITIAL      */  {NULL,          action_CallReady, },
-/* STS_WAIT_GPRS    */  {action_loop,   NULL,               action_GprsAttached,},
-/* STS_WAIT_BEARER  */  {NULL,          NULL,               NULL,                   action_BearHold,},
-/* STS_WAIT_SOCKET  */  {action_loop,   NULL,               NULL,                   NULL,               NULL,               action_SocketConnected,},
-/* STS_WAIT_IPADDR  */  {NULL,          NULL,               NULL,                   NULL,               action_hostname2ip,},
-/* STS_WAIT_LOGIN   */  {NULL,          NULL,               NULL,                   NULL,               NULL,               NULL,                   action_logined, NULL,               action_reconnect},
-/* STS_RUNNING      */  {NULL,          NULL,               NULL,                   NULL,               NULL,               NULL,                   NULL,           NULL,               action_reconnect},
+                      /* EVT_LOOP        EVT_CALL_READY      EVT_GPRS_ATTACHED       EVT_BEARER_HOLD     EVT_HOSTNAME2IP     EVT_SOCKET_CONNECTED    EVT_LOGINED     EVT_HEARTBEAT_LOSE  EVT_SOCKET_DISCONNECTED */
+/* STATE_INITIAL      */  {NULL,          action_CallReady, },
+/* STATE_WAIT_GPRS    */  {action_loop,   NULL,               action_GprsAttached,},
+/* STATE_WAIT_BEARER  */  {NULL,          NULL,               NULL,                   action_BearHold,},
+/* STATE_WAIT_SOCKET  */  {action_loop,   NULL,               NULL,                   NULL,               NULL,               action_SocketConnected,},
+/* STATE_WAIT_IPADDR  */  {NULL,          NULL,               NULL,                   NULL,               action_hostname2ip,},
+/* STATE_WAIT_LOGIN   */  {NULL,          NULL,               NULL,                   NULL,               NULL,               NULL,                   action_logined, NULL,               action_reconnect},
+/* STATE_RUNNING      */  {action_loop,   NULL,               NULL,                   NULL,               NULL,               NULL,                   NULL,           NULL,               action_reconnect},
 };
 
 //根据当前状态和出发事件，查找状态转换表，决定执行动作，在每个动作里面决定状态迁移

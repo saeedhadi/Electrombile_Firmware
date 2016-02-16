@@ -110,14 +110,7 @@ static int event_timer(const EatEvent_st* event)
         case TIMER_LOOP:
             LOG_DEBUG("TIMER_LOOP expire.");
             fsm_run(EVT_LOOP);
-            eat_timer_start(event->data.timer.timer_id, setting.at_cmd_timer_period);
-            break;
-
-
-        case TIMER_HEARTBEAT:
-            LOG_DEBUG("TIMER_HEARTBEAT expire!");
-            cmd_Heartbeat();
-            eat_timer_start(TIMER_HEARTBEAT, setting.heartbeat_timer_period);
+            eat_timer_start(event->data.timer.timer_id, setting.main_loop_timer_period);
             break;
 
         case TIMER_SEEKAUTOOFF:
