@@ -144,7 +144,7 @@ static int cmd_AT(const unsigned char* cmdString, unsigned short length)
     if(strstr(buf, "deletesetting"))
     {
         LOG_DEBUG("setting.txt deleted.");
-        eat_fs_Delete(SETITINGFILE_NAME);//TODO, for debug
+        eat_fs_Delete(SETTINGFILE_NAME);//TODO, for debug
         return 0;
     }
     if(strstr(buf, "deletemileage"))

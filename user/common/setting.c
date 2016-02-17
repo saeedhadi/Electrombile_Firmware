@@ -14,6 +14,7 @@
 #include <eat_uart.h>
 
 #include "setting.h"
+#include "debug.h"
 #include "log.h"
 
 typedef struct
@@ -34,9 +35,81 @@ typedef struct
 
 SETTING setting;
 
+
+int cmd_deletesetting(const char* cmdString, unsigned short length)
+{
+    eat_fs_error_enum fs_Op_ret;
+
+    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(SETTINGFILE_NAME);
+    if(EAT_FS_NO_ERROR!=fs_Op_ret)
+    {
+        LOG_ERROR("Delete settingfile Fail,and Return Error is %d",fs_Op_ret);
+        return EAT_FALSE;
+    }
+    else
+    {
+        LOG_DEBUG("Delete settingfile Success");
+    }
+    return EAT_TRUE;
+}
+
+int cmd_catsetting(const char* cmdString, unsigned short length)
+{
+
+    FS_HANDLE fh;
+    eat_bool ret = EAT_FALSE;
+    int rc;
+
+    STORAGE storage;
+
+    LOG_INFO("cat setting...");
+
+    fh = eat_fs_Open(SETTINGFILE_NAME, FS_READ_ONLY);
+    if(EAT_FS_FILE_NOT_FOUND == fh)
+    {
+        LOG_INFO("setting file not exists.");
+        return EAT_TRUE;
+    }
+
+    if (fh < EAT_FS_NO_ERROR)
+    {
+        LOG_ERROR("read setting file fail, rc: %d", fh);
+        return EAT_FALSE;
+    }
+
+    rc = eat_fs_Read(fh, &storage, sizeof(STORAGE), NULL);
+    if (EAT_FS_NO_ERROR == rc)
+    {
+        LOG_DEBUG("read setting file success.");
+
+        if(ADDR_TYPE_DOMAIN == storage.addr_type)
+        {
+            LOG_DEBUG("server domain = %s:%d.", storage.addr.domain, storage.port);
+        }
+        else if(ADDR_TYPE_IP == storage.addr_type)
+        {
+            LOG_DEBUG("server ip = %d.%d.%d.%d:%d.", storage.addr.ipaddr[0], storage.addr.ipaddr[1], storage.addr.ipaddr[2], storage.addr.ipaddr[3], storage.port);
+        }
+        ret = EAT_TRUE;
+    }
+    else
+    {
+        LOG_ERROR("read settingfile fail, and return error: %d", fh);
+    }
+
+    eat_fs_Close(fh);
+
+    return ret;
+
+}
+
+
 static void setting_initial(void)
 {
     LOG_INFO("setting initial to default value.");
+
+    regist_cmd("deletesetting", cmd_deletesetting);
+    regist_cmd("catsetting", cmd_catsetting);
 
     /* Server configuration */
 #if 1
@@ -88,7 +161,7 @@ eat_bool setting_restore(void)
     LOG_INFO("restore setting from file");
 
     /*setting reload*/
-    fh = eat_fs_Open(SETITINGFILE_NAME, FS_READ_ONLY);
+    fh = eat_fs_Open(SETTINGFILE_NAME, FS_READ_ONLY);
     if(EAT_FS_FILE_NOT_FOUND == fh)
     {
         LOG_INFO("setting file not exists.");
@@ -180,7 +253,7 @@ eat_bool setting_save(void)
 
     LOG_INFO("save setting...");
 
-    fh = eat_fs_Open(SETITINGFILE_NAME, FS_READ_WRITE);
+    fh = eat_fs_Open(SETTINGFILE_NAME, FS_READ_WRITE);
     if(EAT_FS_NO_ERROR <= fh)
     {
         LOG_INFO("open file success, fh=%d.", fh);
@@ -203,4 +276,9 @@ eat_bool setting_save(void)
 
     return ret;
 }
+
+
+
+
+
 
