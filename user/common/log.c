@@ -223,11 +223,11 @@ void log_file(const char* fmt, ...)
 
     strcpy(buf+strlen(buf),"\r\n");
 
-    fh_open = eat_fs_Open(LOGFILE_NAME, FS_READ_WRITE|FS_CREATE);
+    fh_open = eat_fs_Open(LOGFILE_NAME, FS_READ_WRITE | FS_CREATE);
 
     if(EAT_FS_NO_ERROR <= fh_open)
     {
-        LOG_INFO("create or open log_file success, fh=%d.", fh_open);
+        LOG_INFO("open log_file success, fh = %d", fh_open);
 
         seekRet = eat_fs_Seek(fh_open,0,EAT_FS_FILE_END);
 
@@ -245,7 +245,7 @@ void log_file(const char* fmt, ...)
             LOG_INFO("Seek File Pointer Success");
 
             fh_write = eat_fs_Write(fh_open, buf, strlen(buf), &writedLen);
-            LOG_DEBUG("%s",buf);
+
             if((EAT_FS_NO_ERROR == fh_write) && (strlen(buf) == writedLen))
             {
 
