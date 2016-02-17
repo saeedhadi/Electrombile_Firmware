@@ -34,9 +34,9 @@ typedef struct
 
 static STATE current_state = STATE_INITIAL;
 
-static char* fsm_getStateName(STATE sts)
+static char* fsm_getStateName(STATE state)
 {
-    switch (sts)
+    switch (state)
     {
 #ifdef LOG_DEBUG_FLAG
         DESC_DEF(STATE_INITIAL);
@@ -50,7 +50,7 @@ static char* fsm_getStateName(STATE sts)
         default:
         {
             static char state_name[10] = {0};
-            sprintf(state_name, "%d", current_state);
+            sprintf(state_name, "%d", state);
             return state_name;
         }
     }
@@ -70,11 +70,12 @@ static char* fsm_getEventName(EVENT event)
         DESC_DEF(EVT_LOGINED);
         DESC_DEF(EVT_HEARTBEAT_LOSE);
         DESC_DEF(EVT_SOCKET_DISCONNECTED);
+        DESC_DEF(EVT_BEARER_DEACTIVATED);
 #endif
         default:
         {
             static char event_name[10] = {0};
-            sprintf(event_name, "%d", current_state);
+            sprintf(event_name, "%d", event);
             return event_name;
         }
     }
