@@ -200,36 +200,27 @@ int action_reconnect(void)
     return 0;
 }
 
-int action_loop(void)
+int action_waitGprsOnLoop(void)
+{
+    modem_ReadGPRSStatus();
+}
+
+int action_runningOnLoop(void)
 {
     static unsigned int heartbeat_times = 1;
 
-    switch (current_state)
+    /*
+     * 利用主循环定时器来构造心跳包的定时器：主循环为10s，每次心跳定时器计数，达到3分钟就发心跳包
+     * 这个地方用static变量来实现不是很严密，有可能中途socket断链了，但该计数器没有清零
+     * 不过没有大的影响，心跳包不需要那么精确
+     */
+    if (heartbeat_times++ % (3 * 60 / 5) == 0)  // the loop timer is 5 seconds, the heartbeat timer is 3 minutes
     {
-    case STATE_WAIT_GPRS:
-        modem_ReadGPRSStatus();
-        break;
-
-    case STATE_RUNNING:
-        /*
-         * 利用主循环定时器来构造心跳包的定时器：主循环为10s，每次心跳定时器计数，达到3分钟就发心跳包
-         * 这个地方用static变量来实现不是很严密，有可能中途socket断链了，但该计数器没有清零
-         * 不过没有大的影响，心跳包不需要那么精确
-         */
-        if (heartbeat_times++ % (3 * 60 / 5) == 0)  // the loop timer is 5 seconds, the heartbeat timer is 3 minutes
-        {
-            LOG_DEBUG("send heart beat");
-            cmd_Heartbeat();
-        }
-        break;
-
-    default:
-        //TODO:xxx
-        break;
+        LOG_DEBUG("send heart beat");
+        cmd_Heartbeat();
     }
-
-    return 0;
 }
+
 
 #if 0
 ACTION* state_transitions[STATE_MAX][EVT_MAX] =
@@ -266,7 +257,7 @@ int fsm_run(EVENT event)
 STATE_TRANSITIONS state_transitions[] =
 {
         {STATE_INITIAL,     EVT_CALL_READY,             action_CallReady},
-        {STATE_WAIT_GPRS,   EVT_LOOP,                   action_loop},
+        {STATE_WAIT_GPRS,   EVT_LOOP,                   action_waitGprsOnLoop},
         {STATE_WAIT_GPRS,   EVT_GPRS_ATTACHED,          action_GprsAttached},
         {STATE_WAIT_BEARER, EVT_BEARER_HOLD,            action_BearHold},
         {STATE_WAIT_SOCKET, EVT_SOCKET_CONNECTED,       action_SocketConnected},
@@ -274,7 +265,7 @@ STATE_TRANSITIONS state_transitions[] =
         {STATE_WAIT_IPADDR, EVT_HOSTNAME2IP,            action_hostname2ip},
         {STATE_WAIT_LOGIN,  EVT_LOGINED,                action_logined},
         {STATE_WAIT_LOGIN,  EVT_SOCKET_DISCONNECTED,    action_reconnect},
-        {STATE_RUNNING,     EVT_LOOP,                   action_loop},
+        {STATE_RUNNING,     EVT_LOOP,                   action_runningOnLoop},
         {STATE_RUNNING,     EVT_SOCKET_DISCONNECTED,    action_reconnect},
 };
 
