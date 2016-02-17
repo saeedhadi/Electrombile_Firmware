@@ -365,6 +365,10 @@ s32 socket_sendData(void* data, s32 len)
     }
     else
     {
+        if (rc == SOC_PIPE || rc == SOC_NOTCONN)
+        {
+            fsm_run(EVT_SOCKET_DISCONNECTED);       //这个地方仅为保护作用，正常的socket断链应该会通过soc_notify_cb来通知
+        }
         LOG_ERROR("sokcet send data failed:%d!", rc);
     }
 
