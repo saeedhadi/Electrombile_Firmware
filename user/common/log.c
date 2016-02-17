@@ -12,6 +12,7 @@
 
 #include "uart.h"
 #include "data.h"
+#include "debug.h"
 #include "log.h"
 
 #define LOGFILE_NAME  L"C:\\log_file.txt"

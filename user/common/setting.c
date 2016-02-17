@@ -14,6 +14,7 @@
 #include <eat_uart.h>
 
 #include "setting.h"
+#include "debug.h"
 #include "log.h"
 
 typedef struct
@@ -34,9 +35,16 @@ typedef struct
 
 SETTING setting;
 
+static void log_setting_initial(void);
+int cmd_deleteseeting(const char* cmdString, unsigned short length);
+
+
+
 static void setting_initial(void)
 {
     LOG_INFO("setting initial to default value.");
+
+    log_setting_initial();
 
     /* Server configuration */
 #if 1
@@ -203,4 +211,27 @@ eat_bool setting_save(void)
 
     return ret;
 }
+
+static void log_setting_initial(void)
+{
+    regist_cmd("deletesetting", cmd_deleteseeting);
+}
+
+int cmd_deleteseeting(const char* cmdString, unsigned short length)
+{
+    eat_fs_error_enum fs_Op_ret;
+
+    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(SETITINGFILE_NAME);
+    if(EAT_FS_NO_ERROR!=fs_Op_ret)
+    {
+        LOG_ERROR("Delete settingfile Fail,and Return Error is %d",fs_Op_ret);
+        return EAT_FALSE;
+    }
+    else
+    {
+        LOG_DEBUG("Delete settingfile Success");
+    }
+    return EAT_TRUE;
+}
+
 
