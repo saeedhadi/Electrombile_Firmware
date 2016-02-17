@@ -94,7 +94,7 @@ static void start_mainloop(void)
 }
 
 
-int action_CallReady(void)
+static int action_onCallReady(void)
 {
     modem_ReadGPRSStatus();
 
@@ -105,8 +105,15 @@ int action_CallReady(void)
     return 0;
 }
 
-//这个状态的事件处理最复杂，因为里面的API既有可能是同步的，也有可能是异步的，造成这一状态可以向另外四个状态迁移
-int action_GprsAttached(void)
+/*
+ * 这个状态的事件处理最复杂，因为下面三个API既有可能立即返回成功，也有可能等待事件通知，造成这一状态可以向另外四个状态迁移
+ *
+ * eat_gprs_bearer_open
+ * eat_soc_gethostbyname
+ * eat_soc_connect
+ *
+ */
+static int action_onGprsAttached(void)
 {
     int rc = socket_init();
 
@@ -139,7 +146,7 @@ int action_GprsAttached(void)
 }
 
 
-int action_BearHold(void)
+static int action_onBearHold(void)
 {
     int rc = socket_setup();
 
@@ -165,7 +172,7 @@ int action_BearHold(void)
     return 0;
 }
 
-int action_SocketConnected(void)
+static int action_onSocketConnected(void)
 {
     cmd_Login();
 
@@ -174,38 +181,39 @@ int action_SocketConnected(void)
     return 0;
 }
 
-int action_onSocketConnectFailed(void)
+static int action_onSocketConnectFailed(void)
 {
     fsm_trans(STATE_WAIT_GPRS);
+    return 0;
 }
 
-int action_logined(void)
+static int action_onLogined(void)
 {
     fsm_trans(STATE_RUNNING);
 
     return 0;
 }
 
-int action_hostname2ip(void)
+static int action_onDNS(void)
 {
     fsm_trans(STATE_WAIT_SOCKET);
 
     return 0;
 }
 
-int action_reconnect(void)
+static int action_onSocketDisconnected(void)
 {
     fsm_trans(STATE_WAIT_GPRS);
 
     return 0;
 }
 
-int action_waitGprsOnLoop(void)
+static int action_waitGprsOnLoop(void)
 {
     modem_ReadGPRSStatus();
 }
 
-int action_runningOnLoop(void)
+static int action_runningOnLoop(void)
 {
     static unsigned int heartbeat_times = 1;
 
@@ -226,13 +234,13 @@ int action_runningOnLoop(void)
 ACTION* state_transitions[STATE_MAX][EVT_MAX] =
 {
                       /* EVT_LOOP        EVT_CALL_READY      EVT_GPRS_ATTACHED       EVT_BEARER_HOLD     EVT_HOSTNAME2IP     EVT_SOCKET_CONNECTED    EVT_LOGINED     EVT_HEARTBEAT_LOSE  EVT_SOCKET_DISCONNECTED    EVT_BEARER_DEACTIVATED*/
-/* STATE_INITIAL      */  {NULL,          action_CallReady, },
-/* STATE_WAIT_GPRS    */  {action_loop,   NULL,               action_GprsAttached,},
-/* STATE_WAIT_BEARER  */  {NULL,          NULL,               NULL,                   action_BearHold,},
-/* STATE_WAIT_SOCKET  */  {NULL,          NULL,               NULL,                   NULL,               NULL,               action_SocketConnected,},
-/* STATE_WAIT_IPADDR  */  {NULL,          NULL,               NULL,                   NULL,               action_hostname2ip,},
-/* STATE_WAIT_LOGIN   */  {NULL,          NULL,               NULL,                   NULL,               NULL,               NULL,                   action_logined, NULL,               action_reconnect},
-/* STATE_RUNNING      */  {action_loop,   NULL,               NULL,                   NULL,               NULL,               NULL,                   NULL,           NULL,               action_reconnect},
+/* STATE_INITIAL      */  {NULL,          action_onCallReady, },
+/* STATE_WAIT_GPRS    */  {action_loop,   NULL,               action_onGprsAttached,},
+/* STATE_WAIT_BEARER  */  {NULL,          NULL,               NULL,                   action_onBearHold,},
+/* STATE_WAIT_SOCKET  */  {NULL,          NULL,               NULL,                   NULL,               NULL,               action_onSocketConnected,},
+/* STATE_WAIT_IPADDR  */  {NULL,          NULL,               NULL,                   NULL,               action_onDNS,},
+/* STATE_WAIT_LOGIN   */  {NULL,          NULL,               NULL,                   NULL,               NULL,               NULL,                   action_onLogined, NULL,               action_onSocketDisconnected},
+/* STATE_RUNNING      */  {action_loop,   NULL,               NULL,                   NULL,               NULL,               NULL,                   NULL,           NULL,               action_onSocketDisconnected},
 };
 
 
@@ -256,17 +264,17 @@ int fsm_run(EVENT event)
  */
 STATE_TRANSITIONS state_transitions[] =
 {
-        {STATE_INITIAL,     EVT_CALL_READY,             action_CallReady},
+        {STATE_INITIAL,     EVT_CALL_READY,             action_onCallReady},
         {STATE_WAIT_GPRS,   EVT_LOOP,                   action_waitGprsOnLoop},
-        {STATE_WAIT_GPRS,   EVT_GPRS_ATTACHED,          action_GprsAttached},
-        {STATE_WAIT_BEARER, EVT_BEARER_HOLD,            action_BearHold},
-        {STATE_WAIT_SOCKET, EVT_SOCKET_CONNECTED,       action_SocketConnected},
+        {STATE_WAIT_GPRS,   EVT_GPRS_ATTACHED,          action_onGprsAttached},
+        {STATE_WAIT_BEARER, EVT_BEARER_HOLD,            action_onBearHold},
+        {STATE_WAIT_SOCKET, EVT_SOCKET_CONNECTED,       action_onSocketConnected},
         {STATE_WAIT_SOCKET, EVT_SOCKET_CONNECT_FAILED,  action_onSocketConnectFailed},
-        {STATE_WAIT_IPADDR, EVT_HOSTNAME2IP,            action_hostname2ip},
-        {STATE_WAIT_LOGIN,  EVT_LOGINED,                action_logined},
-        {STATE_WAIT_LOGIN,  EVT_SOCKET_DISCONNECTED,    action_reconnect},
+        {STATE_WAIT_IPADDR, EVT_HOSTNAME2IP,            action_onDNS},
+        {STATE_WAIT_LOGIN,  EVT_LOGINED,                action_onLogined},
+        {STATE_WAIT_LOGIN,  EVT_SOCKET_DISCONNECTED,    action_onSocketDisconnected},
         {STATE_RUNNING,     EVT_LOOP,                   action_runningOnLoop},
-        {STATE_RUNNING,     EVT_SOCKET_DISCONNECTED,    action_reconnect},
+        {STATE_RUNNING,     EVT_SOCKET_DISCONNECTED,    action_onSocketDisconnected},
 };
 
 int fsm_run(EVENT event)
