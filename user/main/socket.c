@@ -182,7 +182,9 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
             }
             else
             {
-                LOG_ERROR("SOC_CONNECT failed:%d, maybe the server is OFF!", result);
+                LOG_ERROR("SOC_CONNECT failed, maybe the server is OFF!");
+                fsm_run(EVT_SOCKET_CONNECT_FAILED);
+                eat_soc_close(s);
             }
 
             break;
@@ -190,7 +192,7 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
         case SOC_CLOSE:
             LOG_INFO("SOC_CLOSE.");
 
-            eat_soc_close(socket_id);
+            eat_soc_close(s);
 
             fsm_run(EVT_SOCKET_DISCONNECTED);
 
@@ -363,6 +365,10 @@ s32 socket_sendData(void* data, s32 len)
     }
     else
     {
+        if (rc == SOC_PIPE || rc == SOC_NOTCONN)
+        {
+            fsm_run(EVT_SOCKET_DISCONNECTED);       //这个地方仅为保护作用，正常的socket断链应该会通过soc_notify_cb来通知
+        }
         LOG_ERROR("sokcet send data failed:%d!", rc);
     }
 
