@@ -194,6 +194,26 @@ static int threadCmd_GPS(const MSG_THREAD* msg)
     return 0;
 }
 
+static int ThreadCmd_AutolockState(const MSG_THREAD* msg)
+{
+    AUTOLOCK_INFO* msg_state = (AUTOLOCK_INFO*) msg->data;
+    MSG_AUTODEFEND_STATE_REQ* autolock_msg;
+
+    if (msg->length < sizeof(AUTOLOCK_INFO) || !msg_state)
+    {
+         LOG_ERROR("msg from THREAD_VIBRATION error!");
+         return -1;
+    }
+    autolock_msg = alloc_msg(CMD_AUTODEFEND_STATE, sizeof(MSG_AUTODEFEND_STATE_REQ));
+    autolock_msg->state = htonl((char)msg_state->state);
+
+    LOG_DEBUG("send seek value message.");
+    socket_sendData(autolock_msg, sizeof(MSG_AUTODEFEND_STATE_REQ));
+
+    return 0;
+}
+
+
 static int threadCmd_SMS(const MSG_THREAD* msg)
 {
     LOG_DEBUG("receive thread command CMD_SMS.");
@@ -322,6 +342,7 @@ static THREAD_MSG_PROC msgProcs[] =
         {CMD_THREAD_VIBRATE, threadCmd_Vibrate},
         {CMD_THREAD_SEEK, threadCmd_Seek},
         {CMD_THREAD_LOCATION, threadCmd_Location},
+        {CMD_THREAD_AUTOLOCK,ThreadCmd_AutolockState},
 };
 
 static int event_threadMsg(const EatEvent_st* event)
