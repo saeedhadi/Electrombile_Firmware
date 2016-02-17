@@ -373,7 +373,7 @@ static EVENT_PROC eventProcs[] =
     {EAT_EVENT_MDM_READY_RD,        event_mod_ready_rd},
     {EAT_EVENT_MDM_READY_WR,        EAT_NULL},
     {EAT_EVENT_UART_READY_RD,       event_uart_ready_rd},
-    {EAT_EVENT_UART_READY_WR,       EAT_NULL},
+    {EAT_EVENT_UART_READY_WR,       event_uart_ready_wr},
     {EAT_EVENT_UART_SEND_COMPLETE,  EAT_NULL},
     {EAT_EVENT_USER_MSG,            event_threadMsg},
     {EAT_EVENT_ADC,                 EAT_NULL},

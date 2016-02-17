@@ -17,108 +17,97 @@
 
 #define LOGFILE_NAME  L"C:\\log_file.txt"
 
+int log_catlog(void)
+{
+#define READ_BUFFER_LENGTH  512
+    FS_HANDLE fh;
+    int rc = 0;
+    char buf[READ_BUFFER_LENGTH] = {0};
+    UINT readLen = 0;
+    int printlen = 0;
 
-//TODO: this function need to be refactored
-#warning this function must be refactored
+    eat_bool uart_buffer_full = EAT_FALSE;
+    eat_bool end_of_file = EAT_FALSE;
+
+    static int file_offset = 0;
+
+    fh = eat_fs_Open(LOGFILE_NAME, FS_READ_ONLY);
+
+    //the log file is not found
+    if(EAT_FS_FILE_NOT_FOUND == fh)
+    {
+        /*log_file == LOG_ERROR,there should not be LOG_ERROR*/
+        print("log file not exists.");
+        file_offset = 0;
+        uart_setWrite(0);
+        return -1;
+    }
+
+    if (fh < EAT_FS_NO_ERROR)
+    {
+        /*log_file == LOG_ERROR,there should not be LOG_ERROR*/
+        print("open file failed, eat_fs_Open return %d!", fh);
+        file_offset = 0;
+        uart_setWrite(0);
+        return -1;
+    }
+
+    rc = eat_fs_Seek(fh, file_offset, EAT_FS_FILE_BEGIN);
+    if (rc < EAT_FS_NO_ERROR)
+    {
+        print("seek file pointer failed:%d", rc);
+        eat_fs_Close(fh);
+        file_offset = 0;
+        uart_setWrite(0);
+        return -1;
+    }
+
+    do
+    {
+        rc = eat_fs_Read(fh, buf, READ_BUFFER_LENGTH, &readLen);
+        if (rc < EAT_FS_NO_ERROR)
+        {
+            print("read file failed:%d", rc);
+            file_offset = 0;
+            uart_setWrite(0);
+            eat_fs_Close(fh);
+
+            return -1;
+        }
+
+        if (readLen < READ_BUFFER_LENGTH)   //read the end of file
+        {
+            end_of_file = EAT_TRUE;
+        }
+
+        printlen = print("%s", buf);
+        file_offset += printlen;
+        if (printlen < readLen) //UART driver's receive buffer is full
+        {
+            uart_buffer_full = EAT_TRUE;
+            uart_setWrite(log_catlog);
+        }
+
+//        LOG_INFO("read %d bytes, print %d bytes", readLen, printlen);
+
+        if (!uart_buffer_full && end_of_file)
+        {
+
+            file_offset = 0;
+            uart_setWrite(0);
+        }
+
+    }while (!uart_buffer_full && !end_of_file);
+
+    eat_fs_Close(fh);
+
+    return 0;
+}
+
 int cmd_catlog(const char* cmdString, unsigned short length)
 {
-    FS_HANDLE fh_open,fh_read;
-    char buf[512] = "\0";
-    char temp_buf[1024] = "\0";
-    int seekRet = NULL;
-    UINT readLen = 0;
-    unsigned char *buf_p = NULL;
-    eat_bool end_file = EAT_FALSE;
-
-    fh_open = eat_fs_Open(LOGFILE_NAME, FS_READ_ONLY);
-
-    if(EAT_FS_FILE_NOT_FOUND == fh_open)
-    {
-        /*log_file == LOG_ERROR,there should not be LOG_ERROR*/
-        LOG_INFO("log file not exists.");
-        return -1;
-    }
-    else if(EAT_FS_NO_ERROR <= fh_open)
-    {
-        LOG_INFO("open log_file success, fh=%d.", fh_open);
-
-        seekRet = eat_fs_Seek(fh_open,0,EAT_FS_FILE_BEGIN);
-
-        if(0 <= seekRet)
-        {
-            LOG_INFO("Seek File Pointer Success");
-            while(EAT_TRUE)
-            {
-                eat_sleep(1);
-                fh_read = eat_fs_Read(fh_open,&buf,512, &readLen);
-
-                if(EAT_FS_NO_ERROR == fh_read && readLen == 512)
-                {
-                    //eat_fs_Close(fh_open);
-                    strcpy(temp_buf+strlen(temp_buf),buf);
-                    while(EAT_TRUE)
-                    {
-                        buf_p = strstr(temp_buf,"\r\n");
-                        if(NULL == buf_p)
-                        {
-                            break;
-                        }
-                        strcpy(buf,buf_p+2);
-                        memset(buf_p,0,strlen(buf_p));
-
-                        LOG_INFO("%s",temp_buf);//print the line
-
-                        eat_sleep(1);
-                        strcpy(temp_buf,buf);
-                    }
-
-                }
-                else if(EAT_FS_NO_ERROR == fh_read && readLen < 512)
-                {
-                    //eat_fs_Close(fh_open);
-                    strcpy(temp_buf+strlen(temp_buf),buf);
-                    while(EAT_TRUE)
-                    {
-                        buf_p = strstr(temp_buf,"\r\n");
-                        if(NULL == buf_p)
-                        {
-                            end_file = EAT_TRUE;
-                            break;
-                        }
-                        strcpy(buf,buf_p+2);
-                        memset(buf_p,0,strlen(buf_p));
-
-                        LOG_INFO("%s",temp_buf);//print the line
-
-                        eat_sleep(1);
-                        strcpy(temp_buf,buf);
-                    }
-                    if(EAT_TRUE == end_file)
-                        break;
-                }
-                else
-                {
-                    /*log_file == LOG_ERROR,there should not be LOG_ERROR*/
-                    LOG_INFO("read log_file error:%d at %d",fh_read,readLen);
-                    break;
-                }
-            }
-        }
-        else
-        {
-            /*log_file == LOG_ERROR,there should not be LOG_ERROR*/
-            LOG_INFO("Seek File Pointer Fail");
-        }
-        eat_fs_Close(fh_open);
-        return 0;
-    }
-    else
-    {
-        /*log_file == LOG_ERROR,there should not be LOG_ERROR*/
-        LOG_INFO("open file failed, fh=%d!", fh_open);
-        eat_fs_Close(fh_open);
-        return -1;
-    }
+    print("cat log file begin:");
+    return log_catlog();
 }
 
 int cmd_deletelog(const char* cmdString, unsigned short length)
