@@ -180,38 +180,19 @@ int action_hostname2ip(void)
 
 int action_reconnect(void)
 {
-    fsm_trans(STATE_WAIT_SOCKET);
+    fsm_trans(STATE_WAIT_GPRS);
 
     return 0;
 }
 
 int action_loop(void)
 {
-#define MAX_SOCKET_RETRY_TIMES  5
-    static int socket_retry_times = 0;
-
     static unsigned int heartbeat_times = 1;
 
     switch (status)
     {
     case STATE_WAIT_GPRS:
         modem_ReadGPRSStatus();
-        break;
-
-    case STATE_WAIT_SOCKET:
-        //TODO: maybe the retry of connect is unnecessary here
-        if (socket_retry_times++ < MAX_SOCKET_RETRY_TIMES)
-        {
-            if (socket_connect() == ERR_WAITING_HOSTNAME2IP)
-            {
-                fsm_trans(STATE_WAIT_IPADDR);
-            }
-        }
-        else
-        {
-            socket_retry_times = 0;
-            fsm_trans(STATE_WAIT_GPRS);
-        }
         break;
 
     case STATE_RUNNING:
@@ -237,7 +218,7 @@ int action_loop(void)
 
 ACTION* state_transitions[STATE_MAX][EVT_MAX] =
 {
-                      /* EVT_LOOP        EVT_CALL_READY      EVT_GPRS_ATTACHED       EVT_BEARER_HOLD     EVT_HOSTNAME2IP     EVT_SOCKET_CONNECTED    EVT_LOGINED     EVT_HEARTBEAT_LOSE  EVT_SOCKET_DISCONNECTED */
+                      /* EVT_LOOP        EVT_CALL_READY      EVT_GPRS_ATTACHED       EVT_BEARER_HOLD     EVT_HOSTNAME2IP     EVT_SOCKET_CONNECTED    EVT_LOGINED     EVT_HEARTBEAT_LOSE  EVT_SOCKET_DISCONNECTED    EVT_BEARER_DEACTIVATED*/
 /* STATE_INITIAL      */  {NULL,          action_CallReady, },
 /* STATE_WAIT_GPRS    */  {action_loop,   NULL,               action_GprsAttached,},
 /* STATE_WAIT_BEARER  */  {NULL,          NULL,               NULL,                   action_BearHold,},

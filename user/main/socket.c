@@ -17,6 +17,7 @@
 #include "timer.h"
 #include "fsm.h"
 #include "error.h"
+#include "request.h"
 
 static char* getEventDescription(soc_event_enum event);
 static char* getStateDescription(cbm_bearer_state_enum state);
@@ -95,7 +96,7 @@ int socket_connect2IP(u8 ip_addr[4])
 {
     s8 rc = SOC_SUCCESS;
 
-    sockaddr_struct address={SOC_SOCK_STREAM};
+    sockaddr_struct address = {SOC_SOCK_STREAM};
 
     address.sock_type = SOC_SOCK_STREAM;
     address.addr_len = 4;
@@ -113,6 +114,7 @@ int socket_connect2IP(u8 ip_addr[4])
     if(rc >= 0)
     {
         LOG_INFO("socket id of new connection is :%d.", rc);
+        cmd_Login();
         return ERR_SOCKET_CONNECTED;
     }
     else if (rc == SOC_WOULDBLOCK)
@@ -188,7 +190,7 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
         case SOC_CLOSE:
             LOG_INFO("SOC_CLOSE.");
 
-//            eat_soc_close(socket_id);
+            eat_soc_close(socket_id);
 
             fsm_run(EVT_SOCKET_DISCONNECTED);
 
@@ -211,7 +213,14 @@ static void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
 	switch (state)
 	{
         case CBM_ACTIVATED:
+            LOG_DEBUG("local ip is %d.%d.%d.%d", ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3]);
+
 		    fsm_run(EVT_BEARER_HOLD);
+            break;
+
+        case CBM_DEACTIVATED:
+            //TODO: how to deal with this event???
+            fsm_run(EVT_BEARER_DEACTIVATED);
             break;
 
         case CBM_GPRS_AUTO_DISC_TIMEOUT:
@@ -297,7 +306,7 @@ int socket_setup(void)
 	s8 val = EAT_TRUE;
 
     eat_soc_notify_register(soc_notify_cb);
-    socket_id = eat_soc_create(SOC_SOCK_STREAM, 0);
+    socket_id = eat_soc_create(SOC_SOCK_STREAM, SOC_SOCK_STREAM);
     if (socket_id < 0)
     {
     	LOG_ERROR("eat_soc_create return error :%d!", socket_id);
