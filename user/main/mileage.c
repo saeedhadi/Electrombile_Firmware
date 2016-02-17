@@ -37,9 +37,6 @@ extern double mileage;
 
 static void msg_mileage_send(MSG_MILEAGE_REQ msg_mileage);
 static eat_bool mileage_reload(void);
-static void log_mileage_initial(void);
-int cmd_deletemileage(const char* cmdString, unsigned short length);
-
 
 
 eat_bool mileage_restore(void)
@@ -96,11 +93,29 @@ static eat_bool mileage_reload(void)
 }
 
 
+int cmd_deletemileage(const char* cmdString, unsigned short length)
+{
+    eat_fs_error_enum fs_Op_ret;
+
+    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(MILEAGEFILE_NAME);
+    if(EAT_FS_NO_ERROR!=fs_Op_ret)
+    {
+        LOG_ERROR("Delete mileagefile Fail,and Return Error is %d",fs_Op_ret);
+        return EAT_FALSE;
+    }
+    else
+    {
+        LOG_DEBUG("Delete mileagefile Success");
+    }
+    return EAT_TRUE;
+}
+
+
 void mileage_initial(void)
 {
     LOG_INFO("milegae initial to default value.");
 
-    log_mileage_initial();
+    regist_cmd("deletemileage", cmd_deletemileage);
 
     /*go to adc_mileageinit_proc to judge the type of the battery*/
     eat_adc_get(EAT_ADC1, ADC1_PERIOD, adc_mileageinit_proc);
@@ -159,7 +174,14 @@ void adc_mileageinit_proc(EatAdc_st* adc)
         value[count] = adc->v;
         count++;
         if(count < 40)
+        {
+            if(count == 39)
+            {
+                /*end this detect next*/
+                eat_adc_get(EAT_ADC1, NULL, adc_mileageinit_proc);
+            }
             return;
+        }
     }
     else if(adc->pin == EAT_ADC0)
     {
@@ -171,7 +193,8 @@ void adc_mileageinit_proc(EatAdc_st* adc)
         adcvalue += value[i];
     }
     adcvalue /= 40;
-    count = 0;
+
+    count = 0;//reset count
 
     if(adcvalue > 554)       //adcvalue>52V,assert 60V
     {
@@ -201,8 +224,6 @@ void adc_mileageinit_proc(EatAdc_st* adc)
         }
     }
     mileage_save();
-    /*end this detect*/
-    eat_adc_get(EAT_ADC1, 0, NULL);
 }
 
 void adc_mileageend_proc(EatAdc_st* adc)
@@ -219,6 +240,12 @@ void adc_mileageend_proc(EatAdc_st* adc)
         {
             voltage[count] = adc->v;
             count++;
+            if(count == 39)
+            {
+                /*end this detect next*/
+                eat_adc_get(EAT_ADC1,NULL,adc_mileageend_proc);
+            }
+            return;
         }
         else if(adc->pin == EAT_ADC0)
         {
@@ -272,7 +299,6 @@ void adc_mileageend_proc(EatAdc_st* adc)
             mileage_save();
         }
 
-        eat_adc_get(EAT_ADC1,NULL,NULL);
         count = 0;
         return;
 
@@ -292,6 +318,11 @@ void adc_mileagestart_proc(EatAdc_st* adc)
         {
             voltage[count] = adc->v;
             count++;
+            if(count == 39)
+            {
+                /*end this detect next*/
+                eat_adc_get(EAT_ADC1,NULL,adc_mileagestart_proc);
+            }
         }
         else if(adc->pin == EAT_ADC0)
         {
@@ -309,7 +340,6 @@ void adc_mileagestart_proc(EatAdc_st* adc)
         /*          ����г̳�ʼ��ѹֵ      */
         adcvalue_start = average_voltage;
 
-        eat_adc_get(EAT_ADC1,NULL,NULL);
         count = 0;
         return;
 
@@ -490,27 +520,7 @@ void detectvoltage_timer(short operation)
     }
 }
 
-static void log_mileage_initial(void)
-{
-    regist_cmd("deletemileage", cmd_deletemileage);
-}
 
-int cmd_deletemileage(const char* cmdString, unsigned short length)
-{
-    eat_fs_error_enum fs_Op_ret;
-
-    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(MILEAGEFILE_NAME);
-    if(EAT_FS_NO_ERROR!=fs_Op_ret)
-    {
-        LOG_ERROR("Delete mileagefile Fail,and Return Error is %d",fs_Op_ret);
-        return EAT_FALSE;
-    }
-    else
-    {
-        LOG_DEBUG("Delete mileagefile Success");
-    }
-    return EAT_TRUE;
-}
 
 
 

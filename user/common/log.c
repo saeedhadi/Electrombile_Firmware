@@ -17,8 +17,6 @@
 
 #define LOGFILE_NAME  L"C:\\log_file.txt"
 
-int cmd_deletelog(const char* cmdString, unsigned short length);
-
 
 //TODO: this function need to be refactored
 #warning this function must be refactored
@@ -122,6 +120,24 @@ int cmd_catlog(const char* cmdString, unsigned short length)
         return -1;
     }
 }
+
+int cmd_deletelog(const char* cmdString, unsigned short length)
+{
+    eat_fs_error_enum fs_Op_ret;
+
+    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(LOGFILE_NAME);
+    if(EAT_FS_NO_ERROR!=fs_Op_ret)
+    {
+        LOG_ERROR("Delete logfile Fail,and Return Error is %d",fs_Op_ret);
+        return EAT_FALSE;
+    }
+    else
+    {
+        LOG_DEBUG("Delete logfile Success");
+    }
+    return EAT_TRUE;
+}
+
 
 void log_initial(void)
 {
@@ -286,21 +302,6 @@ void log_file(const char* fmt, ...)
 }
 
 
-int cmd_deletelog(const char* cmdString, unsigned short length)
-{
-    eat_fs_error_enum fs_Op_ret;
 
-    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(LOGFILE_NAME);
-    if(EAT_FS_NO_ERROR!=fs_Op_ret)
-    {
-        LOG_ERROR("Delete logfile Fail,and Return Error is %d",fs_Op_ret);
-        return EAT_FALSE;
-    }
-    else
-    {
-        LOG_DEBUG("Delete logfile Success");
-    }
-    return EAT_TRUE;
-}
 
 
