@@ -19,6 +19,16 @@
 #include "socket.h"
 
 
+typedef int ACTION(void);
+
+typedef struct
+{
+    STATE state;
+    EVENT event;
+    ACTION  *action;
+}STATE_TRANSITIONS;
+
+
 #define DESC_DEF(x) case x:\
                         return #x
 
@@ -82,7 +92,6 @@ static void start_mainloop(void)
     eat_timer_start(TIMER_LOOP, setting.main_loop_timer_period);
 }
 
-typedef int ACTION(void);
 
 int action_CallReady(void)
 {
@@ -216,17 +225,19 @@ int action_loop(void)
     return 0;
 }
 
+#if 0
 ACTION* state_transitions[STATE_MAX][EVT_MAX] =
 {
                       /* EVT_LOOP        EVT_CALL_READY      EVT_GPRS_ATTACHED       EVT_BEARER_HOLD     EVT_HOSTNAME2IP     EVT_SOCKET_CONNECTED    EVT_LOGINED     EVT_HEARTBEAT_LOSE  EVT_SOCKET_DISCONNECTED    EVT_BEARER_DEACTIVATED*/
 /* STATE_INITIAL      */  {NULL,          action_CallReady, },
 /* STATE_WAIT_GPRS    */  {action_loop,   NULL,               action_GprsAttached,},
 /* STATE_WAIT_BEARER  */  {NULL,          NULL,               NULL,                   action_BearHold,},
-/* STATE_WAIT_SOCKET  */  {action_loop,   NULL,               NULL,                   NULL,               NULL,               action_SocketConnected,},
+/* STATE_WAIT_SOCKET  */  {NULL,          NULL,               NULL,                   NULL,               NULL,               action_SocketConnected,},
 /* STATE_WAIT_IPADDR  */  {NULL,          NULL,               NULL,                   NULL,               action_hostname2ip,},
 /* STATE_WAIT_LOGIN   */  {NULL,          NULL,               NULL,                   NULL,               NULL,               NULL,                   action_logined, NULL,               action_reconnect},
 /* STATE_RUNNING      */  {action_loop,   NULL,               NULL,                   NULL,               NULL,               NULL,                   NULL,           NULL,               action_reconnect},
 };
+
 
 //根据当前状态和出发事件，查找状态转换表，决定执行动作，在每个动作里面决定状态迁移
 int fsm_run(EVENT event)
@@ -241,3 +252,44 @@ int fsm_run(EVENT event)
     return 0;
 }
 
+#else
+
+/*
+ * 以下状态转换表用以取代上面的转换矩阵，上表容易理解，下表容易书写
+ */
+STATE_TRANSITIONS state_transitions[] =
+{
+        {STATE_INITIAL,     EVT_CALL_READY,         action_CallReady},
+        {STATE_WAIT_GPRS,   EVT_LOOP,               action_loop},
+        {STATE_WAIT_GPRS,   EVT_GPRS_ATTACHED,      action_GprsAttached},
+        {STATE_WAIT_BEARER, EVT_BEARER_HOLD,        action_BearHold},
+        {STATE_WAIT_SOCKET, EVT_SOCKET_CONNECTED,   action_SocketConnected},
+        {STATE_WAIT_IPADDR, EVT_HOSTNAME2IP,        action_hostname2ip},
+        {STATE_WAIT_LOGIN,  EVT_LOGINED,            action_logined},
+        {STATE_WAIT_LOGIN,  EVT_SOCKET_DISCONNECTED,action_reconnect},
+        {STATE_RUNNING,     EVT_LOOP,               action_loop},
+        {STATE_RUNNING,     EVT_SOCKET_DISCONNECTED,action_reconnect},
+};
+
+int fsm_run(EVENT event)
+{
+    int i = 0;
+    ACTION* action = 0;
+
+    for (i = 0; i < sizeof(state_transitions) / sizeof(state_transitions[0]); i++)
+    {
+        if (state_transitions[i].state == current_state && state_transitions[i].event == event)
+        {
+            action = state_transitions[i].action;
+        }
+    }
+
+    LOG_DEBUG("run FSM State(%s), Event(%s), handler(%p)", fsm_getStateName(current_state), fsm_getEventName(event), action);
+    if (action)
+    {
+        return action();
+    }
+
+    return 0;
+}
+#endif
