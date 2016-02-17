@@ -229,6 +229,19 @@ static int action_runningOnLoop(void)
     }
 }
 
+static int action_waitloginOnLoop(void)
+{
+    static unsigned int login_times = 0;
+
+    /*
+     * 在5个周期内未收到服务器的登录回应包，就重新发送登录包
+     */
+    if (login_times++ > 5)
+    {
+        login_times = 0;
+        cmd_Login();
+    }
+}
 
 #if 0
 ACTION* state_transitions[STATE_MAX][EVT_MAX] =
@@ -273,6 +286,7 @@ STATE_TRANSITIONS state_transitions[] =
         {STATE_WAIT_IPADDR, EVT_HOSTNAME2IP,            action_onDNS},
         {STATE_WAIT_LOGIN,  EVT_LOGINED,                action_onLogined},
         {STATE_WAIT_LOGIN,  EVT_SOCKET_DISCONNECTED,    action_onSocketDisconnected},
+        {STATE_WAIT_LOGIN,  EVT_LOOP,                   action_waitloginOnLoop},
         {STATE_RUNNING,     EVT_LOOP,                   action_runningOnLoop},
         {STATE_RUNNING,     EVT_SOCKET_DISCONNECTED,    action_onSocketDisconnected},
 };
