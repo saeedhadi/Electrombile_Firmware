@@ -124,7 +124,7 @@ eat_bool mileage_save(void)
 
     LOG_INFO("save mileage...");
 
-    fh = eat_fs_Open(MILEAGEFILE_NAME, FS_READ_WRITE);
+    fh = eat_fs_Open(MILEAGEFILE_NAME, FS_READ_WRITE | FS_CREATE);
     if(EAT_FS_NO_ERROR <= fh)
     {
         LOG_DEBUG("open file success, fh=%d.", fh);
@@ -200,6 +200,7 @@ void adc_mileageinit_proc(EatAdc_st* adc)
             mileage_storage.voltage[i] = (39-12*i/MAX_MILEAGE_LEN)*3/103;
         }
     }
+    mileage_save();
     /*end this detect*/
     eat_adc_get(EAT_ADC1, 0, NULL);
 }
