@@ -182,7 +182,9 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
             }
             else
             {
-                LOG_ERROR("SOC_CONNECT failed:%d, maybe the server is OFF!", result);
+                LOG_ERROR("SOC_CONNECT failed, maybe the server is OFF!");
+                fsm_run(EVT_SOCKET_CONNECT_FAILED);
+                eat_soc_close(s);
             }
 
             break;
@@ -190,7 +192,7 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
         case SOC_CLOSE:
             LOG_INFO("SOC_CLOSE.");
 
-            eat_soc_close(socket_id);
+            eat_soc_close(s);
 
             fsm_run(EVT_SOCKET_DISCONNECTED);
 
