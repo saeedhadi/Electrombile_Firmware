@@ -11,7 +11,11 @@
 #include <eat_interface.h>
 
 int event_uart_ready_rd(const EatEvent_st* event);
+int event_uart_ready_wr(const EatEvent_st* event);
 
-void print(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
+int print(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
+
+typedef int UART_WRITER(void);
+void uart_setWrite(UART_WRITER writer);
 
 #endif /* USER_ELECTROMBILE_UART_H_ */

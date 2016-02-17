@@ -18,6 +18,12 @@
 #include "log.h"
 
 
+UART_WRITER* uart_writer = 0;
+void uart_setWrite(UART_WRITER writer)
+{
+    uart_writer = writer;
+}
+
 int event_uart_ready_rd(const EatEvent_st* event)
 {
 	u16 length = 0;
@@ -40,8 +46,22 @@ int event_uart_ready_rd(const EatEvent_st* event)
 	return 0;
 }
 
+int event_uart_ready_wr(const EatEvent_st* event)
+{
+    if (uart_writer)
+    {
+        uart_writer();
+    }
+    else
+    {
+        LOG_INFO("uart wr event not handled");
+    }
 
-void print(const char* fmt, ...)
+    return 0;
+}
+
+
+int print(const char* fmt, ...)
 {
     char buf[1024] = {0};
     int length = 0;
@@ -53,5 +73,5 @@ void print(const char* fmt, ...)
 
     length = strlen(buf);
 
-    eat_uart_write(EAT_UART_1, buf, length);
+    return eat_uart_write(EAT_UART_1, buf, length);
 }
