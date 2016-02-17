@@ -11,6 +11,7 @@
 #include <eat_periphery.h>
 
 #include "setting.h"
+#include "debug.h"
 #include "log.h"
 #include "msg.h"
 #include "client.h"
@@ -36,6 +37,8 @@ extern double mileage;
 
 static void msg_mileage_send(MSG_MILEAGE_REQ msg_mileage);
 static eat_bool mileage_reload(void);
+static void log_mileage_initial(void);
+int cmd_deletemileage(const char* cmdString, unsigned short length);
 
 
 
@@ -96,6 +99,9 @@ static eat_bool mileage_reload(void)
 void mileage_initial(void)
 {
     LOG_INFO("milegae initial to default value.");
+
+    log_mileage_initial();
+
     /*go to adc_mileageinit_proc to judge the type of the battery*/
     eat_adc_get(EAT_ADC1, ADC1_PERIOD, adc_mileageinit_proc);
 }
@@ -481,6 +487,28 @@ void detectvoltage_timer(short operation)
         LOG_INFO("TIMER_VOLTAGE_GET stop!");
         eat_timer_stop(TIMER_VOLTAGE_GET);
     }
+}
+
+static void log_mileage_initial(void)
+{
+    regist_cmd("deletemileage", cmd_deletemileage);
+}
+
+int cmd_deletemileage(const char* cmdString, unsigned short length)
+{
+    eat_fs_error_enum fs_Op_ret;
+
+    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(MILEAGEFILE_NAME);
+    if(EAT_FS_NO_ERROR!=fs_Op_ret)
+    {
+        LOG_ERROR("Delete mileagefile Fail,and Return Error is %d",fs_Op_ret);
+        return EAT_FALSE;
+    }
+    else
+    {
+        LOG_DEBUG("Delete mileagefile Success");
+    }
+    return EAT_TRUE;
 }
 
 

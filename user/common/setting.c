@@ -36,7 +36,7 @@ typedef struct
 SETTING setting;
 
 static void log_setting_initial(void);
-int cmd_deleteseeting(const char* cmdString, unsigned short length);
+int cmd_deletesetting(const char* cmdString, unsigned short length);
 
 
 
@@ -214,10 +214,10 @@ eat_bool setting_save(void)
 
 static void log_setting_initial(void)
 {
-    regist_cmd("deletesetting", cmd_deleteseeting);
+    regist_cmd("deletesetting", cmd_deletesetting);
 }
 
-int cmd_deleteseeting(const char* cmdString, unsigned short length)
+int cmd_deletesetting(const char* cmdString, unsigned short length)
 {
     eat_fs_error_enum fs_Op_ret;
 
