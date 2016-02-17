@@ -18,7 +18,8 @@
 #define MODEM_READ_CMD  "?"
 #define MODEM_WRITE_CMD "="
 
-#define NEALINE    "\n"
+#define CR  "\d"    //CR (carriage return)
+#define LF  "\n"    //LF (line feed - new line)
 
 
 #define AT_CGATT    "AT+CGATT"
@@ -41,7 +42,7 @@ static eat_bool modem_cmd(const unsigned char *cmd)
 
 eat_bool modem_ReadGPRSStatus(void)
 {
-    unsigned char* cmd = AT_CGATT MODEM_READ_CMD NEALINE;
+    unsigned char* cmd = AT_CGATT MODEM_READ_CMD LF;
 
     return modem_cmd(cmd);
 }
