@@ -22,7 +22,7 @@
 #define DESC_DEF(x) case x:\
                         return #x
 
-static STATE status = STATE_INITIAL;
+static STATE current_state = STATE_INITIAL;
 
 static char* fsm_getStateName(STATE sts)
 {
@@ -40,7 +40,7 @@ static char* fsm_getStateName(STATE sts)
         default:
         {
             static char state_name[10] = {0};
-            sprintf(state_name, "%d", status);
+            sprintf(state_name, "%d", current_state);
             return state_name;
         }
     }
@@ -64,17 +64,17 @@ static char* fsm_getEventName(EVENT event)
         default:
         {
             static char event_name[10] = {0};
-            sprintf(event_name, "%d", status);
+            sprintf(event_name, "%d", current_state);
             return event_name;
         }
     }
 }
 
-static void fsm_trans(STATE sts)
+static void fsm_trans(STATE state)
 {
-    LOG_DEBUG("state: %s -> %s", fsm_getStateName(status), fsm_getStateName(sts));
+    LOG_DEBUG("state: %s -> %s", fsm_getStateName(current_state), fsm_getStateName(state));
 
-    status = sts;
+    current_state = state;
 }
 
 static void start_mainloop(void)
@@ -189,7 +189,7 @@ int action_loop(void)
 {
     static unsigned int heartbeat_times = 1;
 
-    switch (status)
+    switch (current_state)
     {
     case STATE_WAIT_GPRS:
         modem_ReadGPRSStatus();
@@ -231,9 +231,9 @@ ACTION* state_transitions[STATE_MAX][EVT_MAX] =
 //根据当前状态和出发事件，查找状态转换表，决定执行动作，在每个动作里面决定状态迁移
 int fsm_run(EVENT event)
 {
-    ACTION* action = state_transitions[status][event];
+    ACTION* action = state_transitions[current_state][event];
 
-    LOG_DEBUG("run FSM State(%s), Event(%s)", fsm_getStateName(status), fsm_getEventName(event));
+    LOG_DEBUG("run FSM State(%s), Event(%s)", fsm_getStateName(current_state), fsm_getEventName(event));
     if (action)
     {
         return action();
