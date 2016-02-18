@@ -51,9 +51,9 @@ void* alloc_rspMsg(const MSG_HEADER* pMsg)
             {CMD_TIMER,     sizeof(MSG_GPSTIMER_RSP)},
             {CMD_MILEAGE,   sizeof(MSG_MILEAGE_REQ)},
 
-            {CMD_UPGRADE_START, sizeof MSG_UPGRADE_START_RSP},
-            {CMD_UPGRADE_DATA,  sizeof MSG_UPGRADE_DATA_RSP},
-            {CMD_UPGRADE_END,   sizeof MSG_UPGRADE_END_RSP},
+            {CMD_UPGRADE_START, sizeof(MSG_UPGRADE_START_RSP)},
+            {CMD_UPGRADE_DATA,  sizeof(MSG_UPGRADE_DATA_RSP)},
+            {CMD_UPGRADE_END,   sizeof(MSG_UPGRADE_END_RSP)},
     };
 
     for (i = 0; i < sizeof(rsp_msg_length_map) / sizeof(rsp_msg_length_map[0]); i++)
