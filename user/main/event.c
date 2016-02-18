@@ -204,7 +204,7 @@ static int ThreadCmd_AutolockState(const MSG_THREAD* msg)
          LOG_ERROR("msg from THREAD_VIBRATION error!");
          return -1;
     }
-    autolock_msg = alloc_msg(CMD_AUTODEFEND_STATE, sizeof(MSG_AUTODEFEND_STATE_REQ));
+    autolock_msg = alloc_msg(CMD_DEFEND_NOTIFY, sizeof(MSG_AUTODEFEND_STATE_REQ));
     autolock_msg->state = msg_state->state;
 
     LOG_DEBUG("send seek value message.");

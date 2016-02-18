@@ -40,7 +40,7 @@ enum
     CMD_DEFEND_ON       = 19,
     CMD_DEFEND_OFF      = 20,
     CMD_DEFEND_GET      = 21,
-    CMD_AUTODEFEND_STATE   = 22
+    CMD_DEFEND_NOTIFY   = 22
 
 };
 
