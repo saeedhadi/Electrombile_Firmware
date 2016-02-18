@@ -16,6 +16,7 @@
 #include "socket.h"
 #include "fsm.h"
 #include "version.h"
+#include "upgrade.h"
 
 //TODO: the following header file should be removed
 #include "timer.h"
@@ -359,6 +360,7 @@ int cmd_UpgradeStart_rsp(const void* msg)
 {
     MSG_UPGRADE_START* req = (MSG_UPGRADE_START*)msg;
     MSG_UPGRADE_START_RSP* rsp = NULL;
+    int rc = 0;
 
     if (req->version <= VERSION)    //No need to upgrade, normally not happened
     {
@@ -381,6 +383,7 @@ int cmd_UpgradeStart_rsp(const void* msg)
     }
 
     //创建升级包文件，回应可以升级
+    rc = upgrade_createFile();
 
     return 0;
 }
@@ -389,11 +392,10 @@ int cmd_UpgradeData_rsp(const void* msg)
 {
     MSG_UPGRADE_DATA* req = (MSG_UPGRADE_DATA*)msg;
     MSG_UPGRADE_DATA_RSP* rsp = NULL;
+    int rc = 0;
 
     //TODO: complete the following procedure
-    //打开升级包文件
-    //fseek to req->offset
-    //fwrite req->data
+    rc = upgrade_appendFile(req->offset, req->data, req->header.length - sizeof(req->offset));
     //response req->offset + length of req->data
 
     return 0;
@@ -403,6 +405,7 @@ int cmd_UpgradeEnd_rsp(const void* msg)
 {
     MSG_UPGRADE_END* req = (MSG_UPGRADE_END*)msg;
     MSG_UPGRADE_END_RSP* rsp = NULL;
+    int rc = 0;
 
     //TODO: complete the following procedure
     //校验升级包的大小是否和req->size一致
@@ -410,6 +413,7 @@ int cmd_UpgradeEnd_rsp(const void* msg)
     //响应消息
 
     //启动升级
+    rc = upgrade_do();
 
     return 0;
 }
