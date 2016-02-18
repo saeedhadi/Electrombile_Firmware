@@ -205,7 +205,7 @@ static int ThreadCmd_AutolockState(const MSG_THREAD* msg)
          return -1;
     }
     autolock_msg = alloc_msg(CMD_AUTODEFEND_STATE, sizeof(MSG_AUTODEFEND_STATE_REQ));
-    autolock_msg->state = htonl((char)msg_state->state);
+    autolock_msg->state = msg_state->state;
 
     LOG_DEBUG("send seek value message.");
     socket_sendData(autolock_msg, sizeof(MSG_AUTODEFEND_STATE_REQ));
