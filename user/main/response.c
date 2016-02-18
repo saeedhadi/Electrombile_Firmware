@@ -15,6 +15,7 @@
 #include "thread.h"
 #include "socket.h"
 #include "fsm.h"
+#include "version.h"
 
 //TODO: the following header file should be removed
 #include "timer.h"
@@ -354,3 +355,61 @@ int cmd_Server_rsp(const void* msg)
     return 0;
 }
 
+int cmd_UpgradeStart_rsp(const void* msg)
+{
+    MSG_UPGRADE_START* req = (MSG_UPGRADE_START*)msg;
+    MSG_UPGRADE_START_RSP* rsp = NULL;
+
+    if (req->version <= VERSION)    //No need to upgrade, normally not happened
+    {
+        rsp = alloc_rspMsg(msg);
+        if (!rsp)
+        {
+            LOG_ERROR("alloc rsp msg failed:cmd=%d", req->header.cmd);
+            return -1;
+        }
+        rsp->code = -1;
+        socket_sendData(rsp,sizeof(MSG_UPGRADE_START_RSP));
+        return -1;
+    }
+
+    //TODO: 调用eat_fs_GetFolderSize获取磁盘剩余空间大小，是否足以容纳 升级包大小(req->size)
+    if (0)
+    {
+        //返回错误
+        return -1;
+    }
+
+    //创建升级包文件，回应可以升级
+
+    return 0;
+}
+
+int cmd_UpgradeData_rsp(const void* msg)
+{
+    MSG_UPGRADE_DATA* req = (MSG_UPGRADE_DATA*)msg;
+    MSG_UPGRADE_DATA_RSP* rsp = NULL;
+
+    //TODO: complete the following procedure
+    //打开升级包文件
+    //fseek to req->offset
+    //fwrite req->data
+    //response req->offset + length of req->data
+
+    return 0;
+}
+
+int cmd_UpgradeEnd_rsp(const void* msg)
+{
+    MSG_UPGRADE_END* req = (MSG_UPGRADE_END*)msg;
+    MSG_UPGRADE_END_RSP* rsp = NULL;
+
+    //TODO: complete the following procedure
+    //校验升级包的大小是否和req->size一致
+    //校验升级包的校验和是否和req->checksum一致
+    //响应消息
+
+    //启动升级
+
+    return 0;
+}
