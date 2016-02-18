@@ -46,6 +46,32 @@ void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
 	}
 }
 
+
+static eat_bool AutolockStateSend(eat_bool state)
+{
+    eat_bool ret;
+    u8 msgLen = sizeof(MSG_THREAD) + sizeof(AUTOLOCK_INFO);
+    MSG_THREAD* msg = allocMsg(msgLen);
+    AUTOLOCK_INFO* msg_state = 0;
+
+    if (!msg)
+    {
+        LOG_ERROR("alloc msg failed!");
+        return EAT_FALSE;
+    }
+
+    msg->cmd = CMD_THREAD_AUTOLOCK;
+    msg->length = sizeof(AUTOLOCK_INFO);
+
+    msg_state = (AUTOLOCK_INFO*)msg->data;
+    msg_state->state = state;
+
+    LOG_INFO("send autolock state msg to main thread!");
+    ret = sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, msgLen);
+
+    return ret;
+}
+
 static void move_alarm_timer_handler()
 {
     unsigned char readbuf[3];
@@ -180,7 +206,7 @@ void BT_at_read_handler()
         {
             set_vibration_state(EAT_FALSE);
            LOG_DEBUG("set defend switch off.");
-       }       
+       }
     }
 }
 
@@ -190,7 +216,7 @@ void app_vibration_thread(void *data)
 	bool ret;
 	static int number=0;
 	LOG_INFO("vibration thread start.");
-      
+
 	ret = mma8652_init();
 	if (!ret)
 	{
@@ -213,7 +239,7 @@ void app_vibration_thread(void *data)
                 {
                     case TIMER_VIBRATION:
                         vibration_timer_handler();
-                        
+
                        // if(get_ScanCompletion_state())
                        if(number++>30)
                         {       LOG_DEBUG("BTSCAN.");
@@ -299,12 +325,11 @@ static void vibration_timer_handler(void)
             {
                 timerCount++;
 
-                if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
+                if(timerCount * setting.vibration_timer_period*10 >= (get_autodefend_period() * 60000))
                 {
                     LOG_INFO("vibration state auto locked.");
 
-#warning cannot call cmd_Autodefendstate directly, because it is in the main thread, it should be replaced by thread message
-                    cmd_Autodefendstate(EAT_FALSE);
+                    AutolockStateSend(EAT_TRUE);    //TODO:send autolock_msg to main thread
 
                     set_vibration_state(EAT_TRUE);
 

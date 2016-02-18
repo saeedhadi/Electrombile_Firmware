@@ -23,8 +23,8 @@
 
 #define EAT_ADC0 EAT_PIN23_ADC1
 #define EAT_ADC1 EAT_PIN24_ADC2
-#define ADC1_PERIOD 10  //ms
-#define ADC_RELATIVE_VALUE 1024.f/2.8
+#define ADC1_PERIOD 10  //sampling period : 10ms
+#define ADC_RELATIVE_VALUE 1024.f/2.8   //reference voltage is 2.8V
 
 
 DumpVoltage mileage_storage = {0};
@@ -38,7 +38,9 @@ extern double mileage;
 static void msg_mileage_send(MSG_MILEAGE_REQ msg_mileage);
 static eat_bool mileage_reload(void);
 
-
+/*
+*fun:load the default mileage value or that in mileagefile
+*/
 eat_bool mileage_restore(void)
 {
 
@@ -48,6 +50,9 @@ eat_bool mileage_restore(void)
     LOG_INFO("restore mileage from file");
     return mileage_reload();
 }
+/*
+*reload the value in mileagefile
+*/
 static eat_bool mileage_reload(void)
 {
 
@@ -74,6 +79,7 @@ static eat_bool mileage_reload(void)
     if (EAT_FS_NO_ERROR == rc)
     {
         LOG_DEBUG("read mileage file success.");
+        /*load and record the value in mileagefile*/
         for(i = 0;i < MAX_MILEAGE_LEN;i++)
         {
             mileage_storage.dump_mileage[i] = storage.dump_mileage[i];
@@ -120,7 +126,9 @@ void mileage_initial(void)
     /*go to adc_mileageinit_proc to judge the type of the battery*/
     eat_adc_get(EAT_ADC1, ADC1_PERIOD, adc_mileageinit_proc);
 }
-
+/*
+*fun:save the value in mileage_storage
+*/
 eat_bool mileage_save(void)
 {
     FS_HANDLE fh;
@@ -162,7 +170,9 @@ eat_bool mileage_save(void)
 
     return ret;
 }
-
+/*
+*fun:read 40 times ADC1's value ,average and judge the battery type
+*/
 void adc_mileageinit_proc(EatAdc_st* adc)
 {
     u16 adcvalue = 0;
@@ -187,7 +197,7 @@ void adc_mileageinit_proc(EatAdc_st* adc)
     {
         return;
     }
-    /*40 ���洢ֵ ȡƽ����*/
+    /* average the value of the 40 times' */
     for(i = 0;i < 40;i++)
     {
         adcvalue += value[i];
@@ -202,6 +212,7 @@ void adc_mileageinit_proc(EatAdc_st* adc)
         for(i = 0;i <MAX_MILEAGE_LEN;i++)
         {
             mileage_storage.dump_mileage[i] = 0;
+            /*电压按照设计标准上调3V，计算范围为12V 3/103为电阻分压参数*/
             mileage_storage.voltage[i] = (63-12*i/MAX_MILEAGE_LEN)*3/103;
         }
     }
@@ -211,6 +222,7 @@ void adc_mileageinit_proc(EatAdc_st* adc)
         for(i = 0;i <MAX_MILEAGE_LEN;i++)
         {
             mileage_storage.dump_mileage[i] = 0;
+            /*电压按照设计标准上调3V，计算范围为12V 3/103为电阻分压参数*/
             mileage_storage.voltage[i] = (51-12*i/MAX_MILEAGE_LEN)*3/103;
         }
     }
@@ -220,12 +232,15 @@ void adc_mileageinit_proc(EatAdc_st* adc)
         for(i = 0;i <MAX_MILEAGE_LEN;i++)
         {
             mileage_storage.dump_mileage[i] = 0;
+            /*电压按照设计标准上调3V，计算范围为12V 3/103为电阻分压参数*/
             mileage_storage.voltage[i] = (39-12*i/MAX_MILEAGE_LEN)*3/103;
         }
     }
     mileage_save();
 }
-
+/*
+*fun:when the trip is over detect the battery value and caculate the mileage
+*/
 void adc_mileageend_proc(EatAdc_st* adc)
 {
     static short count = 0;
@@ -254,7 +269,7 @@ void adc_mileageend_proc(EatAdc_st* adc)
     }
     else
     {
-        /*          �������յ�ѹֵ&&�޸ı�          */
+        /* average the value of the 40 times' */
         for(count = 0;count <40;count++)
         {
             average_voltage += voltage[count];
@@ -265,13 +280,14 @@ void adc_mileageend_proc(EatAdc_st* adc)
         while(average_voltage/ADC_RELATIVE_VALUE > mileage_storage.voltage[end++]);
         --start;
         --end;
-        if(start > end)//���̵�ѹС�ڽ�����ѹ
+        if(start > end)//if the value of start is ahead the value of end,abort it
         {
             LOG_INFO("data is invalid , abort...");
             /*abort this mileage data*/
         }
-        else if(start == end)//���̵�ѹ���ڽ�����ѹ
+        else if(start == end)
         {
+            //if the trip is only in one block,judge if it is larger than the old
             if(mileage > mileage_storage.dump_mileage[start])
             {
                 mileage_storage.dump_mileage[start] = mileage;
@@ -305,7 +321,9 @@ void adc_mileageend_proc(EatAdc_st* adc)
     }
 }
 
-
+/*
+*fun:when the trip start, detect the battery value to start to caculate the mileage
+*/
 void adc_mileagestart_proc(EatAdc_st* adc)
 {
     static short count = 0;
@@ -331,13 +349,14 @@ void adc_mileagestart_proc(EatAdc_st* adc)
     }
     else
     {
+        /* average the value of the 40 times' */
         for(count = 0;count <40;count++)
         {
             average_voltage += voltage[count];
         }
         average_voltage /= 40;
 
-        /*          ����г̳�ʼ��ѹֵ      */
+        /*record the start value*/
         adcvalue_start = average_voltage;
 
         count = 0;
@@ -345,7 +364,9 @@ void adc_mileagestart_proc(EatAdc_st* adc)
 
     }
 }
-
+/*
+*fun:when the electric vehicle stop,detect the battery value 3min once(not in use)
+*/
 void adc_voltage_proc(EatAdc_st* adc)
 {
     static short count = 0;
@@ -358,6 +379,11 @@ void adc_voltage_proc(EatAdc_st* adc)
         {
             voltage[count] = adc->v;
             count++;
+            if(count == 39)
+            {
+                /*end this detect next*/
+                eat_adc_get(EAT_ADC1,NULL,adc_voltage_proc);
+            }
         }
         else if(adc->pin == EAT_ADC0)
         {
@@ -366,16 +392,16 @@ void adc_voltage_proc(EatAdc_st* adc)
     }
     else
     {
+        /* average the value of the 40 times' */
         for(count = 0;count <40;count++)
         {
             average_voltage += voltage[count];
         }
         average_voltage /= 40;
 
-        /*          �洢40�ε�ѹƽ��ֵ      */
+        /* record the adcvalue */
         adcvalue = average_voltage;
 
-        eat_adc_get(EAT_ADC1,NULL,NULL);
         count = 0;
         return;
 
