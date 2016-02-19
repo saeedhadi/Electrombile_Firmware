@@ -201,6 +201,13 @@ static int action_onDNS(void)
     return 0;
 }
 
+static int action_onDNSFailed(void)
+{
+    fsm_trans(STATE_WAIT_GPRS);
+    return 0;
+}
+
+
 static int action_onSocketDisconnected(void)
 {
     fsm_trans(STATE_WAIT_GPRS);
@@ -294,6 +301,7 @@ STATE_TRANSITIONS state_transitions[] =
         {STATE_WAIT_SOCKET, EVT_SOCKET_CONNECTED,       action_onSocketConnected},
         {STATE_WAIT_SOCKET, EVT_SOCKET_CONNECT_FAILED,  action_onSocketConnectFailed},
         {STATE_WAIT_IPADDR, EVT_HOSTNAME2IP,            action_onDNS},
+        {STATE_WAIT_IPADDR, EVT_HOSTNAME2IP_FAILED,     action_onDNSFailed},
         {STATE_WAIT_LOGIN,  EVT_LOGINED,                action_onLogined},
         {STATE_WAIT_LOGIN,  EVT_SOCKET_DISCONNECTED,    action_onSocketDisconnected},
         {STATE_WAIT_LOGIN,  EVT_LOOP,                   action_waitloginOnLoop},

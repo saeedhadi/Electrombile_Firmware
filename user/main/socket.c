@@ -141,7 +141,8 @@ static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
 	}
 	else
 	{
-	    LOG_ERROR("hostname_notify_cb error:%d", result);
+	    LOG_ERROR("hostname_notify_cb error");
+	    fsm_run(EVT_HOSTNAME2IP_FAILED);
 	}
 
     return;
