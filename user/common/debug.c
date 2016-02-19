@@ -156,11 +156,11 @@ int debug_proc(const unsigned char* cmdString, unsigned short length)
 {
     int i = 0;
 
-    cmdString = trim_left(cmdString);
+    const unsigned char* cmd = trim_left(cmdString);
 
     for (i = 0; i < MAX_CMD_NUMBER && cmd_map[i].action; i++)
     {
-        if (strncmp(cmdString, cmd_map[i].cmd, strlen(cmd_map[i].cmd)) == 0)
+        if (strncmp(cmd, cmd_map[i].cmd, strlen(cmd_map[i].cmd)) == 0)
         {
             return cmd_map[i].action(cmdString, length);
         }
