@@ -141,7 +141,8 @@ static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
 	}
 	else
 	{
-	    LOG_ERROR("hostname_notify_cb error:%d", result);
+	    LOG_ERROR("hostname_notify_cb error");
+	    fsm_run(EVT_HOSTNAME2IP_FAILED);
 	}
 
     return;
@@ -190,7 +191,7 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
             break;
 
         case SOC_CLOSE:
-            LOG_INFO("SOC_CLOSE.");
+            LOG_INFO("SOC_CLOSE:socketid = %d", s);
 
             eat_soc_close(s);
 
@@ -342,14 +343,6 @@ int socket_setup(void)
     }
 
     return socket_connect();
-}
-
-void socket_close(void)
-{
-    LOG_INFO("close the socket(%d).", socket_id);
-    eat_soc_close(socket_id);
-
-    return;
 }
 
 s32 socket_sendData(void* data, s32 len)

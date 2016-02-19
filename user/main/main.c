@@ -130,7 +130,6 @@ void app_main(void *data)
     setting_restore();
     mileage_restore();
     startWatchdog();
-    eat_timer_start(TIMER_WATCHDOG, setting.watchdog_timer_period);
 
     while(EAT_TRUE)
     {

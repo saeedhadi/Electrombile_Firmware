@@ -11,7 +11,7 @@
 #include "watchdog.h"
 #include "log.h"
 
-#define REBOOT_TIMEOUT  60000   //60s
+#define REBOOT_TIMEOUT  5 * 60 * 1000   // 5 minutes
 
 void startWatchdog(void)
 {

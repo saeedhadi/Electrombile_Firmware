@@ -126,7 +126,6 @@ static void setting_initial(void)
     setting.port = 9880;
 
     /* Timer configuration */
-    setting.watchdog_timer_period = 50000;
     setting.main_loop_timer_period = 5000;
     setting.vibration_timer_period = 1000;
     setting.seek_timer_period = 2000;

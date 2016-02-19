@@ -201,6 +201,13 @@ static int action_onDNS(void)
     return 0;
 }
 
+static int action_onDNSFailed(void)
+{
+    fsm_trans(STATE_WAIT_GPRS);
+    return 0;
+}
+
+
 static int action_onSocketDisconnected(void)
 {
     fsm_trans(STATE_WAIT_GPRS);
@@ -210,12 +217,13 @@ static int action_onSocketDisconnected(void)
 
 static int action_waitGprsOnLoop(void)
 {
-    modem_ReadGPRSStatus();
+    return modem_ReadGPRSStatus();
 }
 
 static int action_runningOnLoop(void)
 {
     static unsigned int heartbeat_times = 1;
+    static unsigned int watchdog_times = 1;
 
     /*
      * 利用主循环定时器来构造心跳包的定时器：主循环为10s，每次心跳定时器计数，达到3分钟就发心跳包
@@ -227,6 +235,13 @@ static int action_runningOnLoop(void)
         LOG_DEBUG("send heart beat");
         cmd_Heartbeat();
     }
+
+    if (watchdog_times++ % (50 / 5) == 0)   // the loop timer is 5 seconrd, the watch dog timer is 50 seconds
+    {
+        feedWatchdog();
+    }
+
+    return 0;
 }
 
 static int action_waitloginOnLoop(void)
@@ -241,6 +256,8 @@ static int action_waitloginOnLoop(void)
         login_times = 0;
         cmd_Login();
     }
+
+    return 0;
 }
 
 #if 0
@@ -284,6 +301,7 @@ STATE_TRANSITIONS state_transitions[] =
         {STATE_WAIT_SOCKET, EVT_SOCKET_CONNECTED,       action_onSocketConnected},
         {STATE_WAIT_SOCKET, EVT_SOCKET_CONNECT_FAILED,  action_onSocketConnectFailed},
         {STATE_WAIT_IPADDR, EVT_HOSTNAME2IP,            action_onDNS},
+        {STATE_WAIT_IPADDR, EVT_HOSTNAME2IP_FAILED,     action_onDNSFailed},
         {STATE_WAIT_LOGIN,  EVT_LOGINED,                action_onLogined},
         {STATE_WAIT_LOGIN,  EVT_SOCKET_DISCONNECTED,    action_onSocketDisconnected},
         {STATE_WAIT_LOGIN,  EVT_LOOP,                   action_waitloginOnLoop},
