@@ -34,7 +34,6 @@ typedef struct
 	//Timer configuration
     struct
     {
-        u32 watchdog_timer_period;
         u32 main_loop_timer_period;
         u32 vibration_timer_period;
         u32 seek_timer_period;

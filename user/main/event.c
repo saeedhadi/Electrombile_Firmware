@@ -10,7 +10,6 @@
 #include <eat_uart.h>
 
 #include "timer.h"
-#include "watchdog.h"
 #include "thread_msg.h"
 #include "log.h"
 #include "uart.h"
@@ -101,12 +100,6 @@ static int event_timer(const EatEvent_st* event)
 {
     switch (event->data.timer.timer_id)
     {
-        case TIMER_WATCHDOG:
-            LOG_DEBUG("TIMER_WATCHDOG expire.");
-            feedWatchdog();
-            eat_timer_start(event->data.timer.timer_id, setting.watchdog_timer_period);
-            break;
-
         case TIMER_LOOP:
             LOG_DEBUG("TIMER_LOOP expire.");
             fsm_run(EVT_LOOP);

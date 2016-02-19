@@ -210,12 +210,13 @@ static int action_onSocketDisconnected(void)
 
 static int action_waitGprsOnLoop(void)
 {
-    modem_ReadGPRSStatus();
+    return modem_ReadGPRSStatus();
 }
 
 static int action_runningOnLoop(void)
 {
     static unsigned int heartbeat_times = 1;
+    static unsigned int watchdog_times = 1;
 
     /*
      * 利用主循环定时器来构造心跳包的定时器：主循环为10s，每次心跳定时器计数，达到3分钟就发心跳包
@@ -227,6 +228,13 @@ static int action_runningOnLoop(void)
         LOG_DEBUG("send heart beat");
         cmd_Heartbeat();
     }
+
+    if (watchdog_times++ % (50 / 5) == 0)   // the loop timer is 5 seconrd, the watch dog timer is 50 seconds
+    {
+        feedWatchdog();
+    }
+
+    return 0;
 }
 
 static int action_waitloginOnLoop(void)
@@ -241,6 +249,8 @@ static int action_waitloginOnLoop(void)
         login_times = 0;
         cmd_Login();
     }
+
+    return 0;
 }
 
 #if 0
