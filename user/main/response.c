@@ -369,7 +369,7 @@ int cmd_UpgradeStart_rsp(const void* msg)
     }
     else
     {
-        //TODO: 调用eat_fs_GetFolderSize获取磁盘剩余空间大小，判断是否足以容纳 升级包大小(req->size)
+        //调用eat_fs_GetFolderSize获取磁盘剩余空间大小，判断是否足以容纳 升级包大小(req->size)
         FolderSize = eat_fs_GetFolderSize(APP_FOLDER_NAME);
         if(FolderSize >= 0)
         {
@@ -411,12 +411,35 @@ int cmd_UpgradeData_rsp(const void* msg)
     MSG_UPGRADE_DATA* req = (MSG_UPGRADE_DATA*)msg;
     MSG_UPGRADE_DATA_RSP* rsp = NULL;
     int rc = 0;
+    //check if the data is right
+    if(req->header.length - sizeof(req->offset) != strlen(req->data))
+    {
+        LOG_ERROR("Upgrade:receive data length error.");
+        rc = -1;
+    }
+    else
+    {
+        rc = upgrade_appendFile(req->offset, req->data, req->header.length - sizeof(req->offset));
+    }
 
-    //TODO: complete the following procedure
-    rc = upgrade_appendFile(req->offset, req->data, req->header.length - sizeof(req->offset));
-    //response req->offset + length of req->data
+    if(rc == 0)     // 0 express no error
+    {
+        //response req->offset + length of req->data
+        rsp = alloc_rspMsg(msg);
+        if (!rsp)
+        {
+            LOG_ERROR("alloc rsp msg failed:cmd=%d", req->header.cmd);
+            return -1;
+        }
+        rsp->offset= req->offset + strlen(req->data);
+        socket_sendData(rsp,sizeof(MSG_UPGRADE_DATA_RSP));
+    }
+    else
+    {
+        LOG_ERROR("receive upgrade data failed , do not send rsp .");
+    }
 
-    return 0;
+    return rc;
 }
 
 int cmd_UpgradeEnd_rsp(const void* msg)
