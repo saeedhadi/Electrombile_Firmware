@@ -24,7 +24,7 @@
 #include "data.h"
 #include "mileage.h"
 
-
+#define APP_FOLDER_NAME L"C"
 int cmd_Login_rsp(const void* msg)
 {
     LOG_DEBUG("get login respond.");
@@ -361,29 +361,47 @@ int cmd_UpgradeStart_rsp(const void* msg)
     MSG_UPGRADE_START* req = (MSG_UPGRADE_START*)msg;
     MSG_UPGRADE_START_RSP* rsp = NULL;
     int rc = 0;
+    int FolderSize = 0;
 
     if (req->version <= VERSION)    //No need to upgrade, normally not happened
     {
-        rsp = alloc_rspMsg(msg);
-        if (!rsp)
+        rc = -1;
+    }
+    else
+    {
+        //TODO: 调用eat_fs_GetFolderSize获取磁盘剩余空间大小，判断是否足以容纳 升级包大小(req->size)
+        FolderSize = eat_fs_GetFolderSize(APP_FOLDER_NAME);
+        if(FolderSize >= 0)
         {
-            LOG_ERROR("alloc rsp msg failed:cmd=%d", req->header.cmd);
+            LOG_DEBUG("Get Folder Size Success,and The Folder Size is %d",FolderSize);
+        }
+        else
+        {
+            LOG_ERROR("Get Folder Size Fail, and Return Error is %d",FolderSize);
             return -1;
         }
-        rsp->code = -1;
-        socket_sendData(rsp,sizeof(MSG_UPGRADE_START_RSP));
-        return -1;
-    }
 
-    //TODO: 调用eat_fs_GetFolderSize获取磁盘剩余空间大小，是否足以容纳 升级包大小(req->size)
-    if (0)
+        if (req->size > FolderSize)
+        {
+            LOG_DEBUG("Free disk is not enough , can not start app_upgrade!");
+            rc = -1;
+        }
+        else
+        {
+            LOG_DEBUG("Free disk is enough , create file to start app_upgrade!");
+            //创建升级包文件
+            rc = upgrade_createFile();
+        }
+    }
+    //回应是否可以升级
+    rsp = alloc_rspMsg(msg);
+    if (!rsp)
     {
-        //返回错误
+        LOG_ERROR("alloc rsp msg failed:cmd=%d", req->header.cmd);
         return -1;
     }
-
-    //创建升级包文件，回应可以升级
-    rc = upgrade_createFile();
+    rsp->code = rc;
+    socket_sendData(rsp,sizeof(MSG_UPGRADE_START_RSP));
 
     return 0;
 }
