@@ -40,7 +40,7 @@ typedef struct
 
 typedef struct
 {
-    float intensity;
+    short intensity;
 }SEEK_INFO;
 
 #pragma anon_unions

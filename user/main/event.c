@@ -258,7 +258,7 @@ static int threadCmd_Seek(const MSG_THREAD* msg)
         return -1;
     }
 
-    LOG_DEBUG("receive thread command CMD_SEEK: value(%f).", seek->intensity);
+    LOG_DEBUG("receive thread command CMD_SEEK: value(%d).", seek->intensity);
 
     seek_msg = alloc_msg(CMD_433, sizeof(MSG_433));
     if (!seek_msg)
