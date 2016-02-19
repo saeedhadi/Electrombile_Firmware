@@ -191,32 +191,6 @@ void log_hex(const char* data, int length)
     }
 }
 
-void log_remote(const char* fmt, ...) //when socket connected,LOG_remote;else LOG_location
-{
-    char buf[1024] = {0};
-    int length = 0;
-
-    va_list arg;
-    va_start(arg, fmt);
-    vsnprintf(buf, 1024, fmt, arg);
-    va_end(arg);
-
-    length = strlen(buf);
-
-    //TODO: send via socket
-/*
-    if (socket_conneted())
-    {
-        cmd_Wild(buf, length);
-    }
-    else
-    {
-        eat_trace("%s", buf);
-    }
-
-*/
-}
-
 void log_file(const char* fmt, ...)
 {
     //eat_bool ret = EAT_FALSE;
