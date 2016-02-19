@@ -31,8 +31,38 @@ static void ascii_2_unicode(u16* out, u8* in)
     }
 
 }
+
+#define MAX_FILENAME_LEN    32
 static int fs_ls(const unsigned char* cmdString, unsigned short length)
 {
+    FS_HANDLE fh;
+    EAT_FS_DOSDirEntry fileinfo;
+    WCHAR filename[MAX_FILENAME_LEN];
+
+
+    fh = eat_fs_FindFirst(L"C:\\*.*", 0, 0, &fileinfo, filename, sizeof(filename));
+
+    if (fh > 0)
+    {
+
+        do
+        {
+            //filename, file size, file attr, date
+            print("%s\t %d\t %s\t %d-%d-%d %d:%d:%d\r\n",
+                    fileinfo.FileName,
+                    fileinfo.FileSize,
+                    fileinfo.Attributes & FS_ATTR_DIR ? "Dir" : "File",
+                    fileinfo.CreateDateTime.Year1980 + 1980,
+                    fileinfo.CreateDateTime.Month,
+                    fileinfo.CreateDateTime.Day,
+                    fileinfo.CreateDateTime.Hour,
+                    fileinfo.CreateDateTime.Minute,
+                    fileinfo.CreateDateTime.Second2);
+        }while (eat_fs_FindNext(fh, &fileinfo, filename, sizeof(filename)) == EAT_FS_NO_ERROR);
+    }
+
+    eat_fs_FindClose(fh);
+
     return 0;
 }
 
@@ -59,5 +89,5 @@ void fs_initial(void)
 {
     regist_cmd("ls", fs_ls);
     regist_cmd("rm", fs_rm);
-    regist_cmd("cat", fs_cat);
+//    regist_cmd("cat", fs_cat);
 }
