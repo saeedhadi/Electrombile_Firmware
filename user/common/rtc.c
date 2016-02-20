@@ -39,7 +39,7 @@ void rtc_update(long long time)
     //if GPS's time is not right ,do not synchron;if do , time will always be not right in GPS'shadow
     if (rtc.year > 30)
     {
-        g_isRtcSync = EAT_TRUE;
+        set_RTCupdate_Flag(EAT_TRUE);
 
         rtc.mon = time / 100000000;
         time %= 100000000;
@@ -70,6 +70,11 @@ void rtc_update(long long time)
     {
         LOG_DEBUG("GPS's time is blocked:%lld",time);
     }
+}
+
+void set_RTCupdate_Flag(eat_bool isRtcSync)
+{
+    g_isRtcSync = isRtcSync;
 }
 
 

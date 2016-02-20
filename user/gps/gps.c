@@ -27,7 +27,6 @@
 #define PI 3.141592653
 
 #define READ_BUFF_SIZE 2048
-extern eat_bool g_isRtcSync;
 
 //degree to radian
 #define DEG2RAD(d) (d * PI / 180.f)
@@ -110,7 +109,7 @@ void app_gps_thread(void *data)
 
                     case TIMER_UPDATE_RTC:
                         LOG_INFO("TIMER_UPDATE_RTC expire.");
-                        g_isRtcSync = EAT_FALSE;//at next time , updata RTC_time
+                        set_RTCupdate_Flag(EAT_FALSE);//at next time , updata RTC_time
                         break;
 
 
