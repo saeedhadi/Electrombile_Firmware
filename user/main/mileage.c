@@ -24,7 +24,7 @@
 #define EAT_ADC0 EAT_PIN23_ADC1
 #define EAT_ADC1 EAT_PIN24_ADC2
 #define ADC1_PERIOD 10  //sampling period : 10ms
-#define ADC_RELATIVE_VALUE 1024.f/2.8   //reference voltage is 2.8V
+#define ADC_RELATIVE_VALUE 3*1000/103.f   //3K&100K resistance ,change unit to mV
 
 
 DumpVoltage mileage_storage = {0};
@@ -206,34 +206,34 @@ void adc_mileageinit_proc(EatAdc_st* adc)
 
     count = 0;//reset count
 
-    if(adcvalue > 554)       //adcvalue>52V,assert 60V
+    if(adcvalue > 52*ADC_RELATIVE_VALUE)       //adcvalue>52V,assert 60V
     {
         LOG_INFO("the valtage is %d,assert 60V/TYPE BATTERY", adcvalue);
         for(i = 0;i <MAX_MILEAGE_LEN;i++)
         {
             mileage_storage.dump_mileage[i] = 0;
-            /*电压按照设计标准上调3V，计算范围为12V 3/103为电阻分压参数*/
-            mileage_storage.voltage[i] = (63-12*i/MAX_MILEAGE_LEN)*3/103;
+            /*电压按照设计标准上调3V，计算范围为12V*/
+            mileage_storage.voltage[i] = (63-12*i/MAX_MILEAGE_LEN)*ADC_RELATIVE_VALUE;
         }
     }
-    else if(adcvalue > 426)   //adcvalue>40V,assert 48V
+    else if(adcvalue > 40*ADC_RELATIVE_VALUE)   //adcvalue>40V,assert 48V
     {
         LOG_INFO("the valtage is %d,assert 48V/TYPE BATTERY", adcvalue);
         for(i = 0;i <MAX_MILEAGE_LEN;i++)
         {
             mileage_storage.dump_mileage[i] = 0;
-            /*电压按照设计标准上调3V，计算范围为12V 3/103为电阻分压参数*/
-            mileage_storage.voltage[i] = (51-12*i/MAX_MILEAGE_LEN)*3/103;
+            /*电压按照设计标准上调3V，计算范围为12V*/
+            mileage_storage.voltage[i] = (51-12*i/MAX_MILEAGE_LEN)*ADC_RELATIVE_VALUE;
         }
     }
-    else if(adcvalue < 426)  //adcvalue<40,assert 36V
+    else if(adcvalue <= 40*ADC_RELATIVE_VALUE)  //adcvalue<40,assert 36V
     {
         LOG_INFO("the valtage is %d,assert 36V/TYPE BATTERY", adcvalue);
         for(i = 0;i <MAX_MILEAGE_LEN;i++)
         {
             mileage_storage.dump_mileage[i] = 0;
-            /*电压按照设计标准上调3V，计算范围为12V 3/103为电阻分压参数*/
-            mileage_storage.voltage[i] = (39-12*i/MAX_MILEAGE_LEN)*3/103;
+            /*电压按照设计标准上调3V，计算范围为12V*/
+            mileage_storage.voltage[i] = (39-12*i/MAX_MILEAGE_LEN)*ADC_RELATIVE_VALUE;
         }
     }
     mileage_save();
@@ -276,8 +276,8 @@ void adc_mileageend_proc(EatAdc_st* adc)
         }
         average_voltage /= 40;
 
-        while(adcvalue_start/ADC_RELATIVE_VALUE < mileage_storage.voltage[start++]);
-        while(average_voltage/ADC_RELATIVE_VALUE > mileage_storage.voltage[end++]);
+        while(adcvalue_start < mileage_storage.voltage[start++]);
+        while(average_voltage > mileage_storage.voltage[end++]);
         --start;
         --end;
         if(start > end)//if the value of start is ahead the value of end,abort it
@@ -470,7 +470,7 @@ char get_battery(void)
     char ret;
     float miles = 0 , dump_miles = 0;
 
-    while(mileage_storage.voltage[i++] > adcvalue/ADC_RELATIVE_VALUE);
+    while(mileage_storage.voltage[i++] > adcvalue);
     if(i < 0 || i > MAX_MILEAGE_LEN)
     {
         LOG_INFO("get_mileage ERROR ! Voltage too low: %d",adcvalue);
@@ -500,7 +500,7 @@ char get_mileage(void)
     float miles = 0;
     char ret;
     mileage_reload();
-    while(mileage_storage.voltage[i++] > adcvalue/ADC_RELATIVE_VALUE);
+    while(mileage_storage.voltage[i++] > adcvalue);
     if(i < 0 || i > MAX_MILEAGE_LEN)
     {
         LOG_INFO("get_mileage ERROR ! Voltage too low: %d",adcvalue);
