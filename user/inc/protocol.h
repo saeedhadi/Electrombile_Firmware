@@ -1,17 +1,28 @@
 /*
  * protocol.h
  *
- *  Created on: 2015��6��29��
+ *  Created on: 2015/6/29
  *      Author: jk
+ *
+ *  Change log:
+ *      2.15    去掉CMD_LOGIN中的CCID字段
+ *              增加CMD_SIM_INFO命令字
+ *
  */
 
 #ifndef _PROTOCOL_H_
 #define _PROTOCOL_H_
 
+#define PROTOCOL_VERSION    215
+
 #define START_FLAG (0xAA55)
-#define IMEI_LENGTH 16
+
+#define IMEI_LENGTH 15
+#define IMSI_LENGTH 15
+
 #define MAX_CCID_LENGTH 20
 #define MAX_CELL_NUM 7
+
 #define TEL_NO_LENGTH 11
 
 
@@ -44,6 +55,7 @@ enum
     CMD_UPGRADE_START   = 23,
     CMD_UPGRADE_DATA    = 24,
     CMD_UPGRADE_END     = 25,
+    CMD_SIM_INFO        = 26,
 };
 
 enum
@@ -73,7 +85,6 @@ typedef struct
     MSG_HEADER header;
     char Version;
     char IMEI[IMEI_LENGTH];
-    char CCID[MAX_CCID_LENGTH];
 }__attribute__((__packed__)) MSG_LOGIN_REQ;
 
 typedef MSG_HEADER MSG_LOGIN_RSP;
@@ -392,6 +403,13 @@ typedef struct
     MSG_HEADER header;
     char code;
 }__attribute__((__packed__)) MSG_UPGRADE_END_RSP;
+
+typedef struct
+{
+    MSG_HEADER header;
+    char CCID[MAX_CCID_LENGTH];
+    char IMSI[IMSI_LENGTH];
+};
 
 #pragma pack(pop)
 
