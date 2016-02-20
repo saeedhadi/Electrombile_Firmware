@@ -363,7 +363,7 @@ int cmd_UpgradeStart_rsp(const void* msg)
     int rc = 0;
     int FolderSize = 0;
 
-    if (req->version <= VERSION)    //No need to upgrade, normally not happened
+    if (req->version <= VERSION_NUM)    //No need to upgrade, normally not happened
     {
         rc = -1;
     }

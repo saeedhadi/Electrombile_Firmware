@@ -26,7 +26,7 @@ int cmd_Login(void)
         return -1;
     }
 
-    msg->Version =VERSION;
+    msg->Version =VERSION_NUM;
 
     eat_get_imei(imei, IMEI_LENGTH);
     imei[IMEI_LENGTH-1] = '0';
