@@ -15,7 +15,12 @@
 #ifndef _PROTOCOL_H_
 #define _PROTOCOL_H_
 
-#define PROTOCOL_VERSION    215
+enum
+{
+    PROTOCOL_VESION_251 = 215,
+};
+
+#define PROTOCOL_VERSION    PROTOCOL_VESION_251
 
 #define START_FLAG (0xAA55)
 
