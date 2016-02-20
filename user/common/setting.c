@@ -17,6 +17,8 @@
 #include "debug.h"
 #include "log.h"
 
+#define SETTINGFILE_NAME  L"C:\\setting.txt"
+
 typedef struct
 {
     //Server configuration

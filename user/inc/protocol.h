@@ -40,8 +40,10 @@ enum
     CMD_DEFEND_ON       = 19,
     CMD_DEFEND_OFF      = 20,
     CMD_DEFEND_GET      = 21,
-    CMD_AUTODEFEND_STATE   = 22
-
+    CMD_DEFEND_NOTIFY   = 22,
+    CMD_UPGRADE_START   = 23,
+    CMD_UPGRADE_DATA    = 24,
+    CMD_UPGRADE_END     = 25,
 };
 
 enum
@@ -351,6 +353,45 @@ typedef struct
     MSG_HEADER header;
     char state;             //0 express OFF,1 express ON
 }__attribute__((__packed__)) MSG_AUTODEFEND_STATE_REQ;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int version;
+    int size;
+}__attribute__((__packed__)) MSG_UPGRADE_START;
+
+typedef struct
+{
+    MSG_HEADER header;
+    char code;      //0 means ok to upgrade
+}__attribute__((__packed__)) MSG_UPGRADE_START_RSP;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int offset;
+    char data[];
+}__attribute__((__packed__)) MSG_UPGRADE_DATA;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int offset;
+}__attribute__((__packed__)) MSG_UPGRADE_DATA_RSP;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int checksum;
+    int size;
+}__attribute__((__packed__)) MSG_UPGRADE_END;
+
+typedef struct
+{
+    MSG_HEADER header;
+    char code;
+}__attribute__((__packed__)) MSG_UPGRADE_END_RSP;
 
 #pragma pack(pop)
 

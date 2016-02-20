@@ -1,7 +1,7 @@
 /*
  * msg.c
  *
- *  Created on: 2015Äê7ÔÂ8ÈÕ
+ *  Created on: 2015ï¿½ï¿½7ï¿½ï¿½8ï¿½ï¿½
  *      Author: jk
  */
 #include <eat_interface.h>
@@ -29,42 +29,51 @@ void* alloc_msg(char cmd, size_t length)
 void* alloc_rspMsg(const MSG_HEADER* pMsg)
 {
     MSG_HEADER* msg = NULL;
+    int i = 0;
     size_t msgLen = 0;
-    switch (pMsg->cmd)
+    typedef struct
     {
-        case CMD_DEFEND:
-            msgLen = sizeof(MSG_DEFEND_RSP);
-            break;
+        char cmd;
+        size_t size;
+    }MSG_LENGTH;
 
-        case CMD_SEEK:
-            msgLen = sizeof(MSG_SEEK_RSP);
-            break;
 
-        case CMD_AUTODEFEND_SWITCH_SET:
-            msgLen = sizeof(MSG_AUTODEFEND_SWITCH_SET_RSP);
-            break;
+    MSG_LENGTH rsp_msg_length_map[] =
+    {
+            {CMD_DEFEND,    sizeof(MSG_DEFEND_RSP)},
+            {CMD_SEEK,      sizeof(MSG_SEEK_RSP)},
 
-        case CMD_AUTODEFEND_SWITCH_GET:
-            msgLen = sizeof(MSG_AUTODEFEND_SWITCH_GET_RSP);
-            break;
+            {CMD_AUTODEFEND_SWITCH_SET, sizeof(MSG_AUTODEFEND_SWITCH_SET_RSP)},
+            {CMD_AUTODEFEND_SWITCH_GET, sizeof(MSG_AUTODEFEND_SWITCH_GET_RSP)},
+            {CMD_AUTODEFEND_PERIOD_SET, sizeof(MSG_AUTODEFEND_PERIOD_SET_RSP)},
+            {CMD_AUTODEFEND_PERIOD_GET, sizeof(MSG_AUTODEFEND_PERIOD_GET_RSP)},
 
-        case CMD_AUTODEFEND_PERIOD_SET:
-            msgLen = sizeof(MSG_AUTODEFEND_PERIOD_SET_RSP);
-            break;
+            {CMD_TIMER,     sizeof(MSG_GPSTIMER_RSP)},
+            {CMD_MILEAGE,   sizeof(MSG_MILEAGE_REQ)},
 
-        case CMD_AUTODEFEND_PERIOD_GET:
-            msgLen = sizeof(MSG_AUTODEFEND_PERIOD_GET_RSP);
-            break;
-        case CMD_TIMER:
-            msgLen = sizeof(MSG_GPSTIMER_RSP);
-			break;
-        case CMD_MILEAGE:
-            msgLen = sizeof(MSG_MILEAGE_REQ);
-        default:
-            return NULL;
+            {CMD_UPGRADE_START, sizeof(MSG_UPGRADE_START_RSP)},
+            {CMD_UPGRADE_DATA,  sizeof(MSG_UPGRADE_DATA_RSP)},
+            {CMD_UPGRADE_END,   sizeof(MSG_UPGRADE_END_RSP)},
+    };
+
+    for (i = 0; i < sizeof(rsp_msg_length_map) / sizeof(rsp_msg_length_map[0]); i++)
+    {
+        if (pMsg->cmd == rsp_msg_length_map[i].cmd)
+        {
+            msgLen = rsp_msg_length_map[i].size;
+        }
+    }
+
+    if (msgLen == 0)
+    {
+        return NULL;
     }
 
     msg = eat_mem_alloc(msgLen);
+    if (!msg)
+    {
+        return msg;
+    }
     msg->signature = htons(START_FLAG);
     msg->cmd = pMsg->cmd;
     msg->length = htons(msgLen - MSG_HEADER_LEN);

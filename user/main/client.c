@@ -54,6 +54,9 @@ static MC_MSG_PROC msgProcs[] =
     {CMD_SERVER, cmd_Server_rsp},
     {CMD_TIMER, cmd_Timer_rsp},
     {CMD_BATTERY, cmd_Battery_rsp},
+    {CMD_UPGRADE_START, cmd_UpgradeStart_rsp},
+    {CMD_UPGRADE_DATA, cmd_UpgradeData_rsp},
+    {CMD_UPGRADE_END, cmd_UpgradeEnd_rsp},
 };
 
 int client_proc(const void* m, int msgLen)

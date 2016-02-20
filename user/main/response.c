@@ -15,6 +15,8 @@
 #include "thread.h"
 #include "socket.h"
 #include "fsm.h"
+#include "version.h"
+#include "upgrade.h"
 
 //TODO: the following header file should be removed
 #include "timer.h"
@@ -22,7 +24,7 @@
 #include "data.h"
 #include "mileage.h"
 
-
+#define APP_FOLDER_NAME L"C"
 int cmd_Login_rsp(const void* msg)
 {
     LOG_DEBUG("get login respond.");
@@ -354,3 +356,82 @@ int cmd_Server_rsp(const void* msg)
     return 0;
 }
 
+int cmd_UpgradeStart_rsp(const void* msg)
+{
+    MSG_UPGRADE_START* req = (MSG_UPGRADE_START*)msg;
+    MSG_UPGRADE_START_RSP* rsp = NULL;
+    int rc = 0;
+    int FolderSize = 0;
+
+    if (req->version <= VERSION)    //No need to upgrade, normally not happened
+    {
+        rc = -1;
+    }
+    else
+    {
+        //TODO: 调用eat_fs_GetFolderSize获取磁盘剩余空间大小，判断是否足以容纳 升级包大小(req->size)
+        FolderSize = eat_fs_GetFolderSize(APP_FOLDER_NAME);
+        if(FolderSize >= 0)
+        {
+            LOG_DEBUG("Get Folder Size Success,and The Folder Size is %d",FolderSize);
+        }
+        else
+        {
+            LOG_ERROR("Get Folder Size Fail, and Return Error is %d",FolderSize);
+            return -1;
+        }
+
+        if (req->size > FolderSize)
+        {
+            LOG_DEBUG("Free disk is not enough , can not start app_upgrade!");
+            rc = -1;
+        }
+        else
+        {
+            LOG_DEBUG("Free disk is enough , create file to start app_upgrade!");
+            //创建升级包文件
+            rc = upgrade_createFile();
+        }
+    }
+    //回应是否可以升级
+    rsp = alloc_rspMsg(msg);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc rsp msg failed:cmd=%d", req->header.cmd);
+        return -1;
+    }
+    rsp->code = rc;
+    socket_sendData(rsp,sizeof(MSG_UPGRADE_START_RSP));
+
+    return 0;
+}
+
+int cmd_UpgradeData_rsp(const void* msg)
+{
+    MSG_UPGRADE_DATA* req = (MSG_UPGRADE_DATA*)msg;
+    MSG_UPGRADE_DATA_RSP* rsp = NULL;
+    int rc = 0;
+
+    //TODO: complete the following procedure
+    rc = upgrade_appendFile(req->offset, req->data, req->header.length - sizeof(req->offset));
+    //response req->offset + length of req->data
+
+    return 0;
+}
+
+int cmd_UpgradeEnd_rsp(const void* msg)
+{
+    MSG_UPGRADE_END* req = (MSG_UPGRADE_END*)msg;
+    MSG_UPGRADE_END_RSP* rsp = NULL;
+    int rc = 0;
+
+    //TODO: complete the following procedure
+    //校验升级包的大小是否和req->size一致
+    //校验升级包的校验和是否和req->checksum一致
+    //响应消息
+
+    //启动升级
+    rc = upgrade_do();
+
+    return 0;
+}

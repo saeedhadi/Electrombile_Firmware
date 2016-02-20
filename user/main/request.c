@@ -13,6 +13,7 @@
 #include "msg.h"
 #include "log.h"
 #include "socket.h"
+#include "version.h"
 
 int cmd_Login(void)
 {
@@ -24,6 +25,8 @@ int cmd_Login(void)
         LOG_ERROR("alloc login message failed!");
         return -1;
     }
+
+    msg->Version =VERSION;
 
     eat_get_imei(imei, IMEI_LENGTH);
     imei[IMEI_LENGTH-1] = '0';
