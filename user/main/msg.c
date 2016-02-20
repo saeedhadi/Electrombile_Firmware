@@ -43,13 +43,14 @@ void* alloc_rspMsg(const MSG_HEADER* pMsg)
             {CMD_DEFEND,    sizeof(MSG_DEFEND_RSP)},
             {CMD_SEEK,      sizeof(MSG_SEEK_RSP)},
 
-            {CMD_AUTODEFEND_SWITCH_SET, sizeof(MSG_AUTODEFEND_SWITCH_SET_RSP)},
-            {CMD_AUTODEFEND_SWITCH_GET, sizeof(MSG_AUTODEFEND_SWITCH_GET_RSP)},
-            {CMD_AUTODEFEND_PERIOD_SET, sizeof(MSG_AUTODEFEND_PERIOD_SET_RSP)},
-            {CMD_AUTODEFEND_PERIOD_GET, sizeof(MSG_AUTODEFEND_PERIOD_GET_RSP)},
+            {CMD_SET_AUTOSWITCH,    sizeof(MSG_AUTODEFEND_SWITCH_SET_RSP)},
+            {CMD_GET_AUTOSWITCH,    sizeof(MSG_AUTODEFEND_SWITCH_GET_RSP)},
 
-            {CMD_TIMER,     sizeof(MSG_GPSTIMER_RSP)},
-            {CMD_MILEAGE,   sizeof(MSG_MILEAGE_REQ)},
+            {CMD_SET_PERIOD,    sizeof(MSG_AUTODEFEND_PERIOD_SET_RSP)},
+            {CMD_GET_PERIOD,    sizeof(MSG_AUTODEFEND_PERIOD_GET_RSP)},
+
+            {CMD_SET_TIMER,   sizeof(MSG_SET_TIMER_RSP)},
+            {CMD_ITINERARY,   sizeof(MSG_MILEAGE_REQ)},
 
             {CMD_UPGRADE_START, sizeof(MSG_UPGRADE_START_RSP)},
             {CMD_UPGRADE_DATA,  sizeof(MSG_UPGRADE_DATA_RSP)},

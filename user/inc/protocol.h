@@ -4,6 +4,8 @@
  *  Created on: 2015/6/29
  *      Author: jk
  *
+ *  Copyright (c) 2015 Wuhan Xiaoan Technology Co., Ltd. All rights reserved.
+ *
  *  Change log:
  *      2.15    去掉CMD_LOGIN中的CCID字段
  *              增加CMD_SIM_INFO命令字
@@ -39,14 +41,14 @@ enum
     CMD_433             =  7,
     CMD_DEFEND          =  8,
     CMD_SEEK            =  9,
-    CMD_LOCATION        = 10,
-    CMD_SERVER          = 11,
-    CMD_TIMER           = 12,
-    CMD_AUTODEFEND_SWITCH_SET  = 13,
-    CMD_AUTODEFEND_SWITCH_GET  = 14,
-    CMD_AUTODEFEND_PERIOD_SET  = 15,
-    CMD_AUTODEFEND_PERIOD_GET  = 16,
-    CMD_MILEAGE       = 17,
+    CMD_LOCATE          = 10,
+    CMD_SET_SERVER      = 11,
+    CMD_SET_TIMER       = 12,
+    CMD_SET_AUTOSWITCH  = 13,
+    CMD_GET_AUTOSWITCH  = 14,
+    CMD_SET_PERIOD      = 15,
+    CMD_GET_PERIOD      = 16,
+    CMD_ITINERARY       = 17,
     CMD_BATTERY         = 18,
     CMD_DEFEND_ON       = 19,
     CMD_DEFEND_OFF      = 20,
@@ -61,6 +63,9 @@ enum
 enum
 {
     MSG_SUCCESS = 0,
+    MSG_VERSION_NOT_SUPPORTED = -1,
+    MSG_DISK_NO_SPACE = -2,
+    MSG_UPGRADE_CHECKSUM_FAILED = -3,
 };
 
 #pragma pack(push, 1)
@@ -83,7 +88,7 @@ typedef struct
 typedef struct
 {
     MSG_HEADER header;
-    char Version;
+    char version;
     char IMEI[IMEI_LENGTH];
 }__attribute__((__packed__)) MSG_LOGIN_REQ;
 
@@ -143,7 +148,7 @@ typedef struct
 typedef struct
 {
     MSG_HEADER header;
-    short statue;   //TODO: to define the status bits
+    short status;   //TODO: to define the status bits
 }__attribute__((__packed__)) MSG_PING_REQ;
 
 typedef MSG_HEADER MSG_PING_RSP;
@@ -153,7 +158,7 @@ typedef MSG_HEADER MSG_PING_RSP;
  */
 enum ALARM_TYPE
 {
-    ALARM_FENCE_OUT,
+    ALARM_FENCE_OUT = 1,
     ALARM_FENCE_IN,
     ALARM_VIBRATE,
 };
@@ -197,13 +202,13 @@ typedef struct
 {
     MSG_HEADER header;
     int timer;
-}__attribute__((__packed__)) MSG_GPSTIMER_REQ;
+}__attribute__((__packed__)) MSG_SET_TIMER_REQ;
 
 typedef struct
 {
     MSG_HEADER header;
     int result;
-}__attribute__((__packed__)) MSG_GPSTIMER_RSP;
+}__attribute__((__packed__)) MSG_SET_TIMER_RSP;
 
 /*
 *server set_ip/domain message structure
@@ -214,7 +219,7 @@ typedef struct
     MSG_HEADER header;
     int port;
     char server[];
-}__attribute__((__packed__)) MSG_SERVER;
+}__attribute__((__packed__)) MSG_SET_SERVER;
 
 /*
  * defend message structure
@@ -263,22 +268,20 @@ typedef struct
     unsigned char result;
 }__attribute__((__packed__)) MSG_SEEK_RSP;
 
-typedef MSG_HEADER MSG_LOCATION;
+typedef MSG_HEADER MSG_LOCATE;
 
 typedef struct
 {
     MSG_HEADER header;
     char isGps;
     GPS gps;
-}__attribute__((__packed__)) MSG_GPSLOCATION_RSP;
+}__attribute__((__packed__)) MSG_GPSLOCATION_RSP;   //FIXME: change the name
 
 typedef struct
 {
     MSG_HEADER header;
     char isGps;
-}__attribute__((__packed__)) MSG_CELLLOCATION_HEADER;
-
-
+}__attribute__((__packed__)) MSG_CELLLOCATION_HEADER;   //FIXME: change the name
 
 
 
@@ -375,7 +378,7 @@ typedef struct
 typedef struct
 {
     MSG_HEADER header;
-    char code;      //0 means ok to upgrade
+    char code;      //MSG_SUCCESS means OK to upgrade
 }__attribute__((__packed__)) MSG_UPGRADE_START_RSP;
 
 typedef struct
@@ -409,7 +412,7 @@ typedef struct
     MSG_HEADER header;
     char CCID[MAX_CCID_LENGTH];
     char IMSI[IMSI_LENGTH];
-};
+}__attribute__((__packed__)) MSG_SIM_INFO;
 
 #pragma pack(pop)
 

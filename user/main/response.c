@@ -281,8 +281,8 @@ int cmd_Defend_rsp(const void* msg)
 
 int cmd_Timer_rsp(const void* msg)
 {
-    MSG_GPSTIMER_REQ* req = (MSG_GPSTIMER_REQ*)msg;
-    MSG_GPSTIMER_RSP* rsp = NULL;
+    MSG_SET_TIMER_REQ* req = (MSG_SET_TIMER_REQ*)msg;
+    MSG_SET_TIMER_RSP* rsp = NULL;
     if(0 >= req->timer)
     {
         ;//rsp at the end
@@ -307,13 +307,13 @@ int cmd_Timer_rsp(const void* msg)
 
     //TODO: fix the gps upload time
     rsp->result = 30;
-    socket_sendData(rsp,sizeof(MSG_GPSTIMER_RSP));
+    socket_sendData(rsp,sizeof(MSG_SET_TIMER_RSP));
 
     return 0;
 }
 int cmd_Server_rsp(const void* msg)
 {
-    MSG_SERVER* msg_server = (MSG_SERVER*)msg;
+    MSG_SET_SERVER* msg_server = (MSG_SET_SERVER*)msg;
     u32 ip[4] = {0};
     int count;
     signed char domain[MAX_DOMAIN_NAME_LEN] = {0};

@@ -451,7 +451,7 @@ void mileagehandle(short MILEAGE_STATE)
 static void msg_mileage_send(MSG_MILEAGE_REQ msg_mileage)
 {
     u8 msgLen = sizeof(MSG_MILEAGE_REQ);
-    MSG_MILEAGE_REQ* msg = alloc_msg(CMD_MILEAGE, msgLen);
+    MSG_MILEAGE_REQ* msg = alloc_msg(CMD_ITINERARY, msgLen);
     msg->endtime = msg_mileage.endtime;
     msg->starttime = msg_mileage.starttime;
     msg->mileage = (int)msg_mileage.mileage;
