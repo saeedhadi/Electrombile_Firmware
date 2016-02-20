@@ -13,8 +13,8 @@
 #include <eat_interface.h>
 
 eat_bool rtc_synced(void);
-void set_RTCupdate_Flag(eat_bool isRtcSync);
 
+void rtc_setSyncFlag(eat_bool isRtcSync);
 
 void rtc_update(long long time);
 

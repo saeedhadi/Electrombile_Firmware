@@ -109,7 +109,7 @@ void app_gps_thread(void *data)
 
                     case TIMER_UPDATE_RTC:
                         LOG_INFO("TIMER_UPDATE_RTC expire.");
-                        set_RTCupdate_Flag(EAT_FALSE);//at next time , updata RTC_time
+                        rtc_setSyncFlag(EAT_FALSE);//at next time , updata RTC_time
                         break;
 
 
