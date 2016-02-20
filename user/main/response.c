@@ -5,6 +5,8 @@
  *      Author: jk
  */
 #include <string.h>
+#include <stdint.h>
+
 
 #include <eat_interface.h>
 
@@ -17,6 +19,7 @@
 #include "fsm.h"
 #include "version.h"
 #include "upgrade.h"
+#include "adler32.h"
 
 //TODO: the following header file should be removed
 #include "timer.h"
@@ -25,6 +28,7 @@
 #include "mileage.h"
 
 #define APP_FOLDER_NAME L"C"
+
 int cmd_Login_rsp(const void* msg)
 {
     LOG_DEBUG("get login respond.");
@@ -446,12 +450,51 @@ int cmd_UpgradeEnd_rsp(const void* msg)
 {
     MSG_UPGRADE_END* req = (MSG_UPGRADE_END*)msg;
     MSG_UPGRADE_END_RSP* rsp = NULL;
+    unsigned char* app_buf = NULL;
     int rc = 0;
+    UINT file_size = 0;
+    size_t appLen;
+    uint32_t checksum = 0;
 
-    //TODO: complete the following procedure
     //校验升级包的大小是否和req->size一致
     //校验升级包的校验和是否和req->checksum一致
     //响应消息
+    app_buf = get_AppFile(&file_size);
+
+    if(EAT_FS_NO_ERROR != rc)
+    {
+        LOG_ERROR("get file error , and return error is :%d",rc);
+        rc = -1;
+    }
+    else
+    {
+        LOG_DEBUG("get file success , file size is:%d",file_size);
+        if(file_size != req->size)
+        {
+            LOG_ERROR("file size is not equal,req:%d,file:%d",req->size,file_size);
+            rc = -1;
+        }
+        else
+        {
+            appLen = strlen(app_buf);
+            checksum = adler32(app_buf,appLen);
+        }
+
+        if(req->checksum != checksum)
+        {
+            LOG_ERROR("checksum error,req->checksum:%d,file->checksum:%d",req->checksum,checksum);
+            rc = -1;
+        }
+    }
+
+    rsp = alloc_rspMsg(msg);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc rsp msg failed:cmd=%d", req->header.cmd);
+        return -1;
+    }
+    rsp->code = rc;
+    socket_sendData(rsp,sizeof(MSG_UPGRADE_DATA_RSP));
 
     //启动升级
     rc = upgrade_do();

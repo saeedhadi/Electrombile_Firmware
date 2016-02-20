@@ -12,6 +12,57 @@
 
 #define UPGRADE_FILE_NAME  L"C:\\app.bin"
 
+
+u8 * get_AppFile(int *filesize)
+{
+    FS_HANDLE FileHandle;
+    int rc;
+    u8* app_buf = NULL;
+
+    FileHandle  = eat_fs_Open(UPGRADE_FILE_NAME, FS_READ_ONLY);
+    if(EAT_FS_NO_ERROR <= FileHandle)
+    {
+        LOG_DEBUG("open file success, fh=%d.", FileHandle);
+    }
+    else
+    {
+        LOG_ERROR("open file failed, fh=%d.", FileHandle);
+        return 0;
+    }
+
+    rc = eat_fs_GetFileSize(FileHandle,filesize);
+    if(EAT_FS_NO_ERROR != rc)
+    {
+        LOG_ERROR("get file size error , and return error is :%d",rc);
+        return 0;
+    }
+    else
+    {
+        LOG_DEBUG("get file size success , file size is:%d",*filesize);
+    }
+
+    app_buf = eat_mem_alloc(*filesize);
+    if (!app_buf)
+    {
+        LOG_ERROR("alloc app_buf error!");
+        return 0;
+    }
+
+    rc = eat_fs_Read(FileHandle,app_buf,*filesize, NULL);
+    if (EAT_FS_NO_ERROR == rc)
+    {
+        LOG_DEBUG("read app file success.");
+    }
+    else
+    {
+        LOG_ERROR("read file fail, and return error: %d", rc);
+        return 0;
+    }
+
+    return app_buf;
+}
+
+
 /*
 *fun:create the upgrade file
 *return:0 express success ; -1 express fail
