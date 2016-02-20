@@ -107,6 +107,12 @@ void app_gps_thread(void *data)
                         eat_timer_start(TIMER_GPS, TIMER_GPS_PERIOD);
                         break;
 
+                    case TIMER_UPDATE_RTC:
+                        LOG_INFO("TIMER_UPDATE_RTC expire.");
+                        set_RTCupdate_Flag(EAT_FALSE);//at next time , updata RTC_time
+                        break;
+
+
                     default:
                     	LOG_ERROR("timer[%d] expire!", event.data.timer.timer_id);
                         break;
