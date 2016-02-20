@@ -20,7 +20,7 @@
 #define YEAROFFSET 1954
 
 
-eat_bool g_isRtcSync = EAT_FALSE;
+static eat_bool g_isRtcSync = EAT_FALSE;
 
 eat_bool rtc_synced(void)
 {
