@@ -497,7 +497,7 @@ int cmd_UpgradeEnd_rsp(const void* msg)
     socket_sendData(rsp,sizeof(MSG_UPGRADE_DATA_RSP));
 
     //启动升级
-    rc = upgrade_do();
+    rc = upgrade_do(app_buf);
 
     return 0;
 }

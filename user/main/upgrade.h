@@ -10,7 +10,7 @@
 
 int upgrade_createFile(void);
 int upgrade_appendFile(int offset, char* data, unsigned int length);
-int upgrade_do();
+int upgrade_do(char* app_data);
 u8* get_AppFile(int *filesize);
 
 

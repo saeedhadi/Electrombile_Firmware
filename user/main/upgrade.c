@@ -34,6 +34,7 @@ u8 * get_AppFile(int *filesize)
     if(EAT_FS_NO_ERROR != rc)
     {
         LOG_ERROR("get file size error , and return error is :%d",rc);
+        eat_fs_Close(FileHandle);
         return 0;
     }
     else
@@ -59,6 +60,7 @@ u8 * get_AppFile(int *filesize)
         return 0;
     }
 
+    eat_fs_Close(FileHandle);
     return app_buf;
 }
 
@@ -147,7 +149,48 @@ int upgrade_appendFile(int offset, char* data,  unsigned int length)
 
 }
 
-int upgrade_do()
+int upgrade_do(char* app_data)
 {
+    u32 APP_DATA_RUN_BASE;  //app run addr
+    u32 APP_DATA_STORAGE_BASE;  //app data storage addr
+    u32 app_space_value;
+    unsigned char *addr;
+    int app_dataLen;
+    int rc;
+
+    app_dataLen = strlen(app_data);
+
+    APP_DATA_RUN_BASE = eat_get_app_base_addr(); //get app addr
+    LOG_INFO("APP_DATA_RUN_BASE : %ld",APP_DATA_RUN_BASE);
+
+    app_space_value = eat_get_app_space();  //get app space size
+    LOG_INFO("app_space_value : %ld",app_space_value);
+
+    APP_DATA_STORAGE_BASE = APP_DATA_RUN_BASE + (app_space_value>>1);//second half is space use to storage app_upgrade_data
+
+    addr = (unsigned char *)(APP_DATA_STORAGE_BASE);
+
+    rc = eat_flash_erase(addr , app_dataLen);//erase the flash to write new app_data_storage
+    if(EAT_FALSE == rc)
+    {
+        LOG_ERROR("Erase flash failed [0x%08x, %dKByte]", APP_DATA_STORAGE_BASE,  app_dataLen/1024);
+        return -1;
+    }
+
+    rc = eat_flash_write(addr , app_data , app_dataLen);//write the new app_data_storage
+    if(EAT_FALSE == rc)
+    {
+        LOG_ERROR("Write Flash Failed.");
+        return -1;
+    }
+
+    //upgrade app
+    eat_update_app((void*)(APP_DATA_RUN_BASE),(void*)(APP_DATA_STORAGE_BASE), app_dataLen, EAT_PIN_NUM, EAT_PIN_NUM,EAT_FALSE);
+
+
+    LOG_DEBUG("Upgrade App Over!");
+
     return 0;
 }
+
+

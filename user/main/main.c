@@ -111,9 +111,18 @@ void app_main(void *data)
 {
     EatEvent_st event;
     eat_bool rc;
+    EatEntryPara_st *para;
+
 
     APP_InitRegions();//Init app RAM
     APP_init_clib(); //C library initialize, second step
+
+    para = (EatEntryPara_st*)data;
+    if(para->is_update_app && para->update_app_result)
+    {
+        //APP update succeed
+        eat_update_app_ok(); //clear update APP flag
+    }
 
     LOG_INFO("booting: version:%s, build_time=%s %s. core(version:%s, buildno=%s, buildtime=%s)",
             VERSION_STR, __DATE__, __TIME__, eat_get_version(), eat_get_buildno(), eat_get_buildtime());
