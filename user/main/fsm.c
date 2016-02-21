@@ -172,6 +172,13 @@ static int action_onBearHold(void)
     return 0;
 }
 
+static int action_onBearDeactivated(void)
+{
+    fsm_trans(STATE_WAIT_GPRS);
+
+    return 0;
+}
+
 static int action_onSocketConnected(void)
 {
     cmd_Login();
@@ -298,6 +305,7 @@ STATE_TRANSITIONS state_transitions[] =
         {STATE_WAIT_GPRS,   EVT_LOOP,                   action_waitGprsOnLoop},
         {STATE_WAIT_GPRS,   EVT_GPRS_ATTACHED,          action_onGprsAttached},
         {STATE_WAIT_BEARER, EVT_BEARER_HOLD,            action_onBearHold},
+        {STATE_WAIT_BEARER, EVT_BEARER_DEACTIVATED,     action_onBearDeactivated},
         {STATE_WAIT_SOCKET, EVT_SOCKET_CONNECTED,       action_onSocketConnected},
         {STATE_WAIT_SOCKET, EVT_SOCKET_CONNECT_FAILED,  action_onSocketConnectFailed},
         {STATE_WAIT_IPADDR, EVT_HOSTNAME2IP,            action_onDNS},
@@ -306,6 +314,7 @@ STATE_TRANSITIONS state_transitions[] =
         {STATE_WAIT_LOGIN,  EVT_SOCKET_DISCONNECTED,    action_onSocketDisconnected},
         {STATE_WAIT_LOGIN,  EVT_LOOP,                   action_waitloginOnLoop},
         {STATE_RUNNING,     EVT_LOOP,                   action_runningOnLoop},
+        {STATE_RUNNING,     EVT_BEARER_DEACTIVATED,     action_onBearDeactivated},
         {STATE_RUNNING,     EVT_SOCKET_DISCONNECTED,    action_onSocketDisconnected},
 };
 

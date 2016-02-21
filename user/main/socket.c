@@ -221,7 +221,6 @@ static void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
             break;
 
         case CBM_DEACTIVATED:
-            //TODO: how to deal with this event???
             fsm_run(EVT_BEARER_DEACTIVATED);
             break;
 
