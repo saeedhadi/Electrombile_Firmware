@@ -26,6 +26,8 @@ static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4]);
 
 static s8 socket_id = 0;
 
+static u32 request_id = 0;
+
 #define DESC_DEF(x)	case x:\
                         return #x
 
@@ -141,7 +143,7 @@ static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
 	}
 	else
 	{
-	    LOG_ERROR("hostname_notify_cb error");
+	    LOG_ERROR("hostname_notify_cb error: request_id = %d", request_id);
 	    fsm_run(EVT_HOSTNAME2IP_FAILED);
 	}
 
@@ -160,11 +162,7 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
         case SOC_READ:
 
             rc = eat_soc_recv(socket_id, buffer, 128);
-            if (rc == SOC_WOULDBLOCK)
-            {
-                LOG_ERROR("read data from socket block!");
-            }
-            else if (rc > 0)
+            if (rc > 0)
             {
                 client_proc(buffer, rc);
             }
@@ -204,6 +202,7 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
             break;
 
         default:
+            LOG_INFO("SOC_NOTIFY %d not handled", event);
             break;
     }
 
@@ -230,7 +229,12 @@ static void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
             eat_reset_module();
             break;
 
+        case CBM_ACTIVATING:
+            //no need to handle
+            break;
+
         default:
+            LOG_ERROR("BEAR_NOTIFY %d not handled", state);
             break;
 	}
 }
@@ -283,7 +287,7 @@ int socket_connect()
         u8 len = 0;
 
         eat_soc_gethost_notify_register(hostname_notify_cb);
-        rc = eat_soc_gethostbyname(setting.domain, ipaddr, &len, 1234);
+        rc = eat_soc_gethostbyname(setting.domain, ipaddr, &len, request_id++);
         if (rc == SOC_WOULDBLOCK)
         {
             LOG_INFO("eat_soc_gethostbyname wait callback.");
