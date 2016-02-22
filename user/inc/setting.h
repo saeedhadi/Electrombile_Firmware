@@ -59,7 +59,6 @@ eat_bool setting_restore(void);
 eat_bool setting_save(void);
 
 
-#define SETTINGFILE_NAME  L"C:\\setting.txt"
 
 
 

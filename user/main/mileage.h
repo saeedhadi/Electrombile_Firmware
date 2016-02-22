@@ -56,7 +56,6 @@ char get_battery(void);
 
 
 
-#define MILEAGEFILE_NAME   L"C:\\mileage.txt"
 
 
 #endif//MILEAGE_H

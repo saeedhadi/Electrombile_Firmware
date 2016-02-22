@@ -9,8 +9,11 @@
 #include <string.h>
 
 #include <eat_fs.h>
+#include <eat_fs_type.h>
 
 #include "fs.h"
+#include "tool.h"
+#include "log.h"
 
 #define SYSTEM_DRIVE    "C:\\"
 #define TF_DRIVE        "D:\\"
@@ -65,6 +68,23 @@ static int fs_ls(const unsigned char* cmdString, unsigned short length)
 
     return 0;
 }
+int fs_delete_file(const WCHAR * FileName)
+{
+
+    eat_fs_error_enum fs_Op_ret;
+
+    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(FileName);
+    if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
+    {
+        LOG_ERROR("Delete file Fail,and Return Error is %d",fs_Op_ret);
+        return -1;
+    }
+    else
+    {
+        LOG_DEBUG("Delete file Success");
+        return 0;
+    }
+}
 
 /*
  * cmd format: rm file.txt
@@ -72,7 +92,32 @@ static int fs_ls(const unsigned char* cmdString, unsigned short length)
  */
 static int fs_rm(const unsigned char* cmdString, unsigned short length)
 {
-    return 0;
+    unsigned char* p = NULL;
+    int rc;
+    eat_fs_error_enum fs_Op_ret;
+
+    p = tool_StrstrAndReturnEndPoint((char *)cmdString, "mileage");
+    if(NULL != p)
+    {
+        LOG_DEBUG("delete mileage");
+        rc = fs_delete_file(MILEAGEFILE_NAME);
+    }
+
+    p = tool_StrstrAndReturnEndPoint((char *)cmdString, "setting");
+    if(NULL != p)
+    {
+        LOG_DEBUG("delete setting");
+        rc = fs_delete_file(SETTINGFILE_NAME);
+    }
+
+    p = tool_StrstrAndReturnEndPoint((char *)cmdString, "log");
+    if(NULL != p)
+    {
+        LOG_DEBUG("delete log.txt");
+        rc = fs_delete_file(LOGFILE_NAME);
+    }
+
+    return rc;
 }
 
 /*

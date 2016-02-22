@@ -14,8 +14,7 @@
 #include "data.h"
 #include "debug.h"
 #include "log.h"
-
-#define LOGFILE_NAME  L"C:\\log_file.txt"
+#include "fs.h"
 
 int log_catlog(void)
 {
