@@ -21,7 +21,7 @@
 #include "timer.h"
 
 //because #include "mileage" can't pass compile , so define again there
-#define MILEAGEFILE_NAME   L"C:\\mileage.txt"
+#define MILEAGEFILE_NAME   L"C:\\mileage"
 
 static eat_bool ResetFlag = EAT_FALSE;
 

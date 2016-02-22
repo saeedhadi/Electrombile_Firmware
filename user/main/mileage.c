@@ -26,7 +26,7 @@
 #define ADC1_PERIOD 10  //sampling period : 10ms
 #define ADC_RELATIVE_VALUE 3*1000/103.f   //3K&100K resistance ,change unit to mV
 
-#define MILEAGEFILE_NAME   L"C:\\mileage.txt"
+#define MILEAGEFILE_NAME   L"C:\\mileage"
 
 
 DumpVoltage mileage_storage = {0};
