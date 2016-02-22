@@ -15,7 +15,6 @@
 #include "debug.h"
 #include "log.h"
 
-#define LOGFILE_NAME  L"C:\\log_file.txt"
 
 int log_catlog(void)
 {
@@ -115,7 +114,7 @@ int cmd_deletelog(const char* cmdString, unsigned short length)
     eat_fs_error_enum fs_Op_ret;
 
     fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(LOGFILE_NAME);
-    if(EAT_FS_NO_ERROR!=fs_Op_ret)
+    if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
     {
         LOG_ERROR("Delete logfile Fail,and Return Error is %d",fs_Op_ret);
         return EAT_FALSE;

@@ -20,7 +20,11 @@
 #include "version.h"
 #include "timer.h"
 
+//because #include "mileage" can't pass compile , so define again there
+#define MILEAGEFILE_NAME   L"C:\\mileage"
+
 static eat_bool ResetFlag = EAT_FALSE;
+
 
 static eat_sms_flash_message_cb(EatSmsReadCnf_st smsFlashMessage)
 {
@@ -61,6 +65,90 @@ static void sms_version_proc(u8 *p, u8 *number)
     return;
 }
 
+static void sms_factory_proc(u8 *p, u8 *number)
+{
+    unsigned char *ptr1;
+    char ack_message[64] = {0};
+    eat_fs_error_enum fs_Op_ret;
+
+
+    ptr1 = tool_StrstrAndReturnEndPoint(p, "Factory");
+    if(NULL != ptr1)
+    {
+
+        sprintf(ack_message, "Factory default ok");
+
+        LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
+        eat_send_text_sms(number, ack_message);
+
+        fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(SETTINGFILE_NAME);
+
+        if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
+        {
+            LOG_ERROR("Delete settingfile Fail,and Return Error is %d",fs_Op_ret);
+        }
+        else
+        {
+            LOG_DEBUG("Delete settingfile Success");
+        }
+
+
+        fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(LOGFILE_NAME);
+
+        if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
+        {
+            LOG_ERROR("Delete logfile Fail,and Return Error is %d",fs_Op_ret);
+        }
+        else
+        {
+            LOG_DEBUG("Delete logfile Success");
+        }
+
+
+        fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(MILEAGEFILE_NAME);
+
+        if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
+        {
+            LOG_ERROR("Delete mileagefile Fail,and Return Error is %d",fs_Op_ret);
+        }
+        else
+        {
+            LOG_DEBUG("Delete mileagefile Success");
+        }
+
+        // if time is less , send text will send fail,so proposal not to reply sms there
+        eat_sleep(10*1000);
+
+        eat_reset_module();
+
+    }
+}
+
+
+static void sms_reboot_proc(u8 *p, u8 *number)
+{
+    unsigned char *ptr1;
+    char ack_message[64] = {0};
+
+
+    ptr1 = tool_StrstrAndReturnEndPoint(p, "RESET");
+    if(NULL != ptr1)
+    {
+
+        sprintf(ack_message, "Reset ok");
+
+        LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
+        eat_send_text_sms(number, ack_message);
+        LOG_DEBUG("ready to reboot...");
+
+        // if time is less , send text will send fail,so proposal not to reply sms there
+        eat_sleep(10*1000);
+
+        eat_reset_module();
+    }
+}
+
+
 static void sms_server_proc(u8 *p, u8 *number)
 {
     unsigned char *ptr1;
@@ -82,6 +170,8 @@ static void sms_server_proc(u8 *p, u8 *number)
         {
             sprintf(ack_message, "SERVER %s:%d",setting.domain,setting.port);
         }
+
+        LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
         eat_send_text_sms(number, ack_message);
     }
 
@@ -150,6 +240,7 @@ static void sms_server_proc(u8 *p, u8 *number)
             sprintf(ack_message, "%s ERROR", ptr1);
         }
 
+        LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
         eat_send_text_sms(number, ack_message);
     }
 
@@ -168,6 +259,8 @@ static void sms_timer_proc(u8 *p, u8 *number)
     if(NULL != ptr1)
     {
         sprintf(ack_message, "TIMER:%u", (30 * 1000 / 1000));
+
+        LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
         eat_send_text_sms(number, ack_message);
     }
 
@@ -211,6 +304,7 @@ static void sms_timer_proc(u8 *p, u8 *number)
             sprintf(ack_message, "SET TIMER to %s ERROR", ptr1);
         }
 
+        LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
         eat_send_text_sms(number, ack_message);
     }
 
@@ -239,6 +333,8 @@ static void eat_sms_read_cb(EatSmsReadCnf_st smsReadCnfContent)
         sms_version_proc(p, smsReadCnfContent.number);
         sms_server_proc(p, smsReadCnfContent.number);
         sms_timer_proc(p, smsReadCnfContent.number);
+        sms_reboot_proc(p, smsReadCnfContent.number);
+        sms_factory_proc(p, smsReadCnfContent.number);
     }
     else//PDUģʽ
     {

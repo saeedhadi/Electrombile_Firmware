@@ -26,6 +26,8 @@
 #define ADC1_PERIOD 10  //sampling period : 10ms
 #define ADC_RELATIVE_VALUE 3*1000/103.f   //3K&100K resistance ,change unit to mV
 
+#define MILEAGEFILE_NAME   L"C:\\mileage"
+
 
 DumpVoltage mileage_storage = {0};
 static unsigned int adcvalue;               //usually used to detect the value of the ADC1
@@ -104,7 +106,7 @@ int cmd_deletemileage(const char* cmdString, unsigned short length)
     eat_fs_error_enum fs_Op_ret;
 
     fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(MILEAGEFILE_NAME);
-    if(EAT_FS_NO_ERROR!=fs_Op_ret)
+    if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
     {
         LOG_ERROR("Delete mileagefile Fail,and Return Error is %d",fs_Op_ret);
         return EAT_FALSE;
