@@ -61,6 +61,26 @@ static void sms_version_proc(u8 *p, u8 *number)
     return;
 }
 
+static void sms_reboot_proc(u8 *p, u8 *number)
+{
+    unsigned char *ptr1;
+    char ack_message[64] = {0};
+
+
+    ptr1 = tool_StrstrAndReturnEndPoint(p, "RESET");
+    if(NULL != ptr1)
+    {
+
+        sprintf(ack_message, "RESET ok");
+        eat_send_text_sms(number, ack_message);
+        LOG_DEBUG("ready to reboot...");
+        // if time is less , send text will fail,so proposal not to reply sms there
+        eat_sleep(5000);
+        eat_reset_module();
+    }
+}
+
+
 static void sms_server_proc(u8 *p, u8 *number)
 {
     unsigned char *ptr1;
@@ -239,6 +259,7 @@ static void eat_sms_read_cb(EatSmsReadCnf_st smsReadCnfContent)
         sms_version_proc(p, smsReadCnfContent.number);
         sms_server_proc(p, smsReadCnfContent.number);
         sms_timer_proc(p, smsReadCnfContent.number);
+        sms_reboot_proc(p, smsReadCnfContent.number);
     }
     else//PDUģʽ
     {
