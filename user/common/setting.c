@@ -17,8 +17,6 @@
 #include "debug.h"
 #include "log.h"
 
-#define SETTINGFILE_NAME  L"C:\\setting.txt"
-
 typedef struct
 {
     //Server configuration
@@ -43,7 +41,7 @@ int cmd_deletesetting(const char* cmdString, unsigned short length)
     eat_fs_error_enum fs_Op_ret;
 
     fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(SETTINGFILE_NAME);
-    if(EAT_FS_NO_ERROR!=fs_Op_ret)
+    if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
     {
         LOG_ERROR("Delete settingfile Fail,and Return Error is %d",fs_Op_ret);
         return EAT_FALSE;
