@@ -29,7 +29,6 @@ int cmd_Login(void)
     msg->version = PROTOCOL_VERSION;
 
     eat_get_imei(imei, IMEI_LENGTH);
-    imei[IMEI_LENGTH-1] = '0';
 
     memcpy(msg->IMEI, imei, IMEI_LENGTH);
 
