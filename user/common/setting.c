@@ -17,20 +17,7 @@
 #include "debug.h"
 #include "log.h"
 #include "fs.h"
-typedef struct
-{
-    //Server configuration
-    ADDR_TYPE addr_type;
-    union
-    {
-        char domain[MAX_DOMAIN_NAME_LEN];
-        u8 ipaddr[4];
-    }addr;
-    u16 port;
 
-    //Timer configuration
-    u32 gps_send_timer_period;
-}STORAGE;
 
 
 SETTING setting;
