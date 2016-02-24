@@ -19,6 +19,17 @@
 #define SYSTEM_DRIVE    "C:\\"
 #define TF_DRIVE        "D:\\"
 
+// because #include "mileage.h" can't pass compile , integrate after combine develop
+#define MAX_MILEAGE_LEN 60
+typedef struct
+{
+    float voltage[MAX_MILEAGE_LEN];
+    float dump_mileage[MAX_MILEAGE_LEN];
+
+}DumpVoltage;
+
+
+
 
 //equivalent to eat_acsii_to_ucs2
 static void ascii_2_unicode(u16* out, u8* in)
@@ -167,7 +178,7 @@ int fs_cat_SettingFile(void)
 
 int fs_cat_MileageFile(void)
 {
-   /* FS_HANDLE fh;
+    FS_HANDLE fh;
     eat_bool ret = EAT_FALSE;
     int rc,i;
     DumpVoltage storage;
@@ -191,7 +202,8 @@ int fs_cat_MileageFile(void)
         LOG_DEBUG("read mileage file success.");
         for(i = 0;i < MAX_MILEAGE_LEN;i++)
         {
-            print("%d\tvoltage:%.2f\tmileage:%.2f\t",i+1,storage.voltage,storage.dump_mileage);
+            print("%d\tvoltage:%f\tmileage:%f\t\n",i+1,storage.voltage,storage.dump_mileage);
+            eat_sleep(20);//the number is certain , 20ms is enough
         }
 
     }
@@ -202,8 +214,7 @@ int fs_cat_MileageFile(void)
 
     eat_fs_Close(fh);
 
-    return rc;*/
-    return 0;
+    return rc;
 }
 
 int fs_cat_LogFile(void)
