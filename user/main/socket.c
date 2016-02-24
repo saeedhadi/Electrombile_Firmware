@@ -229,6 +229,7 @@ static void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
             break;
 
         case CBM_ACTIVATING:
+        case CBM_DEACTIVATING:
             //no need to handle
             break;
 
