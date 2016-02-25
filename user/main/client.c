@@ -30,7 +30,7 @@
 
 
 
-typedef int (*MSG_PROC)(const void* msg);
+typedef int (*MSG_PROC)(const void* msg);       //TODO: add the message length parameter
 typedef struct
 {
     char cmd;
