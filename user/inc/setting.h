@@ -58,7 +58,4 @@ void set_vibration_state(eat_bool fixed) __attribute__((always_inline));
 eat_bool setting_restore(void);
 eat_bool setting_save(void);
 
-#define SETTINGFILE_NAME  L"C:\\setting"
-
-
 #endif /* USER_ELECTROMBILE_SETTING_H_ */

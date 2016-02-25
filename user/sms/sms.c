@@ -19,6 +19,7 @@
 #include "tool.h"
 #include "version.h"
 #include "timer.h"
+#include "fs.h"
 
 //because #include "mileage" can't pass compile , so define again there
 #define MILEAGEFILE_NAME   L"C:\\mileage"

@@ -16,6 +16,7 @@
 #include "setting.h"
 #include "debug.h"
 #include "log.h"
+#include "fs.h"
 
 typedef struct
 {

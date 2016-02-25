@@ -24,6 +24,7 @@
 #include "setting.h"
 #include "mileage.h"
 #include "log.h"
+#include "fs.h"
 #include "version.h"
 /********************************************************************
  * Macros
@@ -126,6 +127,7 @@ void app_main(void *data)
     }
 
     log_initial();
+    fs_initial();
 
     setting_restore();
     mileage_restore();

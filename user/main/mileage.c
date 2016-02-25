@@ -18,7 +18,7 @@
 #include "socket.h"
 #include "timer.h"
 #include "rtc.h"
-
+#include "fs.h"
 #include "mileage.h"
 
 #define EAT_ADC0 EAT_PIN23_ADC1

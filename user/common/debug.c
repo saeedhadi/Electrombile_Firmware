@@ -139,34 +139,28 @@ static int cmd_AT(const unsigned char* cmdString, unsigned short length)
     return 0;
 }
 
-//TODO: the following command should be in FS module
-#if 0
-    if(strstr(buf, "deletesetting"))
-    {
-        LOG_DEBUG("setting.txt deleted.");
-        eat_fs_Delete(SETTINGFILE_NAME);//TODO, for debug
-        return 0;
-    }
-    if(strstr(buf, "deletemileage"))
-    {
-        LOG_DEBUG("mileage.txt deleted.");
-        eat_fs_Delete(MILEAGEFILE_NAME);//TODO, for debug
-        return 0;
-    }
-    if(strstr(buf, "deletelog"))
-    {
-        LOG_DEBUG("log.txt deleted.");
-        eat_fs_Delete(LOGFILE_NAME);//TODO, for debug
-        return 0;
-    }
-#endif
+/*
+ * 去掉字符串开头的空格
+ *
+ */
+static const unsigned char* trim_left(const unsigned char* string)
+{
+    const unsigned char* p = string;
+
+    while(*p == ' ') p++;
+
+    return p;
+}
 
 int debug_proc(const unsigned char* cmdString, unsigned short length)
 {
     int i = 0;
+
+    const unsigned char* cmd = trim_left(cmdString);
+
     for (i = 0; i < MAX_CMD_NUMBER && cmd_map[i].action; i++)
     {
-        if (strstr(cmdString, cmd_map[i].cmd))
+        if (strncmp(cmd, cmd_map[i].cmd, strlen(cmd_map[i].cmd)) == 0)
         {
             return cmd_map[i].action(cmdString, length);
         }
