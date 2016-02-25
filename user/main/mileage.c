@@ -101,7 +101,7 @@ static eat_bool mileage_reload(void)
 }
 
 
-int cmd_deletemileage(const char* cmdString, unsigned short length)
+int cmd_deletemileage(const unsigned char* cmdString, unsigned short length)
 {
     eat_fs_error_enum fs_Op_ret;
 

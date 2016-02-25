@@ -37,7 +37,7 @@ typedef struct
 SETTING setting;
 
 
-int cmd_deletesetting(const char* cmdString, unsigned short length)
+int cmd_deletesetting(const unsigned char* cmdString, unsigned short length)
 {
     eat_fs_error_enum fs_Op_ret;
 
@@ -54,7 +54,7 @@ int cmd_deletesetting(const char* cmdString, unsigned short length)
     return EAT_TRUE;
 }
 
-int cmd_catsetting(const char* cmdString, unsigned short length)
+int cmd_catsetting(const unsigned char* cmdString, unsigned short length)
 {
 
     FS_HANDLE fh;

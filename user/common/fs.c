@@ -15,6 +15,7 @@
 #include "setting.h"
 #include "uart.h"
 #include "log.h"
+#include "debug.h"
 
 #define SYSTEM_DRIVE    "C:\\"
 #define TF_DRIVE        "D:\\"
@@ -137,7 +138,6 @@ static int fs_rm(const unsigned char* cmdString, unsigned short length)
  */
 static int fs_cat(const unsigned char* cmdString, unsigned short length)
 {
-    unsigned char* p = NULL;
     int rc;
 
     return rc;

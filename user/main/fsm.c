@@ -17,6 +17,7 @@
 #include "modem.h"
 #include "request.h"
 #include "socket.h"
+#include "watchdog.h"
 
 
 typedef int ACTION(void);

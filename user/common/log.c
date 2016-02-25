@@ -103,13 +103,13 @@ int log_catlog(void)
     return 0;
 }
 
-int cmd_catlog(const char* cmdString, unsigned short length)
+int cmd_catlog(const unsigned char* cmdString, unsigned short length)
 {
     print("cat log file begin:");
     return log_catlog();
 }
 
-int cmd_deletelog(const char* cmdString, unsigned short length)
+int cmd_deletelog(const unsigned char* cmdString, unsigned short length)
 {
     eat_fs_error_enum fs_Op_ret;
 
