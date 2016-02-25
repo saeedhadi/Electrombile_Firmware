@@ -27,7 +27,6 @@
 #include "data.h"
 #include "mileage.h"
 
-#define APP_FOLDER_NAME L"C"
 
 int cmd_Login_rsp(const void* msg)
 {
@@ -373,18 +372,7 @@ int cmd_UpgradeStart_rsp(const void* msg)
     }
     else
     {
-        //调用eat_fs_GetFolderSize获取磁盘剩余空间大小，判断是否足以容纳 升级包大小(req->size)
-        FolderSize = eat_fs_GetFolderSize(APP_FOLDER_NAME);
-        if(FolderSize >= 0)
-        {
-            LOG_DEBUG("Get Folder Size Success,and The Folder Size is %d",FolderSize);
-        }
-        else
-        {
-            LOG_ERROR("Get Folder Size Fail, and Return Error is %d",FolderSize);
-            return -1;
-        }
-
+        FolderSize = upgrade_GetFolderSize();
         if (req->size > FolderSize)
         {
             LOG_DEBUG("Free disk is not enough , can not start app_upgrade!");
@@ -415,8 +403,10 @@ int cmd_UpgradeData_rsp(const void* msg)
     MSG_UPGRADE_DATA* req = (MSG_UPGRADE_DATA*)msg;
     MSG_UPGRADE_DATA_RSP* rsp = NULL;
     int rc = 0;
+
+
     //check if the data is right
-    if(req->header.length - sizeof(req->offset) != strlen(req->data))
+    if(req->header.length - sizeof(req->offset) != sizeof((u8 *)(req->data)))
     {
         LOG_ERROR("Upgrade:receive data length error.");
         rc = -1;
@@ -426,22 +416,16 @@ int cmd_UpgradeData_rsp(const void* msg)
         rc = upgrade_appendFile(req->offset, req->data, req->header.length - sizeof(req->offset));
     }
 
-    if(rc == 0)     // 0 express no error
+
+    //response req->offset + length of req->data
+    rsp = alloc_rspMsg(msg);
+    if (!rsp)
     {
-        //response req->offset + length of req->data
-        rsp = alloc_rspMsg(msg);
-        if (!rsp)
-        {
-            LOG_ERROR("alloc rsp msg failed:cmd=%d", req->header.cmd);
-            return -1;
-        }
-        rsp->offset= req->offset + strlen(req->data);
-        socket_sendData(rsp,sizeof(MSG_UPGRADE_DATA_RSP));
+        LOG_ERROR("alloc rsp msg failed:cmd=%d", req->header.cmd);
+        return -1;
     }
-    else
-    {
-        LOG_ERROR("receive upgrade data failed , do not send rsp .");
-    }
+    rsp->offset= req->offset + sizeof((u8 *)(req->data));
+    socket_sendData(rsp,sizeof(MSG_UPGRADE_DATA_RSP));
 
     return rc;
 }
@@ -450,42 +434,15 @@ int cmd_UpgradeEnd_rsp(const void* msg)
 {
     MSG_UPGRADE_END* req = (MSG_UPGRADE_END*)msg;
     MSG_UPGRADE_END_RSP* rsp = NULL;
-    unsigned char* app_buf = NULL;
     int rc = 0;
     UINT file_size = 0;
-    size_t appLen;
     uint32_t checksum = 0;
+    u8* app_buf;
 
     //校验升级包的大小是否和req->size一致
     //校验升级包的校验和是否和req->checksum一致
     //响应消息
-    app_buf = get_AppFile(&file_size);
-
-    if(EAT_FS_NO_ERROR != rc)
-    {
-        LOG_ERROR("get file error , and return error is :%d",rc);
-        rc = -1;
-    }
-    else
-    {
-        LOG_DEBUG("get file success , file size is:%d",file_size);
-        if(file_size != req->size)
-        {
-            LOG_ERROR("file size is not equal,req:%d,file:%d",req->size,file_size);
-            rc = -1;
-        }
-        else
-        {
-            appLen = strlen(app_buf);
-            checksum = adler32(app_buf,appLen);
-        }
-
-        if(req->checksum != checksum)
-        {
-            LOG_ERROR("checksum error,req->checksum:%d,file->checksum:%d",req->checksum,checksum);
-            rc = -1;
-        }
-    }
+    rc = upgrade_CheckAppfile(req->size,req->checksum);
 
     rsp = alloc_rspMsg(msg);
     if (!rsp)
@@ -497,7 +454,7 @@ int cmd_UpgradeEnd_rsp(const void* msg)
     socket_sendData(rsp,sizeof(MSG_UPGRADE_DATA_RSP));
 
     //启动升级
-    rc = upgrade_do(app_buf);
+    rc = upgrade_do();
 
     return 0;
 }

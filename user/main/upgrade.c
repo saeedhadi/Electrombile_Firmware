@@ -5,15 +5,22 @@
  *      Author: jk
  */
 
+#include <stdint.h>
+#include <string.h>
+
 #include <eat_fs.h>
+#include <eat_interface.h>
+
 
 #include "upgrade.h"
+#include "adler32.h"
 #include "log.h"
 
 #define UPGRADE_FILE_NAME  L"C:\\app.bin"
+#define APP_FOLDER_NAME L"C"
 
 
-u8 * get_AppFile(int *filesize)
+u8 * upgrade_GetAppFile(UINT *p_FileSize)
 {
     FS_HANDLE FileHandle;
     int rc;
@@ -30,7 +37,7 @@ u8 * get_AppFile(int *filesize)
         return 0;
     }
 
-    rc = eat_fs_GetFileSize(FileHandle,filesize);
+    rc = eat_fs_GetFileSize(FileHandle,p_FileSize);
     if(EAT_FS_NO_ERROR != rc)
     {
         LOG_ERROR("get file size error , and return error is :%d",rc);
@@ -39,32 +46,115 @@ u8 * get_AppFile(int *filesize)
     }
     else
     {
-        LOG_DEBUG("get file size success , file size is:%d",*filesize);
+        LOG_DEBUG("get file size success , file size is:%d",*p_FileSize);
     }
 
-    app_buf = eat_mem_alloc(*filesize);
+    app_buf = eat_mem_alloc(*p_FileSize);
     if (!app_buf)
     {
         LOG_ERROR("alloc app_buf error!");
         return 0;
     }
 
-    rc = eat_fs_Read(FileHandle,app_buf,*filesize, NULL);
+    rc = eat_fs_Read(FileHandle,app_buf,*p_FileSize, NULL);
     if (EAT_FS_NO_ERROR == rc)
     {
         LOG_DEBUG("read app file success.");
     }
     else
     {
-        LOG_ERROR("read file fail, and return error: %d", rc);
+        LOG_ERROR("read app file fail, and return error: %d", rc);
         return 0;
     }
 
     eat_fs_Close(FileHandle);
+
     return app_buf;
 }
 
+int upgrade_adler32(unsigned char *data, size_t len)
+{
+    int checksum = 0;
 
+    checksum = adler32(data,len);
+
+    return checksum;
+}
+
+/*
+*fun:check app file
+*return:0 express OK , !0 express not OK
+*/
+int upgrade_CheckAppfile(int req_size,int req_checksum)
+{
+    UINT *pFileSize = NULL;
+    int checksum = 0;
+    unsigned char* app_buf = NULL;
+    size_t appLen = 0;
+    int rc = 0;
+
+    app_buf = upgrade_GetAppFile(pFileSize);
+
+    if(!app_buf)
+    {
+        LOG_DEBUG("get app file success.");
+    }
+    else
+    {
+        LOG_DEBUG("get app file failed , and return is %d",app_buf);
+        rc = -1;
+    }
+
+    if(EAT_FS_NO_ERROR != rc)
+    {
+        LOG_ERROR("get file error , and return error is :%d",rc);
+        rc = -1;
+    }
+    else
+    {
+        LOG_DEBUG("get file success , file size is:%d",*pFileSize);
+        if(*pFileSize != req_size)
+        {
+            LOG_ERROR("file size is not equal,req:%d,file:%d",req_size,*pFileSize);
+            rc = -1;
+        }
+        else
+        {
+            appLen = sizeof(app_buf);
+            checksum = upgrade_adler32(app_buf,appLen);
+        }
+
+        if(req_checksum != checksum)
+        {
+            LOG_ERROR("checksum error,req->checksum:%d,file->checksum:%d",req_checksum,checksum);
+            rc = -1;
+        }
+    }
+
+    eat_mem_free(app_buf);
+
+    return rc;
+}
+
+
+int upgrade_GetFolderSize()
+{
+    int FolderSize = 0;
+
+    //调用eat_fs_GetFolderSize获取磁盘剩余空间大小，判断是否足以容纳 升级包大小(req->size)
+    FolderSize = eat_fs_GetFolderSize(APP_FOLDER_NAME);
+    if(FolderSize >= 0)
+    {
+        LOG_DEBUG("Get Folder Size Success,and The Folder Size is %d",FolderSize);
+    }
+    else
+    {
+        LOG_ERROR("Get Folder Size Fail, and Return Error is %d",FolderSize);
+        return -1;
+    }
+
+    return FolderSize;
+}
 /*
 *fun:create the upgrade file
 *return:0 express success ; -1 express fail
@@ -74,6 +164,13 @@ int upgrade_createFile(void)
     FS_HANDLE fh;
 
     LOG_INFO("create upgrade file...");
+
+    fh = eat_fs_Delete(UPGRADE_FILE_NAME);
+    if(EAT_FS_FILE_NOT_FOUND != fh && EAT_FS_NO_ERROR != fh)
+    {
+        LOG_ERROR("upgrade file exists , but can't delete it.");
+    }
+
 
     fh = eat_fs_Open(UPGRADE_FILE_NAME,FS_CREATE);
     if(EAT_FS_NO_ERROR <= fh)
@@ -120,7 +217,8 @@ int upgrade_appendFile(int offset, char* data,  unsigned int length)
             fh_write = eat_fs_Write(fh_open, data, length, &writedLen);
             if((EAT_FS_NO_ERROR == fh_write) && length == writedLen)
             {
-                fh_commit = eat_fs_Commit(fh_open);//don't know how soon the next block will come , commit it
+                //don't know how soon the next block will come , commit it
+                fh_commit = eat_fs_Commit(fh_open);
                 if(EAT_FS_NO_ERROR == fh_commit)
                 {
                     LOG_INFO("commit file success.");
@@ -149,16 +247,18 @@ int upgrade_appendFile(int offset, char* data,  unsigned int length)
 
 }
 
-int upgrade_do(char* app_data)
+int upgrade_do(void)
 {
     u32 APP_DATA_RUN_BASE;  //app run addr
     u32 APP_DATA_STORAGE_BASE;  //app data storage addr
     u32 app_space_value;
+    unsigned char *app_data;
     unsigned char *addr;
-    int app_dataLen;
+    UINT app_dataLen;
     int rc;
+    app_data = upgrade_GetAppFile(&app_dataLen);
 
-    app_dataLen = strlen(app_data);
+    //app_dataLen = sizeof((u8 *)(app_data));
 
     APP_DATA_RUN_BASE = eat_get_app_base_addr(); //get app addr
     LOG_INFO("APP_DATA_RUN_BASE : %ld",APP_DATA_RUN_BASE);
