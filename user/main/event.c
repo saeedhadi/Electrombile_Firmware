@@ -200,7 +200,7 @@ static int ThreadCmd_AutolockState(const MSG_THREAD* msg)
     autolock_msg = alloc_msg(CMD_DEFEND_NOTIFY, sizeof(MSG_AUTODEFEND_STATE_REQ));
     autolock_msg->state = msg_state->state;
 
-    LOG_DEBUG("send seek value message.");
+    LOG_DEBUG("send auto lock state change message: %d", msg_state->state);
     socket_sendData(autolock_msg, sizeof(MSG_AUTODEFEND_STATE_REQ));
 
     return 0;
