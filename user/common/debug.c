@@ -176,6 +176,6 @@ int regist_cmd(const unsigned char* cmd, CMD_ACTION action)
     strncpy(cmd_map[i].cmd, cmd, MAX_CMD_LENGTH);
     cmd_map[i].action = action;
 
-    LOG_INFO("register cmd %s(%p) at position %d success", cmd, action, i);
+    LOG_DEBUG("register cmd %s(%p) at position %d success", cmd, action, i);
     return 0;
 }

@@ -18,7 +18,7 @@ void startWatchdog(void)
 	eat_bool rc = eat_watchdog_start(REBOOT_TIMEOUT, 0); //reboot if over time
     if(rc)
     {
-        LOG_INFO("open watchdog success.");
+        LOG_DEBUG("open watchdog success.");
     }
     else
     {

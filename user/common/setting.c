@@ -107,7 +107,7 @@ int cmd_catsetting(const unsigned char* cmdString, unsigned short length)
 
 static void setting_initial(void)
 {
-    LOG_INFO("setting initial to default value.");
+    LOG_DEBUG("setting initial to default value.");
 
     regist_cmd("deletesetting", cmd_deletesetting);
     regist_cmd("catsetting", cmd_catsetting);
@@ -158,7 +158,7 @@ eat_bool setting_restore(void)
 
     setting_initial();
 
-    LOG_INFO("restore setting from file");
+    LOG_DEBUG("restore setting from file");
 
     /*setting reload*/
     fh = eat_fs_Open(SETTINGFILE_NAME, FS_READ_ONLY);

@@ -46,10 +46,10 @@ static eat_bool mileage_reload(void);
 eat_bool mileage_restore(void)
 {
 
-    LOG_INFO("mileage initial...");
+    LOG_DEBUG("mileage initial...");
     mileage_initial();
     eat_sleep(100);
-    LOG_INFO("restore mileage from file");
+    LOG_DEBUG("restore mileage from file");
     return mileage_reload();
 }
 /*
