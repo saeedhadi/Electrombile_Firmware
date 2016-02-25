@@ -12,6 +12,7 @@
 #include "debug.h"
 #include "log.h"
 #include "rtc.h"
+#include "utils.h"
 #include "version.h"
 
 #define MAX_CMD_LENGTH (16)
@@ -139,24 +140,11 @@ static int cmd_AT(const unsigned char* cmdString, unsigned short length)
     return 0;
 }
 
-/*
- * 去掉字符串开头的空格
- *
- */
-static const unsigned char* trim_left(const unsigned char* string)
-{
-    const unsigned char* p = string;
-
-    while(*p == ' ') p++;
-
-    return p;
-}
-
 int debug_proc(const unsigned char* cmdString, unsigned short length)
 {
     int i = 0;
 
-    const unsigned char* cmd = trim_left(cmdString);
+    const unsigned char* cmd = string_trimLeft(cmdString);
 
     for (i = 0; i < MAX_CMD_NUMBER && cmd_map[i].action; i++)
     {
