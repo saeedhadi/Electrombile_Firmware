@@ -10,5 +10,6 @@
 
 const unsigned char* string_trimLeft(const unsigned char* string);
 
+void ascii_2_unicode(unsigned short* out, const unsigned char* in);
 
 #endif /* USER_INC_UTILS_H_ */

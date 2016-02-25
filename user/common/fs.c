@@ -12,41 +12,19 @@
 
 #include "fs.h"
 #include "tool.h"
-#include "setting.h"
 #include "uart.h"
 #include "log.h"
 #include "debug.h"
+#include "utils.h"
 
 #define SYSTEM_DRIVE    "C:\\"
 #define TF_DRIVE        "D:\\"
 
-// because #include "mileage.h" can't pass compile , integrate after combine develop
-#define MAX_MILEAGE_LEN 60
-typedef struct
-{
-    float voltage[MAX_MILEAGE_LEN];
-    float dump_mileage[MAX_MILEAGE_LEN];
-
-}DumpVoltage;
+#define CMD_STRING_LS   "ls"
+#define CMD_STRING_RM   "rm"
+#define CMD_STRING_CAT  "cat"
 
 
-
-
-//equivalent to eat_acsii_to_ucs2
-static void ascii_2_unicode(u16* out, u8* in)
-{
-    u16 i=0;
-    u8* outp = (u8*)out;
-    u8* inp = in;
-    //eat_trace("filename:%s",in);
-    while( inp[i] )
-    {
-        outp[i*2] = inp[i];
-        outp[i*2+1] = 0x00;
-        i++;
-    }
-
-}
 
 #define MAX_FILENAME_LEN    32
 static int fs_ls(const unsigned char* cmdString, unsigned short length)
@@ -87,16 +65,7 @@ int fs_delete_file(const WCHAR * FileName)
     eat_fs_error_enum fs_Op_ret;
 
     fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(FileName);
-    if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
-    {
-        LOG_ERROR("Delete file Fail,and Return Error is %d",fs_Op_ret);
-        return -1;
-    }
-    else
-    {
-        LOG_DEBUG("Delete file Success");
-        return 0;
-    }
+
 }
 
 /*
@@ -105,28 +74,32 @@ int fs_delete_file(const WCHAR * FileName)
  */
 static int fs_rm(const unsigned char* cmdString, unsigned short length)
 {
-    unsigned char* p = NULL;
-    int rc;
+    const unsigned char* filename = strstr(cmdString, CMD_STRING_RM);
+    int rc = EAT_FS_NO_ERROR;
+    WCHAR filename_w[MAX_FILENAME_LEN];
 
-    p = tool_StrstrAndReturnEndPoint((char *)cmdString, "mileage");
-    if(NULL != p)
+
+    filename = string_trimLeft(filename);
+    if (strlen(filename) == 0)
     {
-        LOG_DEBUG("delete mileage");
-        rc = fs_delete_file(MILEAGEFILE_NAME);
+        LOG_INFO("parameter not correct");
+        return 0;
     }
 
-    p = tool_StrstrAndReturnEndPoint((char *)cmdString, "setting");
-    if(NULL != p)
-    {
-        LOG_DEBUG("delete setting");
-        rc = fs_delete_file(SETTINGFILE_NAME);
-    }
+    ascii_2_unicode(filename_w, filename);      //FIXME: overflow bug: the filename length may exceed MAX_FILENAME_LEN
 
-    p = tool_StrstrAndReturnEndPoint((char *)cmdString, "log");
-    if(NULL != p)
+    rc = eat_fs_Delete(filename_w);
+    if (rc == EAT_FS_FILE_NOT_FOUND)
     {
-        LOG_DEBUG("delete log.txt");
-        rc = fs_delete_file(LOGFILE_NAME);
+        LOG_INFO("file not found");
+    }
+    else if(rc == EAT_FS_NO_ERROR)
+    {
+        LOG_DEBUG("delete file Success");
+    }
+    else
+    {
+        LOG_ERROR("delete file fail, return code is %d", rc);
     }
 
     return rc;
@@ -146,7 +119,7 @@ static int fs_cat(const unsigned char* cmdString, unsigned short length)
 
 void fs_initial(void)
 {
-    regist_cmd("ls", fs_ls);
-    regist_cmd("rm", fs_rm);
-    regist_cmd("cat", fs_cat);
+    regist_cmd(CMD_STRING_LS, fs_ls);
+    regist_cmd(CMD_STRING_RM, fs_rm);
+    regist_cmd(CMD_STRING_CAT, fs_cat);
 }
