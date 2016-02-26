@@ -434,15 +434,8 @@ int cmd_UpgradeEnd_rsp(const void* msg)
 {
     MSG_UPGRADE_END* req = (MSG_UPGRADE_END*)msg;
     MSG_UPGRADE_END_RSP* rsp = NULL;
-    int rc = 0;
-    UINT file_size = 0;
-    uint32_t checksum = 0;
-    u8* app_buf;
 
-    //校验升级包的大小是否和req->size一致
-    //校验升级包的校验和是否和req->checksum一致
-    //响应消息
-    rc = upgrade_CheckAppfile(req->size,req->checksum);
+    int rc =  upgrade_CheckAppfile(req->size,req->checksum);
 
     rsp = alloc_rspMsg(msg);
     if (!rsp)
