@@ -123,3 +123,21 @@ void fs_initial(void)
     regist_cmd(CMD_STRING_RM, fs_rm);
     regist_cmd(CMD_STRING_CAT, fs_cat);
 }
+
+SINT64 fs_getDiskFreeSize(void)
+{
+    SINT64 size = 0;
+
+    int rc = eat_fs_GetDiskFreeSize(EAT_FS, &size);
+    if(rc == EAT_FS_NO_ERROR)
+    {
+        LOG_DEBUG("Get free disk size success,and the free disk size is %d", size);
+    }
+    else
+    {
+        LOG_ERROR("Get free disk size failed, rc = %d",rc);
+        return -1;
+    }
+
+    return size;
+}
