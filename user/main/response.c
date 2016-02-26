@@ -20,12 +20,10 @@
 #include "version.h"
 #include "upgrade.h"
 #include "adler32.h"
-
-//TODO: the following header file should be removed
-#include "timer.h"
+#include "fs.h"
 #include "setting.h"
-#include "data.h"
 #include "mileage.h"
+#include "seek.h"
 
 
 int cmd_Login_rsp(const void* msg)
@@ -83,9 +81,7 @@ int cmd_Seek_rsp(const void* msg)
     if (req->operator == SEEK_ON)
     {
         setSeekMode(EAT_TRUE);
-        eat_timer_start(TIMER_SEEKAUTOOFF,setting.seekautooff_timer_peroid);
-
-        LOG_DEBUG("seek auto_off is on ,time is %ds",setting.seekautooff_timer_peroid/1000);
+        seek_startAutoOffTimer();
 
         LOG_DEBUG("set seek on.");
     }
@@ -212,7 +208,7 @@ int cmd_AutodefendPeriodGet_rsp(const void* msg)
 
     rsp->token = req->token;
     rsp->period = get_autodefend_period();
-    LOG_INFO("alloc autodefend_period_get rsp message as %dmins",rsp->period);
+    LOG_DEBUG("send autodefend period: %d minutes",rsp->period);
     socket_sendData(rsp, sizeof(MSG_AUTODEFEND_PERIOD_GET_RSP));
 
     return 0;
@@ -332,7 +328,7 @@ int cmd_Server_rsp(const void* msg)
         setting.port = (u16)msg_server->port;
 
         setting_save();
-        LOG_INFO("server proc %s:%d successful!",msg_server->server,msg_server->port);
+        LOG_DEBUG("server proc %s:%d successful!",msg_server->server,msg_server->port);
 
         eat_reset_module();
     }
@@ -346,7 +342,7 @@ int cmd_Server_rsp(const void* msg)
             setting.port = (u16)msg_server->port;
 
             setting_save();
-            LOG_INFO("server proc %s:%d successful!",msg_server->server,msg_server->port);
+            LOG_DEBUG("server proc %s:%d successful!",msg_server->server,msg_server->port);
 
             eat_reset_module();
         }

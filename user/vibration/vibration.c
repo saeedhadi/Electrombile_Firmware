@@ -63,7 +63,7 @@ static eat_bool AutolockStateSend(eat_bool state)
     msg_state = (AUTOLOCK_INFO*)msg->data;
     msg_state->state = state;
 
-    LOG_INFO("send autolock state msg to main thread!");
+    LOG_DEBUG("send autolock state msg to main thread!");
     ret = sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, msgLen);
 
     return ret;
@@ -273,7 +273,7 @@ static void vibration_timer_handler(void)
             if(isMoved)
             {
                 timerCount = 0;
-                LOG_INFO("timerCount = 0 now !");
+                LOG_DEBUG("timerCount = 0 now !");
             }
             else
             {
@@ -281,7 +281,7 @@ static void vibration_timer_handler(void)
 
                 if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
                 {
-                    LOG_INFO("vibration state auto locked.");
+                    LOG_DEBUG("vibration state auto locked.");
 
                     AutolockStateSend(EAT_TRUE);    //TODO:send autolock_msg to main thread
 

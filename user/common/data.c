@@ -11,20 +11,9 @@
 
 LOCAL_DATA data =
 {
-    EAT_FALSE,
     EAT_TRUE,
     5,
 };
-
-eat_bool isSeekMode(void)
-{
-    return data.isSeekMode;
-}
-
-void setSeekMode(eat_bool fixed)
-{
-    data.isSeekMode = fixed;
-}
 
 eat_bool get_autodefend_state(void)
 {

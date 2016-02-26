@@ -185,7 +185,7 @@ int upgrade_createFile(void)
 {
     FS_HANDLE fh;
 
-    LOG_INFO("create upgrade file...");
+    LOG_DEBUG("create upgrade file...");
 
     fh = eat_fs_Delete(UPGRADE_FILE_NAME);
     if(EAT_FS_FILE_NOT_FOUND != fh && EAT_FS_NO_ERROR != fh)
@@ -235,7 +235,7 @@ int upgrade_appendFile(int offset, char* data,  unsigned int length)
 
     if(EAT_FS_NO_ERROR <= fh_open)
     {
-        LOG_INFO("create or open log_file success, fh=%d.", fh_open);
+        LOG_DEBUG("create or open log_file success, fh=%d.", fh_open);
 
         seekRet = eat_fs_Seek(fh_open,0,EAT_FS_FILE_END);
 
@@ -246,7 +246,7 @@ int upgrade_appendFile(int offset, char* data,  unsigned int length)
         }
         else
         {
-            LOG_INFO("Seek File Pointer Success");
+            LOG_DEBUG("Seek File Pointer Success");
 
             fh_write = eat_fs_Write(fh_open, data, length, &writedLen);
             if((EAT_FS_NO_ERROR == fh_write) && length == writedLen)
@@ -255,7 +255,7 @@ int upgrade_appendFile(int offset, char* data,  unsigned int length)
                 fh_commit = eat_fs_Commit(fh_open);
                 if(EAT_FS_NO_ERROR == fh_commit)
                 {
-                    LOG_INFO("commit file success.");
+                    LOG_DEBUG("commit file success.");
                 }
                 else
                 {
@@ -320,10 +320,10 @@ int upgrade_do(void)
     }
 
     APP_DATA_RUN_BASE = eat_get_app_base_addr(); //get app addr
-    LOG_INFO("APP_DATA_RUN_BASE : %ld",APP_DATA_RUN_BASE);
+    LOG_DEBUG("APP_DATA_RUN_BASE : %ld",APP_DATA_RUN_BASE);
 
     app_space_value = eat_get_app_space();  //get app space size
-    LOG_INFO("app_space_value : %ld",app_space_value);
+    LOG_DEBUG("app_space_value : %ld",app_space_value);
 
     APP_DATA_STORAGE_BASE = APP_DATA_RUN_BASE + (app_space_value>>1);//second half is space use to storage app_upgrade_data
 

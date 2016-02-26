@@ -21,6 +21,8 @@
 #include "modem.h"
 #include "fsm.h"
 #include "request.h"
+#include "seek.h"
+#include "adc.h"
 
 typedef int (*EVENT_FUNC)(const EatEvent_st* event);
 typedef struct
@@ -115,6 +117,24 @@ static int event_timer(const EatEvent_st* event)
             LOG_ERROR ("timer(%d) not processed!", event->data.timer.timer_id);
             break;
     }
+    return 0;
+}
+
+static int event_adc(const EatEvent_st* event)
+{
+    unsigned int value = event->data.adc.v;
+
+    LOG_DEBUG("ad value=%d", value);
+
+    if (event->data.adc.pin == ADC_433)
+    {
+        seek_proc(value);
+    }
+    else
+    {
+        LOG_INFO("not processed adc pin:%d", event->data.adc.pin);
+    }
+
     return 0;
 }
 
@@ -240,32 +260,6 @@ static int threadCmd_Vibrate(const MSG_THREAD* msg)
     return 0;
 }
 
-static int threadCmd_Seek(const MSG_THREAD* msg)
-{
-    SEEK_INFO* seek = (SEEK_INFO*)msg->data;
-    MSG_433* seek_msg;
-
-    if (msg->length < sizeof(SEEK_INFO)  || !seek)
-    {
-        LOG_ERROR("msg from THREAD_SEEK error!");
-        return -1;
-    }
-
-    LOG_DEBUG("receive thread command CMD_SEEK: value(%d).", seek->intensity);
-
-    seek_msg = alloc_msg(CMD_433, sizeof(MSG_433));
-    if (!seek_msg)
-    {
-        LOG_ERROR("alloc message failed!");
-        return -1;
-    }
-
-    LOG_DEBUG("send seek value message.");
-    seek_msg->intensity = htonl((int)seek->intensity);
-    socket_sendData(seek_msg, sizeof(MSG_433));
-
-    return 0;
-}
 
 static int threadCmd_Location(const MSG_THREAD* msg)
 {
@@ -333,7 +327,6 @@ static THREAD_MSG_PROC msgProcs[] =
         {CMD_THREAD_GPS, threadCmd_GPS},
         {CMD_THREAD_SMS, threadCmd_SMS},
         {CMD_THREAD_VIBRATE, threadCmd_Vibrate},
-        {CMD_THREAD_SEEK, threadCmd_Seek},
         {CMD_THREAD_LOCATION, threadCmd_Location},
         {CMD_THREAD_AUTOLOCK,ThreadCmd_AutolockState},
 };
@@ -390,7 +383,7 @@ static EVENT_PROC eventProcs[] =
     {EAT_EVENT_UART_READY_WR,       event_uart_ready_wr},
     {EAT_EVENT_UART_SEND_COMPLETE,  EAT_NULL},
     {EAT_EVENT_USER_MSG,            event_threadMsg},
-    {EAT_EVENT_ADC,                 EAT_NULL},
+    {EAT_EVENT_ADC,                 event_adc},
 };
 
 

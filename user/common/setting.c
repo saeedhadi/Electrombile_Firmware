@@ -63,7 +63,7 @@ int cmd_catsetting(const unsigned char* cmdString, unsigned short length)
 
     STORAGE storage;
 
-    LOG_INFO("cat setting...");
+    LOG_DEBUG("cat setting...");
 
     fh = eat_fs_Open(SETTINGFILE_NAME, FS_READ_ONLY);
     if(EAT_FS_FILE_NOT_FOUND == fh)
@@ -130,7 +130,6 @@ static void setting_initial(void)
     setting.main_loop_timer_period = 5000;
     setting.vibration_timer_period = 1000;
     setting.seek_timer_period = 2000;
-    setting.seekautooff_timer_peroid = 30*1000;
     setting.timeupdate_timer_peroid = 24 * 60 * 60 * 1000;      //24h * 60m * 60s * 1000ms
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;
@@ -251,12 +250,12 @@ eat_bool setting_save(void)
 //    storage.gps_send_timer_period = setting.gps_send_timer_period;
 
 
-    LOG_INFO("save setting...");
+    LOG_DEBUG("save setting...");
 
     fh = eat_fs_Open(SETTINGFILE_NAME, FS_READ_WRITE);
     if(EAT_FS_NO_ERROR <= fh)
     {
-        LOG_INFO("open file success, fh=%d.", fh);
+        LOG_DEBUG("open file success, fh=%d.", fh);
 
         rc = eat_fs_Write(fh, &storage, sizeof(STORAGE), &writedLen);
         if(EAT_FS_NO_ERROR == rc && sizeof(STORAGE) == writedLen)

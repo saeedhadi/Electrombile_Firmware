@@ -115,13 +115,13 @@ int socket_connect2IP(u8 ip_addr[4])
     rc = eat_soc_connect(socket_id, &address);
     if(rc >= 0)
     {
-        LOG_INFO("socket id of new connection is :%d.", rc);
+        LOG_DEBUG("socket id of new connection is :%d.", rc);
         cmd_Login();
         return ERR_SOCKET_CONNECTED;
     }
     else if (rc == SOC_WOULDBLOCK)
     {
-        LOG_INFO("Connection is in progressing...");
+        LOG_DEBUG("Connection is in progressing...");
         return ERR_SOCKET_WAITING;
     }
     else
@@ -176,7 +176,7 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
         case SOC_CONNECT:
             if(result)
             {
-                LOG_INFO("SOC_CONNECT success.");
+                LOG_DEBUG("SOC_CONNECT success.");
                 fsm_run(EVT_SOCKET_CONNECTED);
             }
             else
@@ -210,7 +210,7 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
 
 static void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
 {
-	LOG_INFO("bear_notify state: %s.", getStateDescription(state));
+    LOG_DEBUG("bear_notify state: %s.", getStateDescription(state));
 
 	switch (state)
 	{
@@ -244,16 +244,16 @@ int socket_init(void)
     s8 rc = eat_gprs_bearer_open("CMNET", NULL, NULL, bear_notify_cb);
     if (rc == CBM_WOULDBLOCK)
     {
-        LOG_INFO("opening bearer...");
+        LOG_DEBUG("opening bearer...");
     }
     else if (rc == CBM_OK)
     {
-        LOG_INFO("open bearer success.");
+        LOG_DEBUG("open bearer success.");
 
         rc = eat_gprs_bearer_hold();
         if (rc == CBM_OK)
         {
-            LOG_INFO("hold bearer success.");
+            LOG_DEBUG("hold bearer success.");
 
             return socket_setup();
         }
@@ -290,7 +290,7 @@ int socket_connect()
         rc = eat_soc_gethostbyname(setting.domain, ipaddr, &len, request_id++);
         if (rc == SOC_WOULDBLOCK)
         {
-            LOG_INFO("eat_soc_gethostbyname wait callback.");
+            LOG_DEBUG("eat_soc_gethostbyname wait callback.");
             return ERR_WAITING_HOSTNAME2IP;
         }
         else if (rc == SOC_SUCCESS)

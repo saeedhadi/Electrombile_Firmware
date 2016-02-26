@@ -121,7 +121,7 @@ int cmd_deletemileage(const unsigned char* cmdString, unsigned short length)
 
 void mileage_initial(void)
 {
-    LOG_INFO("milegae initial to default value.");
+    LOG_DEBUG("milegae initial to default value.");
 
     regist_cmd("deletemileage", cmd_deletemileage);
 
@@ -147,7 +147,7 @@ eat_bool mileage_save(void)
     }
 
 
-    LOG_INFO("save mileage...");
+    LOG_DEBUG("save mileage...");
 
     fh = eat_fs_Open(MILEAGEFILE_NAME, FS_READ_WRITE | FS_CREATE);
     if(EAT_FS_NO_ERROR <= fh)
@@ -210,7 +210,7 @@ void adc_mileageinit_proc(EatAdc_st* adc)
 
     if(adcvalue > 52*ADC_RELATIVE_VALUE)       //adcvalue>52V,assert 60V
     {
-        LOG_INFO("the valtage is %d,assert 60V/TYPE BATTERY", adcvalue);
+        LOG_DEBUG("the valtage is %d,assert 60V/TYPE BATTERY", adcvalue);
         for(i = 0;i <MAX_MILEAGE_LEN;i++)
         {
             mileage_storage.dump_mileage[i] = 0;
@@ -220,7 +220,7 @@ void adc_mileageinit_proc(EatAdc_st* adc)
     }
     else if(adcvalue > 40*ADC_RELATIVE_VALUE)   //adcvalue>40V,assert 48V
     {
-        LOG_INFO("the valtage is %d,assert 48V/TYPE BATTERY", adcvalue);
+        LOG_DEBUG("the valtage is %d,assert 48V/TYPE BATTERY", adcvalue);
         for(i = 0;i <MAX_MILEAGE_LEN;i++)
         {
             mileage_storage.dump_mileage[i] = 0;
@@ -230,7 +230,7 @@ void adc_mileageinit_proc(EatAdc_st* adc)
     }
     else if(adcvalue <= 40*ADC_RELATIVE_VALUE)  //adcvalue<40,assert 36V
     {
-        LOG_INFO("the valtage is %d,assert 36V/TYPE BATTERY", adcvalue);
+        LOG_DEBUG("the valtage is %d,assert 36V/TYPE BATTERY", adcvalue);
         for(i = 0;i <MAX_MILEAGE_LEN;i++)
         {
             mileage_storage.dump_mileage[i] = 0;
@@ -457,7 +457,7 @@ static void msg_mileage_send(MSG_MILEAGE_REQ msg_mileage)
     msg->endtime = msg_mileage.endtime;
     msg->starttime = msg_mileage.starttime;
     msg->mileage = (int)msg_mileage.mileage;
-    LOG_INFO("send the mileage");
+    LOG_DEBUG("send the mileage");
     socket_sendData(msg, msgLen);
 }
 /*
@@ -538,12 +538,12 @@ void detectvoltage_timer(short operation)
 {
     if(DETECTVOLTAGE_START == operation)
     {
-        LOG_INFO("TIMER_VOLTAGE_GET start!");
+        LOG_DEBUG("TIMER_VOLTAGE_GET start!");
 //        eat_timer_start(TIMER_VOLTAGE_GET, setting.detectvolatge_timer_peroid);
     }
     else if(DETECTVOLTAGE_STOP == operation)
     {
-        LOG_INFO("TIMER_VOLTAGE_GET stop!");
+        LOG_DEBUG("TIMER_VOLTAGE_GET stop!");
         eat_timer_stop(TIMER_VOLTAGE_GET);
     }
 }

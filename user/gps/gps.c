@@ -102,13 +102,13 @@ void app_gps_thread(void *data)
                 switch (event.data.timer.timer_id)
                 {
                     case TIMER_GPS:
-                    	LOG_INFO("TIMER_GPS expire.");
+                        LOG_DEBUG("TIMER_GPS expire.");
                         gps_timer_handler(CMD_THREAD_GPS);
                         eat_timer_start(TIMER_GPS, TIMER_GPS_PERIOD);
                         break;
 
                     case TIMER_UPDATE_RTC:
-                        LOG_INFO("TIMER_UPDATE_RTC expire.");
+                        LOG_DEBUG("TIMER_UPDATE_RTC expire.");
                         rtc_setSyncFlag(EAT_FALSE);//at next time , updata RTC_time
                         break;
 
