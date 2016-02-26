@@ -11,5 +11,8 @@
 int upgrade_createFile(void);
 int upgrade_appendFile(int offset, char* data, unsigned int length);
 int upgrade_do(void);
+int upgrade_adler32(unsigned char *data, size_t len);
+int upgrade_CheckAppfile(int req_size,int req_checksum);
+
 
 #endif /* USER_MAIN_UPGRADE_H_ */

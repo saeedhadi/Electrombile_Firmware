@@ -20,12 +20,11 @@
 #define UPGRADE_FILE_NAME  L"C:\\app.bin"
 #define APP_FOLDER_NAME L"C"
 
-
-u8 * upgrade_GetAppFile(UINT *p_FileSize)
+static UINT upgrade_getAppsize(void)
 {
     FS_HANDLE FileHandle;
-    int rc;
-    u8* app_buf = NULL;
+    UINT filesize = 0;
+    int rc = 0;
 
     FileHandle  = eat_fs_Open(UPGRADE_FILE_NAME, FS_READ_ONLY);
     if(EAT_FS_NO_ERROR <= FileHandle)
@@ -38,7 +37,7 @@ u8 * upgrade_GetAppFile(UINT *p_FileSize)
         return 0;
     }
 
-    rc = eat_fs_GetFileSize(FileHandle,p_FileSize);
+    rc = eat_fs_GetFileSize(FileHandle,&filesize);
     if(EAT_FS_NO_ERROR != rc)
     {
         LOG_ERROR("get file size error , and return error is :%d",rc);
@@ -47,17 +46,33 @@ u8 * upgrade_GetAppFile(UINT *p_FileSize)
     }
     else
     {
-        LOG_DEBUG("get file size success , file size is:%d",*p_FileSize);
+        LOG_DEBUG("get file size success , file size is:%d",filesize);
     }
 
-    app_buf = eat_mem_alloc(*p_FileSize);
-    if (!app_buf)
+    eat_fs_Close(FileHandle);
+
+    return filesize;
+}
+
+
+
+static int upgrade_getAppContent(u8 * app_buf,UINT filesize)
+{
+    FS_HANDLE FileHandle;
+    int rc = 0;
+
+    FileHandle  = eat_fs_Open(UPGRADE_FILE_NAME, FS_READ_ONLY);
+    if(EAT_FS_NO_ERROR <= FileHandle)
     {
-        LOG_ERROR("alloc app_buf error!");
-        return 0;
+        LOG_DEBUG("open file success, fh=%d.", FileHandle);
+    }
+    else
+    {
+        LOG_ERROR("open file failed, fh=%d.", FileHandle);
+        return -1;
     }
 
-    rc = eat_fs_Read(FileHandle,app_buf,*p_FileSize, NULL);
+    rc = eat_fs_Read(FileHandle,app_buf,filesize, NULL);
     if (EAT_FS_NO_ERROR == rc)
     {
         LOG_DEBUG("read app file success.");
@@ -65,14 +80,22 @@ u8 * upgrade_GetAppFile(UINT *p_FileSize)
     else
     {
         LOG_ERROR("read app file fail, and return error: %d", rc);
-        return 0;
+        return -1;
     }
 
     eat_fs_Close(FileHandle);
 
-    return app_buf;
+    return rc;
 }
 
+static int upgrade_adler32(unsigned char *data, size_t len)
+{
+    int checksum = 0;
+
+    checksum = adler32(data,len);
+
+    return checksum;
+}
 
 /*
 *fun:check app file
@@ -80,41 +103,58 @@ u8 * upgrade_GetAppFile(UINT *p_FileSize)
 */
 int upgrade_CheckAppfile(int req_size,int req_checksum)
 {
-    UINT *pFileSize = NULL;
+    UINT filesize = 0;
     int checksum = 0;
     unsigned char* app_buf = NULL;
     size_t appLen = 0;
     int rc = 0;
 
-    app_buf = upgrade_GetAppFile(pFileSize);
-
-    if(!app_buf)
+    filesize = upgrade_getAppsize();
+    if(!filesize)
     {
-        LOG_DEBUG("get app file success.");
+        LOG_DEBUG("get appLen success:%d",filesize);
     }
     else
     {
-        LOG_DEBUG("get app file failed , and return is %d",app_buf);
+        LOG_ERROR("get appLen error!");
+        return -1;
+    }
+
+    app_buf = eat_mem_alloc(filesize);
+    if (!app_buf)
+    {
+        LOG_ERROR("alloc app_buf error!");
+        return -1;
+    }
+
+    rc = upgrade_getAppContent(app_buf,filesize);
+
+    if(!rc)
+    {
+        LOG_DEBUG("get app data success.");
+    }
+    else
+    {
+        LOG_DEBUG("get app data failed , and return is %d",app_buf);
         rc = -1;
     }
 
     if(EAT_FS_NO_ERROR != rc)
     {
-        LOG_ERROR("get file error , and return error is :%d",rc);
+        LOG_ERROR("get file error.");
         rc = -1;
     }
     else
     {
-        LOG_DEBUG("get file success , file size is:%d",*pFileSize);
-        if(*pFileSize != req_size)
+        if(filesize != req_size)
         {
-            LOG_ERROR("file size is not equal,req:%d,file:%d",req_size,*pFileSize);
+            LOG_ERROR("file size is not equal,req:%d,file:%d",req_size,filesize);
             rc = -1;
         }
         else
         {
             appLen = sizeof(app_buf);
-            checksum = adler32(app_buf, appLen);
+            checksum = upgrade_adler32(app_buf,appLen);
         }
 
         if(req_checksum != checksum)
@@ -261,9 +301,23 @@ int upgrade_do(void)
     unsigned char *addr;
     UINT app_dataLen;
     int rc;
-    app_data = upgrade_GetAppFile(&app_dataLen);
 
-    //app_dataLen = sizeof((u8 *)(app_data));
+    app_dataLen = upgrade_getAppsize();
+
+    app_data = eat_mem_alloc(app_dataLen);
+
+    rc = upgrade_getAppContent(app_data,app_dataLen);
+
+
+    if(!rc)
+    {
+        LOG_DEBUG("get app data success.");
+    }
+    else
+    {
+        LOG_ERROR("get app data failed , and return is %d",app_data);
+        return -1;
+    }
 
     APP_DATA_RUN_BASE = eat_get_app_base_addr(); //get app addr
     LOG_INFO("APP_DATA_RUN_BASE : %ld",APP_DATA_RUN_BASE);
@@ -288,6 +342,7 @@ int upgrade_do(void)
         LOG_ERROR("Write Flash Failed.");
         return -1;
     }
+    eat_mem_free(app_data);
 
     //upgrade app
     eat_update_app((void*)(APP_DATA_RUN_BASE),(void*)(APP_DATA_STORAGE_BASE), app_dataLen, EAT_PIN_NUM, EAT_PIN_NUM,EAT_FALSE);
