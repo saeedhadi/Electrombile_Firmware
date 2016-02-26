@@ -20,6 +20,7 @@
 #include "version.h"
 #include "upgrade.h"
 #include "adler32.h"
+#include "fs.h"
 
 //TODO: the following header file should be removed
 #include "timer.h"
