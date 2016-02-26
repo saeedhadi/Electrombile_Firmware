@@ -11,6 +11,7 @@
 void seek_initial(void);
 int seek_proc(unsigned int value);
 void seek_startAutoOffTimer(void);
+void setSeekMode(eat_bool fixed);
 
  #endif /* USER_ELECTROMBILE_SEEK_H_ */
 

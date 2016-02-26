@@ -21,12 +21,9 @@
 #include "upgrade.h"
 #include "adler32.h"
 #include "fs.h"
-
-//TODO: the following header file should be removed
-//#include "timer.h"
 #include "setting.h"
-#include "data.h"
 #include "mileage.h"
+#include "seek.h"
 
 
 int cmd_Login_rsp(const void* msg)

@@ -9,13 +9,14 @@
 
 
 #include "log.h"
-#include "data.h"
 #include "seek.h"
 #include "adc.h"
 #include "request.h"
 #include "timer.h"
 
 #define SEEK_AUTO_OFF_PERIOD    30 * 1000   //30 seconds
+
+eat_bool isSeekMode = EAT_FALSE;
 
 void seek_initial(void)
 {
@@ -27,7 +28,7 @@ void seek_initial(void)
 
 int seek_proc(unsigned int value)
 {
-    if (isSeekMode())
+    if (isSeekMode)
     {
         return cmd_seek(value);
     }
@@ -38,4 +39,9 @@ int seek_proc(unsigned int value)
 void seek_startAutoOffTimer(void)
 {
     eat_timer_start(TIMER_SEEKAUTOOFF, SEEK_AUTO_OFF_PERIOD);
+}
+
+void setSeekMode(eat_bool fixed)
+{
+    isSeekMode = fixed;
 }
