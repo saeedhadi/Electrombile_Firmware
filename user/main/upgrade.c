@@ -110,7 +110,7 @@ int upgrade_CheckAppfile(int req_size,int req_checksum)
     int rc = 0;
 
     filesize = upgrade_getAppsize();
-    if(!filesize)
+    if(filesize)
     {
         LOG_DEBUG("get appLen success:%d",filesize);
     }
