@@ -225,7 +225,7 @@ void log_file(const char* fmt, ...)
         }
         else
         {
-            LOG_INFO("Seek File Pointer Success");
+            LOG_DEBUG("Seek File Pointer Success");
 
             fh_write = eat_fs_Write(fh_open, buf, strlen(buf), &writedLen);
 

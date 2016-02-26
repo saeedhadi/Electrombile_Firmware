@@ -33,7 +33,7 @@ void stopWatchdog(void)
 	eat_bool rc = eat_watchdog_stop();
     if(!rc)
     {
-        LOG_INFO("stop watchdog success.");
+        LOG_DEBUG("stop watchdog success.");
     }
     else
     {
@@ -48,7 +48,7 @@ void feedWatchdog(void)
 	eat_bool rc = eat_watchdog_feed();
     if(!rc )
     {
-        LOG_INFO("feed watchdog success.");
+        LOG_DEBUG("feed watchdog success.");
     }
     else
     {

@@ -63,7 +63,7 @@ int cmd_catsetting(const unsigned char* cmdString, unsigned short length)
 
     STORAGE storage;
 
-    LOG_INFO("cat setting...");
+    LOG_DEBUG("cat setting...");
 
     fh = eat_fs_Open(SETTINGFILE_NAME, FS_READ_ONLY);
     if(EAT_FS_FILE_NOT_FOUND == fh)
@@ -251,12 +251,12 @@ eat_bool setting_save(void)
 //    storage.gps_send_timer_period = setting.gps_send_timer_period;
 
 
-    LOG_INFO("save setting...");
+    LOG_DEBUG("save setting...");
 
     fh = eat_fs_Open(SETTINGFILE_NAME, FS_READ_WRITE);
     if(EAT_FS_NO_ERROR <= fh)
     {
-        LOG_INFO("open file success, fh=%d.", fh);
+        LOG_DEBUG("open file success, fh=%d.", fh);
 
         rc = eat_fs_Write(fh, &storage, sizeof(STORAGE), &writedLen);
         if(EAT_FS_NO_ERROR == rc && sizeof(STORAGE) == writedLen)

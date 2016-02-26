@@ -55,7 +55,7 @@ void rtc_update(long long time)
 
         rtc.sec = time;
 
-        LOG_INFO("set RTC to:%4d-%02d-%02d,%02d:%02d:%02d",
+        LOG_DEBUG("set RTC to:%4d-%02d-%02d,%02d:%02d:%02d",
                 rtc.year+YEAROFFSET,
                 rtc.mon,
                 rtc.day,
