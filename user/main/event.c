@@ -124,6 +124,8 @@ static int event_adc(const EatEvent_st* event)
 {
     unsigned int value = event->data.adc.v;
 
+    LOG_DEBUG("ad value=%d", value);
+
     if (event->data.adc.pin == ADC_433)
     {
         seek_proc(value);
