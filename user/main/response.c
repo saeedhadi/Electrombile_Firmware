@@ -364,19 +364,19 @@ int cmd_UpgradeStart_rsp(const void* msg)
     MSG_UPGRADE_START* req = (MSG_UPGRADE_START*)msg;
     MSG_UPGRADE_START_RSP* rsp = NULL;
     int rc = 0;
-    int FolderSize = 0;
+    SINT64 freeDiskSize = 0;
 
     if (req->version <= VERSION_NUM)    //No need to upgrade, normally not happened
     {
-        rc = -1;
+        rc = MSG_VERSION_NOT_SUPPORTED;
     }
     else
     {
-        FolderSize = upgrade_GetFolderSize();
-        if (req->size > FolderSize)
+        freeDiskSize = fs_getDiskFreeSize();
+        if (req->size >= freeDiskSize)      //TODO: equal is not enough, maybe should reserve some disk space
         {
-            LOG_DEBUG("Free disk is not enough , can not start app_upgrade!");
-            rc = -1;
+            LOG_ERROR("Free disk is not enough , can not start app_upgrade!");
+            rc = MSG_DISK_NO_SPACE;
         }
         else
         {
@@ -385,6 +385,7 @@ int cmd_UpgradeStart_rsp(const void* msg)
             rc = upgrade_createFile();
         }
     }
+
     //回应是否可以升级
     rsp = alloc_rspMsg(msg);
     if (!rsp)
@@ -403,17 +404,16 @@ int cmd_UpgradeData_rsp(const void* msg)
     MSG_UPGRADE_DATA* req = (MSG_UPGRADE_DATA*)msg;
     MSG_UPGRADE_DATA_RSP* rsp = NULL;
     int rc = 0;
+    int expectLength = 0;
 
-
-    //check if the data is right
-    if(req->header.length - sizeof(req->offset) != sizeof((u8 *)(req->data)))
+    rc = upgrade_appendFile(req->offset, req->data, req->header.length - sizeof(req->offset));
+    if (rc > 0)
     {
-        LOG_ERROR("Upgrade:receive data length error.");
-        rc = -1;
+        expectLength = req->offset + rc;
     }
     else
     {
-        rc = upgrade_appendFile(req->offset, req->data, req->header.length - sizeof(req->offset));
+        expectLength = req->offset;
     }
 
 
@@ -424,7 +424,7 @@ int cmd_UpgradeData_rsp(const void* msg)
         LOG_ERROR("alloc rsp msg failed:cmd=%d", req->header.cmd);
         return -1;
     }
-    rsp->offset= req->offset + sizeof((u8 *)(req->data));
+    rsp->offset= expectLength;
     socket_sendData(rsp,sizeof(MSG_UPGRADE_DATA_RSP));
 
     return rc;

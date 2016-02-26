@@ -15,6 +15,7 @@
 #include "upgrade.h"
 #include "adler32.h"
 #include "log.h"
+#include "error.h"
 
 #define UPGRADE_FILE_NAME  L"C:\\app.bin"
 #define APP_FOLDER_NAME L"C"
@@ -72,14 +73,6 @@ u8 * upgrade_GetAppFile(UINT *p_FileSize)
     return app_buf;
 }
 
-int upgrade_adler32(unsigned char *data, size_t len)
-{
-    int checksum = 0;
-
-    checksum = adler32(data,len);
-
-    return checksum;
-}
 
 /*
 *fun:check app file
@@ -121,7 +114,7 @@ int upgrade_CheckAppfile(int req_size,int req_checksum)
         else
         {
             appLen = sizeof(app_buf);
-            checksum = upgrade_adler32(app_buf,appLen);
+            checksum = adler32(app_buf, appLen);
         }
 
         if(req_checksum != checksum)
@@ -137,28 +130,17 @@ int upgrade_CheckAppfile(int req_size,int req_checksum)
 }
 
 
-int upgrade_GetFolderSize()
-{
-    int FolderSize = 0;
-
-    //调用eat_fs_GetFolderSize获取磁盘剩余空间大小，判断是否足以容纳 升级包大小(req->size)
-    FolderSize = eat_fs_GetFolderSize(APP_FOLDER_NAME);
-    if(FolderSize >= 0)
-    {
-        LOG_DEBUG("Get Folder Size Success,and The Folder Size is %d",FolderSize);
-    }
-    else
-    {
-        LOG_ERROR("Get Folder Size Fail, and Return Error is %d",FolderSize);
-        return -1;
-    }
-
-    return FolderSize;
-}
 /*
-*fun:create the upgrade file
-*return:0 express success ; -1 express fail
-*/
+ * Function:    upgrade_createFile
+ * Description: create the upgrade file, if the file already exits, truncate it zero size.
+ * Parameters :
+ *      None.
+ *
+ * Returns:
+ *      0:  success
+ *      other: failed
+ *
+ */
 int upgrade_createFile(void)
 {
     FS_HANDLE fh;
@@ -169,28 +151,40 @@ int upgrade_createFile(void)
     if(EAT_FS_FILE_NOT_FOUND != fh && EAT_FS_NO_ERROR != fh)
     {
         LOG_ERROR("upgrade file exists , but can't delete it.");
+        return -1;  //TODO: error code return
     }
 
 
     fh = eat_fs_Open(UPGRADE_FILE_NAME,FS_CREATE);
-    if(EAT_FS_NO_ERROR <= fh)
+    if(EAT_FS_NO_ERROR == fh)
     {
         LOG_DEBUG("create file success, fh=%d.", fh);
     }
     else
     {
         LOG_ERROR("create file failed, fh=%d.", fh);
-        return -1;
+        return -1;  //TODO: error code return
     }
 
     eat_fs_Close(fh);
 
-    return 0;
+    return SUCCESS;
 }
+
 /*
-*fun:receive the upgrade data and write it in file
-*note:offset is not in use now , just seek to endfile
-*/
+ * Function :upgrade_appendFile
+ * Description:append the received data to the end of file.
+ * Parameters :
+ *      offset: [IN]    the offset of the file to be append, now just used to verify
+ *      data:   [IN]    the data buffer pointer
+ *      length: [IN]    the buffer length
+ *
+ * Returns:
+ *      the length of data written to the file, < 0 if error happened
+ *
+ * NOTE
+ *      The parameter offset is not used currently, just seek to the end of file
+ */
 int upgrade_appendFile(int offset, char* data,  unsigned int length)
 {
     FS_HANDLE fh_open, fh_write, fh_commit,seekRet;
@@ -247,6 +241,17 @@ int upgrade_appendFile(int offset, char* data,  unsigned int length)
 
 }
 
+/*
+ * Function :upgrade_do
+ * Description:Perform the upgrade process.
+ * Parameters :
+ *      None.
+ *
+ * Returns:
+ *      0:  success
+ *      other: failed
+ *
+ */
 int upgrade_do(void)
 {
     u32 APP_DATA_RUN_BASE;  //app run addr
