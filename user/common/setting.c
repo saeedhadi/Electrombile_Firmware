@@ -130,7 +130,6 @@ static void setting_initial(void)
     setting.main_loop_timer_period = 5000;
     setting.vibration_timer_period = 1000;
     setting.seek_timer_period = 2000;
-    setting.seekautooff_timer_peroid = 30*1000;
     setting.timeupdate_timer_peroid = 24 * 60 * 60 * 1000;      //24h * 60m * 60s * 1000ms
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;

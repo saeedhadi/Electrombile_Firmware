@@ -10,6 +10,7 @@
 
 void seek_initial(void);
 int seek_proc(unsigned int value);
+void seek_startAutoOffTimer(void);
 
  #endif /* USER_ELECTROMBILE_SEEK_H_ */
 

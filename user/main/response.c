@@ -23,7 +23,7 @@
 #include "fs.h"
 
 //TODO: the following header file should be removed
-#include "timer.h"
+//#include "timer.h"
 #include "setting.h"
 #include "data.h"
 #include "mileage.h"
@@ -84,9 +84,7 @@ int cmd_Seek_rsp(const void* msg)
     if (req->operator == SEEK_ON)
     {
         setSeekMode(EAT_TRUE);
-        eat_timer_start(TIMER_SEEKAUTOOFF,setting.seekautooff_timer_peroid);
-
-        LOG_DEBUG("seek auto_off is on ,time is %ds",setting.seekautooff_timer_peroid/1000);
+        seek_startAutoOffTimer();
 
         LOG_DEBUG("set seek on.");
     }

@@ -13,7 +13,9 @@
 #include "seek.h"
 #include "adc.h"
 #include "request.h"
+#include "timer.h"
 
+#define SEEK_AUTO_OFF_PERIOD    30 * 1000   //30 seconds
 
 void seek_initial(void)
 {
@@ -31,4 +33,9 @@ int seek_proc(unsigned int value)
     }
 
     return 0;
+}
+
+void seek_startAutoOffTimer(void)
+{
+    eat_timer_start(TIMER_SEEKAUTOOFF, SEEK_AUTO_OFF_PERIOD);
 }
