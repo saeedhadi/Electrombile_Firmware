@@ -59,14 +59,7 @@ static int fs_ls(const unsigned char* cmdString, unsigned short length)
 
     return 0;
 }
-int fs_delete_file(const WCHAR * FileName)
-{
 
-    eat_fs_error_enum fs_Op_ret;
-
-    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(FileName);
-
-}
 
 /*
  * cmd format: rm file.txt
@@ -111,7 +104,7 @@ static int fs_rm(const unsigned char* cmdString, unsigned short length)
  */
 static int fs_cat(const unsigned char* cmdString, unsigned short length)
 {
-    int rc;
+    int rc = 0;
 
     return rc;
 }
