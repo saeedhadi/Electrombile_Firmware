@@ -16,7 +16,6 @@ enum CMD
     CMD_THREAD_GPS,
     CMD_THREAD_SMS,
     CMD_THREAD_VIBRATE,
-    CMD_THREAD_SEEK,
     CMD_THREAD_LOCATION,
     CMD_THREAD_AUTOLOCK,
 };
@@ -37,11 +36,6 @@ typedef struct
     char  cellNo;// cell count
     CELL cell[MAX_CELL_NUM];
 }CELL_INFO;       //Cell Global Identifier
-
-typedef struct
-{
-    short intensity;
-}SEEK_INFO;
 
 #pragma anon_unions
 typedef struct

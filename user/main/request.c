@@ -63,3 +63,19 @@ void cmd_Wild(const void* m, int len)
     socket_sendData(msg, msgLen);
 }
 
+int cmd_seek(unsigned int value)
+{
+    MSG_433* seek_msg = alloc_msg(CMD_433, sizeof(MSG_433));
+    if (!seek_msg)
+    {
+        LOG_ERROR("alloc seek message failed!");
+        return -1;
+    }
+
+    LOG_DEBUG("send seek value message:%d", value);
+    seek_msg->intensity = htonl(value);
+    socket_sendData(seek_msg, sizeof(MSG_433));
+
+    return 0;
+}
+

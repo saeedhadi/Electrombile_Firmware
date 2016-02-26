@@ -72,7 +72,7 @@ APP_ENTRY_FLAG
 		(app_user_func)app_gps_thread,//app_user1,
 		(app_user_func)app_sms_thread,//app_user2,
 		(app_user_func)app_vibration_thread,//app_user3,
-		(app_user_func)app_seek_thread,//app_user4,
+		(app_user_func)EAT_NULL,//app_user4,
 		(app_user_func)EAT_NULL,//app_user5,
 		(app_user_func)EAT_NULL,//app_user6,
 		(app_user_func)EAT_NULL,//app_user7,
@@ -141,6 +141,8 @@ void app_main(void *data)
     mileage_restore();
 
     fs_initial();
+
+    seek_initial();
 
     startWatchdog();
 
