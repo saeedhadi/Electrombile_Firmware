@@ -3,6 +3,10 @@
  *
  *  Created on: 2016/2/28
  *      Author: kk
+ *
+ *  Note:
+ *  	This file is copied from the Linux kernel source tree
+ *  	Modify some point to pass the compiler
  */
 
 #ifndef USER_INC_LIST_H_
