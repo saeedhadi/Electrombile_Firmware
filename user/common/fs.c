@@ -42,10 +42,14 @@ static int fs_ls(const unsigned char* cmdString, unsigned short length)
         do
         {
             //filename, file size, file attr, date
-            print("%s\t %d\t %s\t %d-%d-%d %d:%d:%d\r\n",
+            print("%s\t %d\t %c%c%c%c%c\t %d-%d-%d %d:%d:%d\r\n",
                     fileinfo.FileName,
                     fileinfo.FileSize,
-                    fileinfo.Attributes & FS_ATTR_DIR ? "Dir" : "File",
+                    fileinfo.Attributes & FS_ATTR_DIR ? 'D' : '-',
+                    fileinfo.Attributes & FS_ATTR_READ_ONLY ? 'R' : '-',
+                    fileinfo.Attributes & FS_ATTR_HIDDEN ? 'H' : '-',
+                    fileinfo.Attributes & FS_ATTR_SYSTEM ? 'S' : '-',
+                    fileinfo.Attributes & FS_ATTR_ARCHIVE ? 'A' : '-',
                     fileinfo.CreateDateTime.Year1980 + 1980,
                     fileinfo.CreateDateTime.Month,
                     fileinfo.CreateDateTime.Day,
