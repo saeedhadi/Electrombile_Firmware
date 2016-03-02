@@ -128,7 +128,7 @@ SINT64 fs_getDiskFreeSize(void)
     int rc = eat_fs_GetDiskFreeSize(EAT_FS, &size);
     if(rc == EAT_FS_NO_ERROR)
     {
-        LOG_DEBUG("Get free disk size success,and the free disk size is %d", size);
+        LOG_DEBUG("Get free disk size success,and the free disk size is %lld", size);
     }
     else
     {

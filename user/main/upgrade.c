@@ -190,13 +190,12 @@ int upgrade_createFile(void)
     fh = eat_fs_Delete(UPGRADE_FILE_NAME);
     if(EAT_FS_FILE_NOT_FOUND != fh && EAT_FS_NO_ERROR != fh)
     {
-        LOG_ERROR("upgrade file exists , but can't delete it.");
+        LOG_ERROR("upgrade file exists , but can't delete it:%d",fh);
         return -1;  //TODO: error code return
     }
 
-
     fh = eat_fs_Open(UPGRADE_FILE_NAME,FS_CREATE);
-    if(EAT_FS_NO_ERROR == fh)
+    if(EAT_FS_NO_ERROR <= fh)
     {
         LOG_DEBUG("create file success, fh=%d.", fh);
     }
@@ -235,7 +234,7 @@ int upgrade_appendFile(int offset, char* data,  unsigned int length)
 
     if(EAT_FS_NO_ERROR <= fh_open)
     {
-        LOG_DEBUG("create or open log_file success, fh=%d.", fh_open);
+        LOG_DEBUG("open app file success, fh=%d.", fh_open);
 
         seekRet = eat_fs_Seek(fh_open,0,EAT_FS_FILE_END);
 
@@ -249,6 +248,7 @@ int upgrade_appendFile(int offset, char* data,  unsigned int length)
             LOG_DEBUG("Seek File Pointer Success");
 
             fh_write = eat_fs_Write(fh_open, data, length, &writedLen);
+            LOG_HEX(data,length);
             if((EAT_FS_NO_ERROR == fh_write) && length == writedLen)
             {
                 //don't know how soon the next block will come , commit it

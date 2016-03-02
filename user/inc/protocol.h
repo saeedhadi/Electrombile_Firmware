@@ -93,7 +93,7 @@ typedef struct
 typedef struct
 {
     MSG_HEADER header;
-    char version;
+    int version;
     char IMEI[IMEI_LENGTH];
 }__attribute__((__packed__)) MSG_LOGIN_REQ;
 

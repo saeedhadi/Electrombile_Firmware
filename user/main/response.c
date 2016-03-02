@@ -362,7 +362,9 @@ int cmd_UpgradeStart_rsp(const void* msg)
     int rc = 0;
     SINT64 freeDiskSize = 0;
 
-    if (req->version <= VERSION_NUM)    //No need to upgrade, normally not happened
+    LOG_DEBUG("REQ->VERSION:%d:%d",req->version,MSG_VERSION_NOT_SUPPORTED);
+
+    if (req->version <= 215)//VERSION_NUM)    //No need to upgrade, normally not happened
     {
         rc = MSG_VERSION_NOT_SUPPORTED;
     }
@@ -403,6 +405,7 @@ int cmd_UpgradeData_rsp(const void* msg)
     int expectLength = 0;
 
     rc = upgrade_appendFile(req->offset, req->data, req->header.length - sizeof(req->offset));
+    LOG_DEBUG("req->header.length:%d,sizeof(req->offset):%d",req->header.length , sizeof(req->offset));
     if (rc > 0)
     {
         expectLength = req->offset + rc;
@@ -420,7 +423,9 @@ int cmd_UpgradeData_rsp(const void* msg)
         LOG_ERROR("alloc rsp msg failed:cmd=%d", req->header.cmd);
         return -1;
     }
+
     rsp->offset= expectLength;
+    LOG_DEBUG("rsp->LENGTH:%d",expectLength);
     socket_sendData(rsp,sizeof(MSG_UPGRADE_DATA_RSP));
 
     return rc;
