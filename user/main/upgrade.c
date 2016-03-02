@@ -42,7 +42,7 @@ static UINT upgrade_getAppsize(void)
     {
         LOG_ERROR("get file size error , and return error is :%d",rc);
         eat_fs_Close(FileHandle);
-        return 0;
+        return -1;
     }
     else
     {
@@ -65,6 +65,17 @@ static int upgrade_getAppContent(u8 * app_buf,UINT filesize)
     if(EAT_FS_NO_ERROR <= FileHandle)
     {
         LOG_DEBUG("open file success, fh=%d.", FileHandle);
+
+        rc = eat_fs_Read(FileHandle,app_buf,filesize, NULL);
+        if (EAT_FS_NO_ERROR == rc)
+        {
+            LOG_DEBUG("read app file success.");
+        }
+        else
+        {
+            LOG_ERROR("read app file fail, and return error: %d", rc);
+            return -1;
+        }
     }
     else
     {
@@ -72,20 +83,9 @@ static int upgrade_getAppContent(u8 * app_buf,UINT filesize)
         return -1;
     }
 
-    rc = eat_fs_Read(FileHandle,app_buf,filesize, NULL);
-    if (EAT_FS_NO_ERROR == rc)
-    {
-        LOG_DEBUG("read app file success.");
-    }
-    else
-    {
-        LOG_ERROR("read app file fail, and return error: %d", rc);
-        return -1;
-    }
-
     eat_fs_Close(FileHandle);
 
-    return rc;
+    return SUCCESS;
 }
 
 static int upgrade_adler32(unsigned char *data, size_t len)
@@ -103,14 +103,17 @@ static int upgrade_adler32(unsigned char *data, size_t len)
 */
 int upgrade_CheckAppfile(int req_size,int req_checksum)
 {
-    UINT filesize = 0;
+    int filesize = 0;
     int checksum = 0;
     unsigned char* app_buf = NULL;
     size_t appLen = 0;
     int rc = 0;
 
-    filesize = upgrade_getAppsize();
-    if(filesize)
+    LOG_DEBUG("req->size: %d , req->checksum: %d",req_size,req_checksum);
+
+    filesize = (int)upgrade_getAppsize();
+
+    if(filesize >= SUCCESS)
     {
         LOG_DEBUG("get appLen success:%d",filesize);
     }
@@ -129,26 +132,17 @@ int upgrade_CheckAppfile(int req_size,int req_checksum)
 
     rc = upgrade_getAppContent(app_buf,filesize);
 
-    if(!rc)
-    {
-        LOG_DEBUG("get app data success.");
-    }
-    else
+    if(SUCCESS < rc)
     {
         LOG_DEBUG("get app data failed , and return is %d",app_buf);
-        rc = -1;
-    }
-
-    if(EAT_FS_NO_ERROR != rc)
-    {
-        LOG_ERROR("get file error.");
-        rc = -1;
     }
     else
     {
+        LOG_DEBUG("get app data success.");
+
         if(filesize != req_size)
         {
-            LOG_ERROR("file size is not equal,req:%d,file:%d",req_size,filesize);
+            LOG_ERROR("file size is not equal,req->size:filesize = %d:%d",req_size,filesize);
             rc = -1;
         }
         else
@@ -159,7 +153,7 @@ int upgrade_CheckAppfile(int req_size,int req_checksum)
 
         if(req_checksum != checksum)
         {
-            LOG_ERROR("checksum error,req->checksum:%d,file->checksum:%d",req_checksum,checksum);
+            LOG_ERROR("checksum error,req->checksum:file->checksum = %d:%d",req_checksum,checksum);
             rc = -1;
         }
     }
@@ -248,11 +242,11 @@ int upgrade_appendFile(int offset, char* data,  unsigned int length)
             LOG_DEBUG("Seek File Pointer Success");
 
             fh_write = eat_fs_Write(fh_open, data, length, &writedLen);
-            LOG_HEX(data,length);
             if((EAT_FS_NO_ERROR == fh_write) && length == writedLen)
             {
                 //don't know how soon the next block will come , commit it
                 fh_commit = eat_fs_Commit(fh_open);
+
                 if(EAT_FS_NO_ERROR == fh_commit)
                 {
                     LOG_DEBUG("commit file success.");
@@ -265,7 +259,7 @@ int upgrade_appendFile(int offset, char* data,  unsigned int length)
             }
             else
             {
-                LOG_ERROR("write file failed,Error is%d",fh_write);
+                LOG_ERROR("write file failed,Error is %d",fh_write);
                 rc =-1;
             }
         }

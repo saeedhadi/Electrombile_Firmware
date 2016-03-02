@@ -24,6 +24,7 @@
 #include "setting.h"
 #include "mileage.h"
 #include "seek.h"
+#include "data.h"
 
 
 int cmd_Login_rsp(const void* msg)
@@ -362,9 +363,9 @@ int cmd_UpgradeStart_rsp(const void* msg)
     int rc = 0;
     SINT64 freeDiskSize = 0;
 
-    LOG_DEBUG("REQ->VERSION:%d:%d",req->version,MSG_VERSION_NOT_SUPPORTED);
+    LOG_DEBUG("new version : now version = %d:%d",req->version,PROTOCOL_VERSION);
 
-    if (req->version <= 215)//VERSION_NUM)    //No need to upgrade, normally not happened
+    if (req->version <= PROTOCOL_VERSION)//VERSION_NUM)    //No need to upgrade, normally not happened
     {
         rc = MSG_VERSION_NOT_SUPPORTED;
     }
@@ -388,7 +389,7 @@ int cmd_UpgradeStart_rsp(const void* msg)
     rsp = alloc_rspMsg(msg);
     if (!rsp)
     {
-        LOG_ERROR("alloc rsp msg failed:cmd=%d", req->header.cmd);
+        LOG_ERROR("alloc rsp msg failed:cmd =%d", req->header.cmd);
         return -1;
     }
     rsp->code = rc;
@@ -403,20 +404,26 @@ int cmd_UpgradeData_rsp(const void* msg)
     MSG_UPGRADE_DATA_RSP* rsp = NULL;
     int rc = 0;
     int expectLength = 0;
+    short data_length ;
+    short data_offset = htonl(req->offset);
 
-    rc = upgrade_appendFile(req->offset, req->data, req->header.length - sizeof(req->offset));
-    LOG_DEBUG("req->header.length:%d,sizeof(req->offset):%d",req->header.length , sizeof(req->offset));
-    if (rc > 0)
+    data_length = htons(req->header.length) - sizeof(req->offset);
+
+    LOG_DEBUG("data length:%d , data offset:%d",data_length,data_offset);
+
+    rc = upgrade_appendFile(data_offset, req->data, data_length);
+
+    if (rc >= 0)
     {
-        expectLength = req->offset + rc;
+        expectLength = data_offset + data_length;
+        LOG_DEBUG("success this time, and expect length is:%d",expectLength);
     }
     else
     {
-        expectLength = req->offset;
+        expectLength = data_offset;
+        LOG_DEBUG("error this time, and expect length is:%d",expectLength);
     }
 
-
-    //response req->offset + length of req->data
     rsp = alloc_rspMsg(msg);
     if (!rsp)
     {
@@ -424,8 +431,7 @@ int cmd_UpgradeData_rsp(const void* msg)
         return -1;
     }
 
-    rsp->offset= expectLength;
-    LOG_DEBUG("rsp->LENGTH:%d",expectLength);
+    rsp->offset = expectLength;
     socket_sendData(rsp,sizeof(MSG_UPGRADE_DATA_RSP));
 
     return rc;
@@ -448,7 +454,10 @@ int cmd_UpgradeEnd_rsp(const void* msg)
     socket_sendData(rsp,sizeof(MSG_UPGRADE_DATA_RSP));
 
     //启动升级
-    rc = upgrade_do();
+    if(0 <= rc)
+    {
+        rc = upgrade_do();
+    }
 
     return 0;
 }
