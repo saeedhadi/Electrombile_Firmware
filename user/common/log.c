@@ -18,7 +18,7 @@
 
 int log_catlog(void)
 {
-#define READ_BUFFER_LENGTH  512
+    #define READ_BUFFER_LENGTH  512
     FS_HANDLE fh;
     int rc = 0;
     char buf[READ_BUFFER_LENGTH] = {0};
@@ -126,11 +126,20 @@ int cmd_deletelog(const unsigned char* cmdString, unsigned short length)
     return EAT_TRUE;
 }
 
+void error(void)
+{
+    int i;
+    for(i = 0; i <10;i++)
+    {
+        LOG_ERROR("sssssssssssssssssss");
+    }
+}
 
 void log_initial(void)
 {
     regist_cmd("catlog", cmd_catlog);
     regist_cmd("deletelog", cmd_deletelog);
+    regist_cmd("error", error);
 }
 
 /*
@@ -192,11 +201,13 @@ void log_hex(const char* data, int length)
 
 void log_file(const char* fmt, ...)
 {
-    //eat_bool ret = EAT_FALSE;
     char buf[1024] = "\0";
     FS_HANDLE fh_open, fh_write, fh_commit,seekRet;
-    //int seekRet = 0;
     UINT writedLen;
+    const unsigned short * logfile_name[3] = {LOGFILE_NAME_0,LOGFILE_NAME_1,LOGFILE_NAME_2};
+    static int log_sequence = 0;
+    int rc = 0;
+    UINT filesize = 0;
 
     va_list arg;
     va_start(arg, fmt);
@@ -206,10 +217,42 @@ void log_file(const char* fmt, ...)
 
     strcpy(buf+strlen(buf),"\r\n");
 
-    fh_open = eat_fs_Open(LOGFILE_NAME, FS_READ_WRITE | FS_CREATE);
+    fh_open = eat_fs_Open(logfile_name[log_sequence], FS_READ_WRITE | FS_CREATE);
 
     if(EAT_FS_NO_ERROR <= fh_open)
     {
+        //TODO:judge the file size
+        rc = eat_fs_GetFileSize(fh_open,&filesize);
+        if(rc <= EAT_FS_NO_ERROR)
+        {
+            LOG_ERROR("get file size error , and return error:%d",rc);
+        }
+        else
+        {
+            LOG_DEBUG("get file size success:%d",filesize);
+        }
+        if(filesize > 1000)
+        {
+            switch(log_sequence)
+            {
+                case 0:
+                    eat_fs_Delete(logfile_name[++log_sequence]);
+                    LOG_DEBUG("delete log_file_1.");
+                    log_file(fmt);
+                    break;
+                case 1:
+                    eat_fs_Delete(logfile_name[++log_sequence]);
+                    LOG_DEBUG("delete log_file_2.");
+                    log_file(fmt);
+                    break;
+                case 2:
+                    eat_fs_Delete(logfile_name[0]);
+                    log_sequence = 0;
+                    log_file(fmt);
+                    LOG_DEBUG("delete log_file_0.");
+                    break;
+            }
+        }
         LOG_INFO("open log_file success, fh = %d", fh_open);
 
         seekRet = eat_fs_Seek(fh_open,0,EAT_FS_FILE_END);

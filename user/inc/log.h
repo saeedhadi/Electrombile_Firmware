@@ -47,6 +47,11 @@ void log_hex(const char* data, int length);
 void log_file(const char* fmt, ...)__attribute__((format(printf, 1, 2)));
 
 #define LOGFILE_NAME  L"C:\\log_file.txt"
+#define LOGFILE_NAME_0 L"C:\\log_file_0.txt"
+#define LOGFILE_NAME_1 L"C:\\log_file_1.txt"
+#define LOGFILE_NAME_2 L"C:\\log_file_2.txt"
+
+
 
 
 
