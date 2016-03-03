@@ -365,6 +365,8 @@ int cmd_UpgradeStart_rsp(const void* msg)
 
     LOG_DEBUG("new version : now version = %d:%d",req->version,PROTOCOL_VERSION);
 
+    LOG_DEBUG("new app size : %d",req->size);
+
     if (req->version <= PROTOCOL_VERSION)//VERSION_NUM)    //No need to upgrade, normally not happened
     {
         rc = MSG_VERSION_NOT_SUPPORTED;
@@ -405,7 +407,7 @@ int cmd_UpgradeData_rsp(const void* msg)
     int rc = 0;
     int expectLength = 0;
     short data_length ;
-    short data_offset = htonl(req->offset);
+    int data_offset = req->offset;//htonl(req->offset);
 
     data_length = htons(req->header.length) - sizeof(req->offset);
 

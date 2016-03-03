@@ -122,8 +122,11 @@ void app_main(void *data)
     if(para->is_update_app && para->update_app_result)
     {
         //APP update succeed
+        LOG_DEBUG("app upgrade success");
         eat_update_app_ok(); //clear update APP flag
     }
+    LOG_DEBUG("app upgrade success");
+
 
     LOG_INFO("booting: version:%s, build_time=%s %s. core(version:%s, buildno=%s, buildtime=%s)",
             VERSION_STR, __DATE__, __TIME__, eat_get_version(), eat_get_buildno(), eat_get_buildtime());

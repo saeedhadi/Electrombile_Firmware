@@ -109,7 +109,7 @@ int upgrade_CheckAppfile(int req_size,int req_checksum)
     size_t appLen = 0;
     int rc = 0;
 
-    LOG_DEBUG("req->size: %d , req->checksum: %d",req_size,req_checksum);
+    LOG_DEBUG("req->size: %d , req->checksum: %u",req_size,req_checksum);
 
     filesize = (int)upgrade_getAppsize();
 
@@ -147,8 +147,9 @@ int upgrade_CheckAppfile(int req_size,int req_checksum)
         }
         else
         {
-            appLen = sizeof(app_buf);
+            appLen = filesize;
             checksum = upgrade_adler32(app_buf,appLen);
+            LOG_DEBUG("appLen:%d,checksum:%u",appLen,checksum);
         }
 
         if(req_checksum != checksum)
@@ -306,6 +307,16 @@ int upgrade_do(void)
     if(!rc)
     {
         LOG_DEBUG("get app data success.");
+        rc = eat_fs_Delete(UPGRADE_FILE_NAME);
+        if(EAT_FS_NO_ERROR != rc && EAT_FS_FILE_NOT_FOUND !=rc)
+        {
+            LOG_ERROR("delete app file failed , and return is %d",rc);
+            return -1;
+        }
+        else
+        {
+            LOG_DEBUG("delete app file success , and return is %d",rc);
+        }
     }
     else
     {
@@ -324,18 +335,27 @@ int upgrade_do(void)
     addr = (unsigned char *)(APP_DATA_STORAGE_BASE);
 
     rc = eat_flash_erase(addr , app_dataLen);//erase the flash to write new app_data_storage
-    if(EAT_FALSE == rc)
+    if(!rc)
     {
-        LOG_ERROR("Erase flash failed [0x%08x, %dKByte]", APP_DATA_STORAGE_BASE,  app_dataLen/1024);
+        LOG_ERROR("Erase flash failed [0x%08x, %dKByte],error is %d", APP_DATA_STORAGE_BASE,  app_dataLen/1024,rc);
         return -1;
+    }
+    else
+    {
+        LOG_DEBUG("Erase flash success [0x%08x, %dKByte].return is %d", APP_DATA_STORAGE_BASE,  app_dataLen/1024,rc);
     }
 
     rc = eat_flash_write(addr , app_data , app_dataLen);//write the new app_data_storage
-    if(EAT_FALSE == rc)
+    if(!rc)
     {
         LOG_ERROR("Write Flash Failed.");
         return -1;
     }
+    else
+    {
+        LOG_DEBUG("Write Flash success,ready to upgrade app...");
+    }
+
     eat_mem_free(app_data);
 
     //upgrade app
