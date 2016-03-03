@@ -59,24 +59,10 @@ static MC_MSG_PROC msgProcs[] =
     {CMD_UPGRADE_END, cmd_UpgradeEnd_rsp},
 };
 
-int client_proc(const void* m, int msgLen)
+int handle_one_msg(const void* m, int msgLen)
 {
     MSG_HEADER* msg = (MSG_HEADER*)m;
     size_t i = 0;
-
-    LOG_HEX(m, msgLen);
-
-    if (msgLen < sizeof(MSG_HEADER))
-    {
-        LOG_ERROR("receive message length not enough: %zu(at least(%zu)!", msgLen, sizeof(MSG_HEADER));
-        return -1;
-    }
-
-    if (msg->signature != ntohs(START_FLAG))
-    {
-        LOG_ERROR("receive message head signature error:%d!", msg->signature);
-        return -1;
-    }
 
     for (i = 0; i < sizeof(msgProcs) / sizeof(msgProcs[0]); i++)
     {
@@ -98,4 +84,35 @@ int client_proc(const void* m, int msgLen)
     LOG_ERROR("unknown message %d!", msg->cmd);
     return -1;
 }
+
+int client_proc(const void *m, int msgLen)
+{
+    const MSG_HEADER *msg = (const MSG_HEADER *)m;
+    size_t leftLen = 0;
+
+    LOG_HEX(m,msgLen);
+
+    if(msgLen < MSG_HEADER_LEN)
+    {
+        LOG_ERROR("message length not enough: %zu(at least(%zu)", msgLen, sizeof(MSG_HEADER));
+        return -1;
+    }
+
+    leftLen = msgLen;
+    while(leftLen >= ntohs(msg->length) + MSG_HEADER_LEN)
+    {
+        const unsigned char *status = (const unsigned char *)(&(msg->signature));
+        if((status[0] != 0xaa) || (status[1] != 0x55))
+        {
+            LOG_ERROR("receive message header signature error:%x", (unsigned)ntohs(msg->signature));
+            return -1;
+        }
+        handle_one_msg(msg, ntohs(msg->length) + MSG_HEADER_LEN);
+        leftLen = leftLen - MSG_HEADER_LEN - ntohs(msg->length);
+        msg = (const MSG_HEADER *)((const char *)m + msgLen - leftLen);
+        LOG_HEX((const char *)msg,leftLen);
+    }
+    return 0;
+}
+
 
