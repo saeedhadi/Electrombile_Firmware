@@ -112,16 +112,20 @@ int cmd_catlog(const unsigned char* cmdString, unsigned short length)
 int cmd_deletelog(const unsigned char* cmdString, unsigned short length)
 {
     eat_fs_error_enum fs_Op_ret;
-
-    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(LOGFILE_NAME);
-    if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
+    const unsigned short * logfile_name[LOG_FILE_NUM] = LOG_FILE_NAME;
+    int i;
+    for(i = 0;i < LOG_FILE_NUM;i++)
     {
-        LOG_ERROR("Delete logfile Fail,and Return Error is %d",fs_Op_ret);
-        return EAT_FALSE;
-    }
-    else
-    {
-        LOG_DEBUG("Delete logfile Success");
+        fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(logfile_name[i]);
+        if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
+        {
+            LOG_ERROR("Delete log file %d Fail,and Return Error is %d",i,fs_Op_ret);
+            return EAT_FALSE;
+        }
+        else
+        {
+            LOG_DEBUG("Delete log file %d Success",i);
+        }
     }
     return EAT_TRUE;
 }
@@ -204,9 +208,9 @@ void log_file(const char* fmt, ...)
     char buf[1024] = "\0";
     FS_HANDLE fh_open, fh_write, fh_commit,seekRet;
     UINT writedLen;
-    const unsigned short * logfile_name[3] = {LOGFILE_NAME_0,LOGFILE_NAME_1,LOGFILE_NAME_2};
+    const unsigned short * logfile_name[LOG_FILE_NUM] = LOG_FILE_NAME;
     static int log_sequence = 0;
-    int rc = 0;
+    int rc = 0,i;
     UINT filesize = 0;
 
     va_list arg;
@@ -223,35 +227,54 @@ void log_file(const char* fmt, ...)
     {
         //TODO:judge the file size
         rc = eat_fs_GetFileSize(fh_open,&filesize);
-        if(rc <= EAT_FS_NO_ERROR)
+        if(rc < EAT_FS_NO_ERROR)
         {
-            LOG_ERROR("get file size error , and return error:%d",rc);
+            LOG_INFO("get file size error , and return error:%d",rc);
         }
         else
         {
-            LOG_DEBUG("get file size success:%d",filesize);
+            LOG_DEBUG("get file %d size success:%d",log_sequence,filesize);
         }
-        if(filesize > 1000)
+        if(filesize > MAX_LOGFILE_SIZE)
         {
-            switch(log_sequence)
+            for(i = 0;i < LOG_FILE_NUM;i++)
             {
-                case 0:
-                    eat_fs_Delete(logfile_name[++log_sequence]);
-                    LOG_DEBUG("delete log_file_1.");
-                    log_file(fmt);
-                    break;
-                case 1:
-                    eat_fs_Delete(logfile_name[++log_sequence]);
-                    LOG_DEBUG("delete log_file_2.");
-                    log_file(fmt);
-                    break;
-                case 2:
-                    eat_fs_Delete(logfile_name[0]);
-                    log_sequence = 0;
-                    log_file(fmt);
-                    LOG_DEBUG("delete log_file_0.");
-                    break;
+                if(log_sequence == i)
+                {
+                    if(i == LOG_FILE_NUM -1)
+                    {
+                        rc = eat_fs_Delete(logfile_name[0]);
+                        if(rc <0)
+                        {
+                            LOG_ERROR("delete log_file 0 failed.rc= %d",rc);
+                        }
+                        else
+                        {
+                            LOG_DEBUG("delete log_file 0 success.rc= %d",rc);
+                        }
+                        log_sequence = 0;
+                        eat_fs_Close(fh_open);
+                        log_file(fmt);
+                        return;
+                    }
+                    else
+                    {
+                        rc = eat_fs_Delete(logfile_name[++log_sequence]);
+                        if(rc <0)
+                        {
+                            LOG_ERROR("delete log_file 0 failed.rc= %d",rc);
+                        }
+                        else
+                        {
+                            LOG_DEBUG("delete log_file 0 success.rc= %d",rc);
+                        }
+                        eat_fs_Close(fh_open);
+                        log_file(fmt);
+                        return;
+                    }
+                }
             }
+
         }
         LOG_INFO("open log_file success, fh = %d", fh_open);
 
