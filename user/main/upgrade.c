@@ -18,7 +18,6 @@
 #include "error.h"
 
 #define UPGRADE_FILE_NAME  L"C:\\app.bin"
-#define APP_FOLDER_NAME L"C"
 
 static UINT upgrade_getAppsize(void)
 {
@@ -106,7 +105,6 @@ int upgrade_CheckAppfile(int req_size,int req_checksum)
     int filesize = 0;
     int checksum = 0;
     unsigned char* app_buf = NULL;
-    size_t appLen = 0;
     int rc = 0;
 
     LOG_DEBUG("req->size: %d , req->checksum: %u",req_size,req_checksum);
@@ -147,9 +145,8 @@ int upgrade_CheckAppfile(int req_size,int req_checksum)
         }
         else
         {
-            appLen = filesize;
-            checksum = upgrade_adler32(app_buf,appLen);
-            LOG_DEBUG("appLen:%d,checksum:%u",appLen,checksum);
+            checksum = upgrade_adler32(app_buf,filesize);
+            LOG_DEBUG("appLen:%d,checksum:%u",filesize,checksum);
         }
 
         if(req_checksum != checksum)
@@ -360,9 +357,6 @@ int upgrade_do(void)
 
     //upgrade app
     eat_update_app((void*)(APP_DATA_RUN_BASE),(void*)(APP_DATA_STORAGE_BASE), app_dataLen, EAT_PIN_NUM, EAT_PIN_NUM,EAT_FALSE);
-
-
-    LOG_DEBUG("Upgrade App Over!");
 
     return 0;
 }

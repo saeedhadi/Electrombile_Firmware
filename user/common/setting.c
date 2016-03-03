@@ -124,7 +124,7 @@ static void setting_initial(void)
     setting.ipaddr[3] = 200;
 #endif
 
-    setting.port = 7777;
+    setting.port = 9880;
 
     /* Timer configuration */
     setting.main_loop_timer_period = 5000;
