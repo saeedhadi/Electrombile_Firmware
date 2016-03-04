@@ -18,8 +18,7 @@
 
 int log_catlog(void)
 {
-    #define READ_BUFFER_LENGTH  512
-    const unsigned short * logfile_name[LOG_FILE_NUM] = LOG_FILE_NAME;
+#define READ_BUFFER_LENGTH  512
     FS_HANDLE fh;
     int rc = 0;
     char buf[READ_BUFFER_LENGTH] = {0};
@@ -30,9 +29,8 @@ int log_catlog(void)
     eat_bool end_of_file = EAT_FALSE;
 
     static int file_offset = 0;
-    static int file_sequence = 0;
 
-    fh = eat_fs_Open(logfile_name[file_sequence], FS_READ_ONLY);
+    fh = eat_fs_Open(NEW_LOG_FILE, FS_READ_ONLY);
 
     //the log file is not found
     if(EAT_FS_FILE_NOT_FOUND == fh)
@@ -41,12 +39,6 @@ int log_catlog(void)
         print("log file not exists.");
         file_offset = 0;
         uart_setWrite(0);
-        if(0 == file_sequence)//old file not exists ,read new file
-        {
-            file_sequence++;
-            log_catlog();
-            return 0;
-        }
         return -1;
     }
 
@@ -87,7 +79,7 @@ int log_catlog(void)
             end_of_file = EAT_TRUE;
         }
 
-        printlen = print("%s",buf);
+        printlen = print("%s", buf);
         file_offset += printlen;
         if (printlen < readLen) //UART driver's receive buffer is full
         {
@@ -102,16 +94,6 @@ int log_catlog(void)
 
             file_offset = 0;
             uart_setWrite(0);
-            if(file_sequence == LOG_FILE_NUM - 1)
-            {
-                file_sequence = 0;
-            }
-            else
-            {
-                file_sequence++;
-                eat_fs_Close(fh);
-                log_catlog();
-            }
         }
 
     }while (!uart_buffer_full && !end_of_file);
