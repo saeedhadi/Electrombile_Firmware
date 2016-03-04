@@ -42,6 +42,7 @@ typedef struct
 
     //Switch configuration
     eat_bool isVibrateFixed;
+
 }SETTING;
 
 

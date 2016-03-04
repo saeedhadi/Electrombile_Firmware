@@ -14,11 +14,11 @@
 
 #include "upgrade.h"
 #include "adler32.h"
+#include "setting.h"
 #include "log.h"
 #include "error.h"
 
 #define UPGRADE_FILE_NAME  L"C:\\app.bin"
-#define APP_FOLDER_NAME L"C"
 
 static UINT upgrade_getAppsize(void)
 {
@@ -42,7 +42,7 @@ static UINT upgrade_getAppsize(void)
     {
         LOG_ERROR("get file size error , and return error is :%d",rc);
         eat_fs_Close(FileHandle);
-        return 0;
+        return -1;
     }
     else
     {
@@ -65,6 +65,17 @@ static int upgrade_getAppContent(u8 * app_buf,UINT filesize)
     if(EAT_FS_NO_ERROR <= FileHandle)
     {
         LOG_DEBUG("open file success, fh=%d.", FileHandle);
+
+        rc = eat_fs_Read(FileHandle,app_buf,filesize, NULL);
+        if (EAT_FS_NO_ERROR == rc)
+        {
+            LOG_DEBUG("read app file success.");
+        }
+        else
+        {
+            LOG_ERROR("read app file fail, and return error: %d", rc);
+            return -1;
+        }
     }
     else
     {
@@ -72,30 +83,11 @@ static int upgrade_getAppContent(u8 * app_buf,UINT filesize)
         return -1;
     }
 
-    rc = eat_fs_Read(FileHandle,app_buf,filesize, NULL);
-    if (EAT_FS_NO_ERROR == rc)
-    {
-        LOG_DEBUG("read app file success.");
-    }
-    else
-    {
-        LOG_ERROR("read app file fail, and return error: %d", rc);
-        return -1;
-    }
-
     eat_fs_Close(FileHandle);
 
-    return rc;
+    return SUCCESS;
 }
 
-static int upgrade_adler32(unsigned char *data, size_t len)
-{
-    int checksum = 0;
-
-    checksum = adler32(data,len);
-
-    return checksum;
-}
 
 /*
 *fun:check app file
@@ -103,14 +95,16 @@ static int upgrade_adler32(unsigned char *data, size_t len)
 */
 int upgrade_CheckAppfile(int req_size,int req_checksum)
 {
-    UINT filesize = 0;
+    int filesize = 0;
     int checksum = 0;
     unsigned char* app_buf = NULL;
-    size_t appLen = 0;
     int rc = 0;
 
-    filesize = upgrade_getAppsize();
-    if(filesize)
+    LOG_DEBUG("req->size: %d , req->checksum: %u",req_size,req_checksum);
+
+    filesize = (int)upgrade_getAppsize();
+
+    if(filesize >= SUCCESS)
     {
         LOG_DEBUG("get appLen success:%d",filesize);
     }
@@ -120,51 +114,43 @@ int upgrade_CheckAppfile(int req_size,int req_checksum)
         return -1;
     }
 
-    app_buf = eat_mem_alloc(filesize);
-    if (!app_buf)
-    {
-        LOG_ERROR("alloc app_buf error!");
-        return -1;
-    }
 
-    rc = upgrade_getAppContent(app_buf,filesize);
-
-    if(!rc)
+    if(filesize != req_size)
     {
-        LOG_DEBUG("get app data success.");
-    }
-    else
-    {
-        LOG_DEBUG("get app data failed , and return is %d",app_buf);
-        rc = -1;
-    }
-
-    if(EAT_FS_NO_ERROR != rc)
-    {
-        LOG_ERROR("get file error.");
+        LOG_ERROR("file size is not equal,req->size:filesize = %d:%d",req_size,filesize);
         rc = -1;
     }
     else
     {
-        if(filesize != req_size)
+        app_buf = eat_mem_alloc(filesize);
+        if (!app_buf)
         {
-            LOG_ERROR("file size is not equal,req:%d,file:%d",req_size,filesize);
-            rc = -1;
+            LOG_ERROR("alloc app_buf error!");
+            return -1;
+        }
+
+        rc = upgrade_getAppContent(app_buf,filesize);
+
+        if(SUCCESS < rc)
+        {
+            LOG_DEBUG("get app data failed , and return is %d",app_buf);
         }
         else
         {
-            appLen = sizeof(app_buf);
-            checksum = upgrade_adler32(app_buf,appLen);
+            LOG_DEBUG("get app data success.");
+
+            checksum = adler32(app_buf,filesize);
+            LOG_DEBUG("appLen:%d,checksum:%u",filesize,checksum);
+
+            if(req_checksum != checksum)
+            {
+                LOG_ERROR("checksum error,req->checksum:file->checksum = %d:%d",req_checksum,checksum);
+                rc = -1;
+            }
         }
 
-        if(req_checksum != checksum)
-        {
-            LOG_ERROR("checksum error,req->checksum:%d,file->checksum:%d",req_checksum,checksum);
-            rc = -1;
-        }
+        eat_mem_free(app_buf);
     }
-
-    eat_mem_free(app_buf);
 
     return rc;
 }
@@ -190,13 +176,12 @@ int upgrade_createFile(void)
     fh = eat_fs_Delete(UPGRADE_FILE_NAME);
     if(EAT_FS_FILE_NOT_FOUND != fh && EAT_FS_NO_ERROR != fh)
     {
-        LOG_ERROR("upgrade file exists , but can't delete it.");
+        LOG_ERROR("upgrade file exists , but can't delete it:%d",fh);
         return -1;  //TODO: error code return
     }
 
-
     fh = eat_fs_Open(UPGRADE_FILE_NAME,FS_CREATE);
-    if(EAT_FS_NO_ERROR == fh)
+    if(EAT_FS_NO_ERROR <= fh)
     {
         LOG_DEBUG("create file success, fh=%d.", fh);
     }
@@ -235,7 +220,7 @@ int upgrade_appendFile(int offset, char* data,  unsigned int length)
 
     if(EAT_FS_NO_ERROR <= fh_open)
     {
-        LOG_DEBUG("create or open log_file success, fh=%d.", fh_open);
+        LOG_DEBUG("open app file success, fh=%d.", fh_open);
 
         seekRet = eat_fs_Seek(fh_open,0,EAT_FS_FILE_END);
 
@@ -253,6 +238,7 @@ int upgrade_appendFile(int offset, char* data,  unsigned int length)
             {
                 //don't know how soon the next block will come , commit it
                 fh_commit = eat_fs_Commit(fh_open);
+
                 if(EAT_FS_NO_ERROR == fh_commit)
                 {
                     LOG_DEBUG("commit file success.");
@@ -265,7 +251,7 @@ int upgrade_appendFile(int offset, char* data,  unsigned int length)
             }
             else
             {
-                LOG_ERROR("write file failed,Error is%d",fh_write);
+                LOG_ERROR("write file failed,Error is %d",fh_write);
                 rc =-1;
             }
         }
@@ -312,6 +298,16 @@ int upgrade_do(void)
     if(!rc)
     {
         LOG_DEBUG("get app data success.");
+        rc = eat_fs_Delete(UPGRADE_FILE_NAME);
+        if(EAT_FS_NO_ERROR != rc && EAT_FS_FILE_NOT_FOUND !=rc)
+        {
+            LOG_ERROR("delete app file failed , and return is %d",rc);
+            return -1;
+        }
+        else
+        {
+            LOG_DEBUG("delete app file success , and return is %d",rc);
+        }
     }
     else
     {
@@ -332,8 +328,12 @@ int upgrade_do(void)
     rc = eat_flash_erase(addr , app_dataLen);//erase the flash to write new app_data_storage
     if(EAT_FALSE == rc)
     {
-        LOG_ERROR("Erase flash failed [0x%08x, %dKByte]", APP_DATA_STORAGE_BASE,  app_dataLen/1024);
+        LOG_ERROR("Erase flash failed [0x%08x, %dKByte],error is %d", APP_DATA_STORAGE_BASE,  app_dataLen/1024,rc);
         return -1;
+    }
+    else
+    {
+        LOG_DEBUG("Erase flash success [0x%08x, %dKByte].return is %d", APP_DATA_STORAGE_BASE,  app_dataLen/1024,rc);
     }
 
     rc = eat_flash_write(addr , app_data , app_dataLen);//write the new app_data_storage
@@ -342,13 +342,15 @@ int upgrade_do(void)
         LOG_ERROR("Write Flash Failed.");
         return -1;
     }
+    else
+    {
+        LOG_DEBUG("Write Flash success,ready to upgrade app...");
+    }
+
     eat_mem_free(app_data);
 
     //upgrade app
     eat_update_app((void*)(APP_DATA_RUN_BASE),(void*)(APP_DATA_STORAGE_BASE), app_dataLen, EAT_PIN_NUM, EAT_PIN_NUM,EAT_FALSE);
-
-
-    LOG_DEBUG("Upgrade App Over!");
 
     return 0;
 }

@@ -81,8 +81,8 @@ typedef struct
 {
     short signature;
     char cmd;
-    unsigned short seq;
-    unsigned short length;
+    short seq;
+    short length;
 }__attribute__((__packed__)) MSG_HEADER;
 
 #define MSG_HEADER_LEN sizeof(MSG_HEADER)
@@ -93,9 +93,17 @@ typedef struct
 typedef struct
 {
     MSG_HEADER header;
-    char version;
+    int version;
+    char deciveType;
     char IMEI[IMEI_LENGTH];
 }__attribute__((__packed__)) MSG_LOGIN_REQ;
+
+enum DeviceType{
+    XiaoAnBao1 = 1,
+    XiaoAnBao2 = 2,
+    XiaoAnBao3 = 3,
+    XiaoAnBao4 = 4
+};
 
 typedef MSG_HEADER MSG_LOGIN_RSP;
 
@@ -171,7 +179,7 @@ enum ALARM_TYPE
 typedef struct
 {
     MSG_HEADER header;
-    unsigned char alarmType;
+    char alarmType;
 }__attribute__((__packed__)) MSG_ALARM_REQ;
 
 typedef MSG_HEADER MSG_ALARM_RSP;
@@ -240,14 +248,14 @@ typedef struct
 {
     MSG_HEADER header;
     int token;
-    unsigned char operator;     // refer to DEFEND_TYPE
+    char operator;     // refer to DEFEND_TYPE
 }__attribute__((__packed__)) MSG_DEFEND_REQ;
 
 typedef struct
 {
     MSG_HEADER header;
     int token;
-    unsigned char result;
+    char result;
 }__attribute__((__packed__)) MSG_DEFEND_RSP;
 
 /*
@@ -263,14 +271,14 @@ typedef struct
 {
     MSG_HEADER header;
     int token;
-    unsigned char operator;     //refer to SEEK_TYPE
+    char operator;     //refer to SEEK_TYPE
 }__attribute__((__packed__)) MSG_SEEK_REQ;
 
 typedef struct
 {
     MSG_HEADER header;
     int token;
-    unsigned char result;
+    char result;
 }__attribute__((__packed__)) MSG_SEEK_RSP;
 
 typedef MSG_HEADER MSG_LOCATE;

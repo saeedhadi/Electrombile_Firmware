@@ -15,6 +15,8 @@
 #include "debug.h"
 #include "log.h"
 
+#define UPGRADE_FILE_NAME  L"C:\\app.bin"
+
 
 int log_catlog(void)
 {
@@ -108,6 +110,7 @@ int cmd_catlog(const unsigned char* cmdString, unsigned short length)
     print("cat log file begin:");
     return log_catlog();
 }
+
 
 int cmd_deletelog(const unsigned char* cmdString, unsigned short length)
 {

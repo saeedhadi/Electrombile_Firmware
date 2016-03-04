@@ -14,6 +14,7 @@
 #include <eat_uart.h>
 
 #include "setting.h"
+#include "version.h"
 #include "debug.h"
 #include "log.h"
 #include "fs.h"
@@ -31,6 +32,7 @@ typedef struct
 
     //Timer configuration
     u32 gps_send_timer_period;
+
 }STORAGE;
 
 
@@ -107,10 +109,10 @@ int cmd_catsetting(const unsigned char* cmdString, unsigned short length)
 
 static void setting_initial(void)
 {
-    LOG_DEBUG("setting initial to default value.");
-
     regist_cmd("deletesetting", cmd_deletesetting);
     regist_cmd("catsetting", cmd_catsetting);
+
+    LOG_DEBUG("setting initial to default value.");
 
     /* Server configuration */
 #if 1
@@ -133,7 +135,6 @@ static void setting_initial(void)
     setting.timeupdate_timer_peroid = 24 * 60 * 60 * 1000;      //24h * 60m * 60s * 1000ms
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;
-
     return;
 }
 
@@ -252,7 +253,7 @@ eat_bool setting_save(void)
 
     LOG_DEBUG("save setting...");
 
-    fh = eat_fs_Open(SETTINGFILE_NAME, FS_READ_WRITE);
+    fh = eat_fs_Open(SETTINGFILE_NAME, FS_READ_WRITE|FS_CREATE);
     if(EAT_FS_NO_ERROR <= fh)
     {
         LOG_DEBUG("open file success, fh=%d.", fh);

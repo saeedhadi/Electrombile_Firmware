@@ -10,6 +10,7 @@
 #include <eat_interface.h>
 
 #include "request.h"
+#include "setting.h"
 #include "msg.h"
 #include "log.h"
 #include "socket.h"
@@ -26,7 +27,7 @@ int cmd_Login(void)
         return -1;
     }
 
-    msg->version = PROTOCOL_VERSION;
+    msg->version = VERSION_NUM;
 
     eat_get_imei(imei, IMEI_LENGTH);
 

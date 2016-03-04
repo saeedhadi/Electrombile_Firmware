@@ -152,7 +152,7 @@ static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
 
 static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
 {
-    u8 buffer[128] = {0};
+    u8 buffer[1152] = {0};//1K + 128 for upgrade module
     s32 rc = 0;
 
     LOG_DEBUG("SOCKET notify:socketid(%d), event(%s).", s, getEventDescription(event));
@@ -161,7 +161,7 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
     {
         case SOC_READ:
 
-            rc = eat_soc_recv(socket_id, buffer, 128);
+            rc = eat_soc_recv(socket_id, buffer, 1152);//1K + 128 for upgrade module
             if (rc > 0)
             {
                 client_proc(buffer, rc);

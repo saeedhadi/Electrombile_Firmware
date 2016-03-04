@@ -122,6 +122,7 @@ void app_main(void *data)
     if(para->is_update_app && para->update_app_result)
     {
         //APP update succeed
+        LOG_DEBUG("app upgrade success");
         eat_update_app_ok(); //clear update APP flag
     }
 
