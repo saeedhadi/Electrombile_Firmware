@@ -104,7 +104,6 @@ static int action_onCallReady(void)
     }
     else
     {
-        LOG_DEBUG("gprs attach failed");
         fsm_trans(STATE_WAIT_GPRS);
     }
 

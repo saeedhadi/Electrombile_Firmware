@@ -77,7 +77,19 @@ eat_bool modem_IsGPRSAttached(char* modem_rsp)
 
 eat_bool modem_GPRSAttach()
 {
-    return eat_network_get_cgatt();
+    int rc = eat_network_get_creg();
+
+    if (rc == EAT_REG_STATE_REGISTERED)
+    {
+        return eat_network_get_cgatt();
+    }
+    else
+    {
+        LOG_DEBUG("network register status: %d", rc);
+    }
+
+    return EAT_FALSE;
+
 }
 
 #endif
