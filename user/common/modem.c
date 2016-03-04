@@ -10,6 +10,7 @@
 #include <eat_interface.h>
 #include <eat_modem.h>
 #include <eat_type.h>
+#include <eat_network.h>
 
 #include "modem.h"
 #include "log.h"
@@ -75,7 +76,7 @@ eat_bool modem_IsGPRSAttached(char* modem_rsp)
 }
 #else
 
-eat_bool modem_GPRSAttach()
+eat_bool modem_GPRSAttach(void)
 {
     int rc = eat_network_get_creg();
 
