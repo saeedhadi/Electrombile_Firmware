@@ -90,10 +90,6 @@ static int event_mod_ready_rd(const EatEvent_st* event)
         fsm_run(EVT_CALL_READY);
     }
 
-	if (modem_IsGPRSAttached(buf))
-	{
-        fsm_run(EVT_GPRS_ATTACHED);
-	}
 
 	return 0;
 }

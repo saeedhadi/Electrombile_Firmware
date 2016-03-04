@@ -40,12 +40,6 @@ static eat_bool modem_cmd(const unsigned char *cmd)
     }
 }
 
-eat_bool modem_ReadGPRSStatus(void)
-{
-    unsigned char* cmd = AT_CGATT MODEM_READ_CMD LF;
-
-    return modem_cmd(cmd);
-}
 
 eat_bool modem_IsCallReady(char* modem_rsp)
 {
@@ -59,6 +53,15 @@ eat_bool modem_IsCallReady(char* modem_rsp)
     return EAT_FALSE;
 }
 
+#if 0
+eat_bool modem_ReadGPRSStatus(void)
+{
+    unsigned char* cmd = AT_CGATT MODEM_READ_CMD LF;
+
+
+    return modem_cmd(cmd);
+}
+
 eat_bool modem_IsGPRSAttached(char* modem_rsp)
 {
     char* ptr = strstr((const char *) modem_rsp, "+CGATT: 1");
@@ -70,4 +73,11 @@ eat_bool modem_IsGPRSAttached(char* modem_rsp)
 
     return EAT_FALSE;
 }
+#else
 
+eat_bool modem_GPRSAttach()
+{
+    return eat_network_get_cgatt();
+}
+
+#endif
