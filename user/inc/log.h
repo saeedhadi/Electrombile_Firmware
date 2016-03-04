@@ -24,7 +24,7 @@
 
 #ifdef LOG_ERROR_FLAG
 #define LOG_ERROR(fmt, ...) eat_trace("[%d][ERR][%s:%d %s]"fmt, eat_get_task_id(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__) ;\
-                            log_file("[ERR][%s:%d %s]"fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+                            log_file("[%s:%d %s]"fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 #define LOG_ERROR(fmt, ...)
 #endif
