@@ -348,7 +348,7 @@ int upgrade_do(void)
     addr = (unsigned char *)(APP_DATA_STORAGE_BASE);
 
     rc = eat_flash_erase(addr , app_dataLen);//erase the flash to write new app_data_storage
-    if(!rc)
+    if(EAT_FALSE == rc)
     {
         LOG_ERROR("Erase flash failed [0x%08x, %dKByte],error is %d", APP_DATA_STORAGE_BASE,  app_dataLen/1024,rc);
         return -1;
@@ -359,7 +359,7 @@ int upgrade_do(void)
     }
 
     rc = eat_flash_write(addr , app_data , app_dataLen);//write the new app_data_storage
-    if(!rc)
+    if(EAT_FALSE == rc)
     {
         LOG_ERROR("Write Flash Failed.");
         return -1;
