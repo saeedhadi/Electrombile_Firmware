@@ -363,11 +363,11 @@ int cmd_UpgradeStart_rsp(const void* msg)
     int rc = 0;
     SINT64 freeDiskSize = 0;
 
-    LOG_DEBUG("new version : now version = %d:%d",req->version,PROTOCOL_VERSION);
+    LOG_DEBUG("new version : now version = %d:%d",req->version,VERSION_NUM);
 
     LOG_DEBUG("new app size : %d",req->size);
 
-    if (req->version <= PROTOCOL_VERSION)//VERSION_NUM)    //No need to upgrade, normally not happened
+    if (req->version <= VERSION_NUM)    //No need to upgrade, normally not happened
     {
         rc = MSG_VERSION_NOT_SUPPORTED;
     }
