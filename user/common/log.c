@@ -156,20 +156,10 @@ int cmd_deletelog(const unsigned char* cmdString, unsigned short length)
     return EAT_TRUE;
 }
 
-void error(void)
-{
-    int i;
-    for(i = 0; i <10;i++)
-    {
-        LOG_ERROR("sssssssssssssssssss");
-    }
-}
-
 void log_initial(void)
 {
     regist_cmd("catlog", cmd_catlog);
     regist_cmd("deletelog", cmd_deletelog);
-    regist_cmd("error", error);
 }
 
 /*
