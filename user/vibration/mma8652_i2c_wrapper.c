@@ -10,8 +10,11 @@
 #include <eat_interface.h>
 #include <eat_periphery.h>
 
-
 #include "mma8652.h"
+
+#define MMA_INT1 EAT_PIN42_PWM1
+#define MMA_INT2 EAT_PIN41_PWM2
+
 
 bool mma8652_i2c_init(void)
 {
