@@ -48,16 +48,14 @@ void log_file(const char* fmt, ...)__attribute__((format(printf, 1, 2)));
 
 //#define LOGFILE_NAME  L"C:\\log_file.txt"
 
-#define LOGFILE_NAME_0 L"C:\\log_file_0.txt"
-#define LOGFILE_NAME_1 L"C:\\log_file_1.txt"
-#define LOGFILE_NAME_2 L"C:\\log_file_2.txt"
-#define LOGFILE_NAME_3 L"C:\\log_file_3.txt"
+#define OLD_LOG_FILE L"old_logfile.txt"
+#define NEW_LOG_FILE L"new_logfile.txt"
 
-#define LOG_FILE_NAME {LOGFILE_NAME_0,LOGFILE_NAME_1,LOGFILE_NAME_2,LOGFILE_NAME_3}
-#define LOG_FILE_NUM 4
+#define LOG_FILE_NAME {OLD_LOG_FILE,NEW_LOG_FILE}
+#define LOG_FILE_NUM 2
 
-#define MAX_LOGFILE_SIZE 2048
+#define MAX_LOGFILE_SIZE 4096
 
 
 
-#endif /* USER_ELECTROMBILE_LOG_H_ */
+#endif /* USER_ELECTROMBILE_LOG_H_ */1

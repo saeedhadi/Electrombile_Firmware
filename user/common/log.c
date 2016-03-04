@@ -41,6 +41,12 @@ int log_catlog(void)
         print("log file not exists.");
         file_offset = 0;
         uart_setWrite(0);
+        if(0 == file_sequence)//old file not exists ,read new file
+        {
+            file_sequence++;
+            log_catlog();
+            return 0;
+        }
         return -1;
     }
 
@@ -99,13 +105,13 @@ int log_catlog(void)
             if(file_sequence == LOG_FILE_NUM - 1)
             {
                 file_sequence = 0;
-                return 0;
             }
             else
             {
                 file_sequence++;
+                eat_fs_Close(fh);
+                log_catlog();
             }
-            log_catlog();
         }
 
     }while (!uart_buffer_full && !end_of_file);
@@ -124,21 +130,29 @@ int cmd_catlog(const unsigned char* cmdString, unsigned short length)
 int cmd_deletelog(const unsigned char* cmdString, unsigned short length)
 {
     eat_fs_error_enum fs_Op_ret;
-    const unsigned short * logfile_name[LOG_FILE_NUM] = LOG_FILE_NAME;
-    int i;
-    for(i = 0;i < LOG_FILE_NUM;i++)
+
+    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(OLD_LOG_FILE);
+    if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
     {
-        fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(logfile_name[i]);
-        if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
-        {
-            LOG_ERROR("Delete log file %d Fail,and Return Error is %d",i,fs_Op_ret);
-            return EAT_FALSE;
-        }
-        else
-        {
-            LOG_DEBUG("Delete log file %d Success",i);
-        }
+        LOG_ERROR("Delete old log file Fail,and Return Error is %d",fs_Op_ret);
+        return EAT_FALSE;
     }
+    else
+    {
+        LOG_DEBUG("Delete old log file Success");
+    }
+
+    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(NEW_LOG_FILE);
+    if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
+    {
+        LOG_ERROR("Delete new log file Fail,and Return Error is %d",fs_Op_ret);
+        return EAT_FALSE;
+    }
+    else
+    {
+        LOG_DEBUG("Delete new log file Success");
+    }
+
     return EAT_TRUE;
 }
 
@@ -220,9 +234,7 @@ void log_file(const char* fmt, ...)
     char buf[1024] = "\0";
     FS_HANDLE fh_open, fh_write, fh_commit,seekRet;
     UINT writedLen;
-    const unsigned short * logfile_name[LOG_FILE_NUM] = LOG_FILE_NAME;
-    static int log_sequence = 0;
-    int rc = 0,i;
+    int rc = 0;
     UINT filesize = 0;
 
     va_list arg;
@@ -233,7 +245,7 @@ void log_file(const char* fmt, ...)
 
     strcpy(buf+strlen(buf),"\r\n");
 
-    fh_open = eat_fs_Open(logfile_name[log_sequence], FS_READ_WRITE | FS_CREATE);
+    fh_open = eat_fs_Open(NEW_LOG_FILE, FS_READ_WRITE | FS_CREATE);
 
     if(EAT_FS_NO_ERROR <= fh_open)
     {
@@ -249,43 +261,28 @@ void log_file(const char* fmt, ...)
         }
         if(filesize > MAX_LOGFILE_SIZE)
         {
-            for(i = 0;i < LOG_FILE_NUM;i++)
+            eat_fs_Close(fh_open);
+
+            rc = eat_fs_Delete(OLD_LOG_FILE);
+            if(EAT_FS_FILE_NOT_FOUND != rc && EAT_FS_NO_ERROR != rc)
             {
-                if(log_sequence == i)
-                {
-                    if(i == LOG_FILE_NUM -1)
-                    {
-                        rc = eat_fs_Delete(logfile_name[0]);
-                        if(rc <0)
-                        {
-                            LOG_ERROR("delete log_file 0 failed.rc= %d",rc);
-                        }
-                        else
-                        {
-                            LOG_DEBUG("delete log_file 0 success.rc= %d",rc);
-                        }
-                        log_sequence = 0;
-                        eat_fs_Close(fh_open);
-                        log_file(fmt);
-                        return;
-                    }
-                    else
-                    {
-                        rc = eat_fs_Delete(logfile_name[++log_sequence]);
-                        if(rc <0)
-                        {
-                            LOG_ERROR("delete log_file 0 failed.rc= %d",rc);
-                        }
-                        else
-                        {
-                            LOG_DEBUG("delete log_file 0 success.rc= %d",rc);
-                        }
-                        eat_fs_Close(fh_open);
-                        log_file(fmt);
-                        return;
-                    }
-                }
+                LOG_ERROR("delete old_log_file failed.rc= %d",rc);
             }
+            else
+            {
+                LOG_DEBUG("delete old_log_file success.rc= %d",rc);
+            }
+
+            rc = eat_fs_Rename(NEW_LOG_FILE,OLD_LOG_FILE);
+            if(rc <0)
+            {
+                LOG_ERROR("rename failed.rc= %d",rc);
+            }
+            else
+            {
+                LOG_DEBUG("rename success.rc= %d",rc);
+            }
+            log_file(fmt);
 
         }
         LOG_INFO("open log_file success, fh = %d", fh_open);
