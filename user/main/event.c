@@ -207,7 +207,7 @@ static int threadCmd_GPS(const MSG_THREAD* msg)
     return 0;
 }
 
-static int ThreadCmd_AutolockState(const MSG_THREAD* msg)
+static int threadCmd_AutolockState(const MSG_THREAD* msg)
 {
     AUTOLOCK_INFO* msg_state = (AUTOLOCK_INFO*) msg->data;
     MSG_AUTODEFEND_STATE_REQ* autolock_msg;
@@ -328,7 +328,7 @@ static THREAD_MSG_PROC msgProcs[] =
         {CMD_THREAD_SMS, threadCmd_SMS},
         {CMD_THREAD_VIBRATE, threadCmd_Vibrate},
         {CMD_THREAD_LOCATION, threadCmd_Location},
-        {CMD_THREAD_AUTOLOCK,ThreadCmd_AutolockState},
+        {CMD_THREAD_AUTOLOCK, threadCmd_AutolockState},
 };
 
 static int event_threadMsg(const EatEvent_st* event)
