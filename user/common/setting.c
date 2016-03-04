@@ -14,6 +14,7 @@
 #include <eat_uart.h>
 
 #include "setting.h"
+#include "version.h"
 #include "debug.h"
 #include "log.h"
 #include "fs.h"
@@ -31,6 +32,9 @@ typedef struct
 
     //Timer configuration
     u32 gps_send_timer_period;
+
+    //Firmware Version
+    int version;
 }STORAGE;
 
 
@@ -107,10 +111,10 @@ int cmd_catsetting(const unsigned char* cmdString, unsigned short length)
 
 static void setting_initial(void)
 {
-    LOG_DEBUG("setting initial to default value.");
-
     regist_cmd("deletesetting", cmd_deletesetting);
     regist_cmd("catsetting", cmd_catsetting);
+
+    LOG_DEBUG("setting initial to default value.");
 
     /* Server configuration */
 #if 1
@@ -124,7 +128,7 @@ static void setting_initial(void)
     setting.ipaddr[3] = 200;
 #endif
 
-    setting.port = 9880;
+    setting.port = 7777;
 
     /* Timer configuration */
     setting.main_loop_timer_period = 5000;
@@ -133,6 +137,8 @@ static void setting_initial(void)
     setting.timeupdate_timer_peroid = 24 * 60 * 60 * 1000;      //24h * 60m * 60s * 1000ms
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;
+    /* Firmware Version */
+    setting.version = VERSION_NUM;
 
     return;
 }
@@ -207,6 +213,11 @@ eat_bool setting_restore(void)
 //            setting.gps_send_timer_period = storage.gps_send_timer_period;
         }
 
+        if(storage.version != 0)
+        {
+            setting.version = storage.version;
+        }
+
         ret = EAT_TRUE;
     }
     else
@@ -249,10 +260,12 @@ eat_bool setting_save(void)
     //FIXME: change it
 //    storage.gps_send_timer_period = setting.gps_send_timer_period;
 
+    storage.version = setting.version;
+
 
     LOG_DEBUG("save setting...");
 
-    fh = eat_fs_Open(SETTINGFILE_NAME, FS_READ_WRITE);
+    fh = eat_fs_Open(SETTINGFILE_NAME, FS_READ_WRITE|FS_CREATE);
     if(EAT_FS_NO_ERROR <= fh)
     {
         LOG_DEBUG("open file success, fh=%d.", fh);

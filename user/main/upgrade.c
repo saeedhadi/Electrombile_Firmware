@@ -14,11 +14,27 @@
 
 #include "upgrade.h"
 #include "adler32.h"
+#include "setting.h"
 #include "log.h"
 #include "error.h"
 
 #define UPGRADE_FILE_NAME  L"C:\\app.bin"
 
+void upgrade_saveVersion(u32 version)
+{
+    if(EAT_TRUE != version && EAT_FALSE != version)
+    {
+        setting.version = version;
+    }
+    else if(EAT_TRUE == version)
+    {
+        setting_save();
+    }
+    else
+    {
+        setting_restore();//FIXME:where should give up store the version
+    }
+}
 static UINT upgrade_getAppsize(void)
 {
     FS_HANDLE FileHandle;
@@ -354,6 +370,9 @@ int upgrade_do(void)
     }
 
     eat_mem_free(app_data);
+
+    //save the new version
+    upgrade_saveVersion(EAT_TRUE);
 
     //upgrade app
     eat_update_app((void*)(APP_DATA_RUN_BASE),(void*)(APP_DATA_STORAGE_BASE), app_dataLen, EAT_PIN_NUM, EAT_PIN_NUM,EAT_FALSE);

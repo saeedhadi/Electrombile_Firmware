@@ -13,6 +13,8 @@ int upgrade_appendFile(int offset, char* data, unsigned int length);
 int upgrade_do(void);
 
 int upgrade_CheckAppfile(int req_size,int req_checksum);
+void upgrade_saveVersion(u32 version);
+
 
 
 #endif /* USER_MAIN_UPGRADE_H_ */
