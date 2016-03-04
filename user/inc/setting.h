@@ -43,9 +43,6 @@ typedef struct
     //Switch configuration
     eat_bool isVibrateFixed;
 
-    //firmware version
-    u32 version;
-
 }SETTING;
 
 

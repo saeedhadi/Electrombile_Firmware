@@ -111,31 +111,6 @@ int cmd_catlog(const unsigned char* cmdString, unsigned short length)
     return log_catlog();
 }
 
-int cmd_deleteapp(const unsigned char* cmdString, unsigned short length)
-{
-    eat_fs_error_enum fs_Op_ret;
-    FS_HANDLE fh;
-
-    fh = eat_fs_Open(UPGRADE_FILE_NAME,FS_CREATE);
-
-    LOG_DEBUG("CREATE FILE Return  is %d",fh);
-
-    eat_fs_Close(fh);
-
-    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(UPGRADE_FILE_NAME);
-    LOG_DEBUG("DELETE FILE Return  is %d",fs_Op_ret);
-
-    if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
-    {
-        LOG_ERROR("Delete appfile Fail,and Return Error is %d",fs_Op_ret);
-        return EAT_FALSE;
-    }
-    else
-    {
-        LOG_DEBUG("Delete appfile Success");
-    }
-    return EAT_TRUE;
-}
 
 int cmd_deletelog(const unsigned char* cmdString, unsigned short length)
 {
@@ -159,7 +134,6 @@ void log_initial(void)
 {
     regist_cmd("catlog", cmd_catlog);
     regist_cmd("deletelog", cmd_deletelog);
-    regist_cmd("deleteapp", cmd_deleteapp);
 }
 
 /*

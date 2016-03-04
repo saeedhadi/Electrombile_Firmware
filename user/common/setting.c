@@ -33,8 +33,6 @@ typedef struct
     //Timer configuration
     u32 gps_send_timer_period;
 
-    //Firmware Version
-    int version;
 }STORAGE;
 
 
@@ -137,9 +135,6 @@ static void setting_initial(void)
     setting.timeupdate_timer_peroid = 24 * 60 * 60 * 1000;      //24h * 60m * 60s * 1000ms
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;
-    /* Firmware Version */
-    setting.version = VERSION_NUM;
-
     return;
 }
 
@@ -213,11 +208,6 @@ eat_bool setting_restore(void)
 //            setting.gps_send_timer_period = storage.gps_send_timer_period;
         }
 
-        if(storage.version != 0)
-        {
-            setting.version = storage.version;
-        }
-
         ret = EAT_TRUE;
     }
     else
@@ -259,8 +249,6 @@ eat_bool setting_save(void)
     storage.port = setting.port;
     //FIXME: change it
 //    storage.gps_send_timer_period = setting.gps_send_timer_period;
-
-    storage.version = setting.version;
 
 
     LOG_DEBUG("save setting...");

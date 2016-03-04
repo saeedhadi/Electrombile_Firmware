@@ -363,17 +363,15 @@ int cmd_UpgradeStart_rsp(const void* msg)
     int rc = 0;
     SINT64 freeDiskSize = 0;
 
-    LOG_DEBUG("new app size : %d;new version : now version = %d:%d",req->size,req->version,setting.version);
+    LOG_DEBUG("new app size : %d;new version : now version = %d:%d",req->size,req->version,VERSION_NUM);
 
-    if (req->version <= setting.version)    //No need to upgrade, normally not happened
+    if (req->version <= VERSION_NUM)    //No need to upgrade, normally not happened
     {
         rc = MSG_VERSION_NOT_SUPPORTED;
-        LOG_DEBUG("No need to upgrade%d:%d",req->version,setting.version);
+        LOG_DEBUG("No need to upgrade%d:%d",req->version,VERSION_NUM);
     }
     else
     {
-        upgrade_saveVersion(req->version);
-
         freeDiskSize = fs_getDiskFreeSize();
         if (req->size >= freeDiskSize)      //TODO: equal is not enough, maybe should reserve some disk space
         {

@@ -20,21 +20,6 @@
 
 #define UPGRADE_FILE_NAME  L"C:\\app.bin"
 
-void upgrade_saveVersion(u32 version)
-{
-    if(EAT_TRUE != version && EAT_FALSE != version)
-    {
-        setting.version = version;
-    }
-    else if(EAT_TRUE == version)
-    {
-        setting_save();
-    }
-    else
-    {
-        setting_restore();//FIXME:where should give up store the version
-    }
-}
 static UINT upgrade_getAppsize(void)
 {
     FS_HANDLE FileHandle;
@@ -103,14 +88,6 @@ static int upgrade_getAppContent(u8 * app_buf,UINT filesize)
     return SUCCESS;
 }
 
-static int upgrade_adler32(unsigned char *data, size_t len)
-{
-    int checksum = 0;
-
-    checksum = adler32(data,len);
-
-    return checksum;
-}
 
 /*
 *fun:check app file
@@ -137,42 +114,43 @@ int upgrade_CheckAppfile(int req_size,int req_checksum)
         return -1;
     }
 
-    app_buf = eat_mem_alloc(filesize);
-    if (!app_buf)
-    {
-        LOG_ERROR("alloc app_buf error!");
-        return -1;
-    }
 
-    rc = upgrade_getAppContent(app_buf,filesize);
-
-    if(SUCCESS < rc)
+    if(filesize != req_size)
     {
-        LOG_DEBUG("get app data failed , and return is %d",app_buf);
+        LOG_ERROR("file size is not equal,req->size:filesize = %d:%d",req_size,filesize);
+        rc = -1;
     }
     else
     {
-        LOG_DEBUG("get app data success.");
-
-        if(filesize != req_size)
+        app_buf = eat_mem_alloc(filesize);
+        if (!app_buf)
         {
-            LOG_ERROR("file size is not equal,req->size:filesize = %d:%d",req_size,filesize);
-            rc = -1;
+            LOG_ERROR("alloc app_buf error!");
+            return -1;
+        }
+
+        rc = upgrade_getAppContent(app_buf,filesize);
+
+        if(SUCCESS < rc)
+        {
+            LOG_DEBUG("get app data failed , and return is %d",app_buf);
         }
         else
         {
-            checksum = upgrade_adler32(app_buf,filesize);
+            LOG_DEBUG("get app data success.");
+
+            checksum = adler32(app_buf,filesize);
             LOG_DEBUG("appLen:%d,checksum:%u",filesize,checksum);
+
+            if(req_checksum != checksum)
+            {
+                LOG_ERROR("checksum error,req->checksum:file->checksum = %d:%d",req_checksum,checksum);
+                rc = -1;
+            }
         }
 
-        if(req_checksum != checksum)
-        {
-            LOG_ERROR("checksum error,req->checksum:file->checksum = %d:%d",req_checksum,checksum);
-            rc = -1;
-        }
+        eat_mem_free(app_buf);
     }
-
-    eat_mem_free(app_buf);
 
     return rc;
 }
@@ -370,9 +348,6 @@ int upgrade_do(void)
     }
 
     eat_mem_free(app_data);
-
-    //save the new version
-    upgrade_saveVersion(EAT_TRUE);
 
     //upgrade app
     eat_update_app((void*)(APP_DATA_RUN_BASE),(void*)(APP_DATA_STORAGE_BASE), app_dataLen, EAT_PIN_NUM, EAT_PIN_NUM,EAT_FALSE);
