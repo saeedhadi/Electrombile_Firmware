@@ -28,16 +28,15 @@ int seek_proc(unsigned int value)
     return cmd_seek(value);
 }
 
-void seek_startAutoOffTimer(void)
-{
-    eat_timer_start(TIMER_SEEKAUTOOFF, SEEK_AUTO_OFF_PERIOD);
-}
 
 void setSeekMode(eat_bool fixed)
 {
     if (fixed)
     {
         eat_adc_get(ADC_433, ADC_433_PERIOD, NULL);
+
+        //启动定时器，SEEK_AUTO_OFF_PERIOD 后自动退出找车模式，防止客户端不下发关闭找车模式命令
+        eat_timer_start(TIMER_SEEKAUTOOFF, SEEK_AUTO_OFF_PERIOD);
     }
     else
     {
