@@ -27,7 +27,7 @@ int cmd_Login(void)
         return -1;
     }
 
-    msg->version = VERSION_NUM;
+    msg->version = htonl(VERSION_NUM);
 
     eat_get_imei(imei, IMEI_LENGTH);
 
@@ -43,7 +43,7 @@ void cmd_Heartbeat(void)
 {
     u8 msgLen = sizeof(MSG_HEADER) + sizeof(short);
     MSG_PING_REQ* msg = alloc_msg(CMD_PING, msgLen);
-    msg->status = EAT_TRUE;   //TODO: to define the status bits
+    msg->status = htons(EAT_TRUE);   //TODO: to define the status bits
 
     socket_sendData(msg, msgLen);
 }
