@@ -101,29 +101,29 @@ static eat_bool mileage_reload(void)
 }
 
 
-int cmd_deletemileage(const unsigned char* cmdString, unsigned short length)
-{
-    eat_fs_error_enum fs_Op_ret;
-
-    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(MILEAGEFILE_NAME);
-    if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
-    {
-        LOG_ERROR("Delete mileagefile Fail,and Return Error is %d",fs_Op_ret);
-        return EAT_FALSE;
-    }
-    else
-    {
-        LOG_DEBUG("Delete mileagefile Success");
-    }
-    return EAT_TRUE;
-}
+//int cmd_deletemileage(const unsigned char* cmdString, unsigned short length)
+//{
+//    eat_fs_error_enum fs_Op_ret;
+//
+//    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(MILEAGEFILE_NAME);
+//    if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
+//    {
+//        LOG_ERROR("Delete mileagefile Fail,and Return Error is %d",fs_Op_ret);
+//        return EAT_FALSE;
+//    }
+//    else
+//    {
+//        LOG_DEBUG("Delete mileagefile Success");
+//    }
+//    return EAT_TRUE;
+//}
 
 
 void mileage_initial(void)
 {
     LOG_DEBUG("milegae initial to default value.");
 
-    regist_cmd("deletemileage", cmd_deletemileage);
+//    regist_cmd("deletemileage", cmd_deletemileage);
 
     /*go to adc_mileageinit_proc to judge the type of the battery*/
     eat_adc_get(EAT_ADC1, ADC1_PERIOD, adc_mileageinit_proc);

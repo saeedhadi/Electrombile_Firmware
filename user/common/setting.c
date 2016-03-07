@@ -39,22 +39,22 @@ typedef struct
 SETTING setting;
 
 
-int cmd_deletesetting(const unsigned char* cmdString, unsigned short length)
-{
-    eat_fs_error_enum fs_Op_ret;
-
-    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(SETTINGFILE_NAME);
-    if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
-    {
-        LOG_ERROR("Delete settingfile Fail,and Return Error is %d",fs_Op_ret);
-        return EAT_FALSE;
-    }
-    else
-    {
-        LOG_DEBUG("Delete settingfile Success");
-    }
-    return EAT_TRUE;
-}
+//int cmd_deletesetting(const unsigned char* cmdString, unsigned short length)
+//{
+//    eat_fs_error_enum fs_Op_ret;
+//
+//    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(SETTINGFILE_NAME);
+//    if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
+//    {
+//        LOG_ERROR("Delete settingfile Fail,and Return Error is %d",fs_Op_ret);
+//        return EAT_FALSE;
+//    }
+//    else
+//    {
+//        LOG_DEBUG("Delete settingfile Success");
+//    }
+//    return EAT_TRUE;
+//}
 
 int cmd_catsetting(const unsigned char* cmdString, unsigned short length)
 {
@@ -109,7 +109,7 @@ int cmd_catsetting(const unsigned char* cmdString, unsigned short length)
 
 static void setting_initial(void)
 {
-    regist_cmd("deletesetting", cmd_deletesetting);
+//    regist_cmd("deletesetting", cmd_deletesetting);
     regist_cmd("catsetting", cmd_catsetting);
 
     LOG_DEBUG("setting initial to default value.");
