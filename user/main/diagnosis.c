@@ -17,7 +17,7 @@
 /*
  * 检测输入电压范围
  */
-eat_bool diag_batterCheck()
+static eat_bool diag_batterCheck(void)
 {
     eat_bool rc;
     u32 voltage;
@@ -44,7 +44,7 @@ eat_bool diag_batterCheck()
 /*
  * 检测GSM的信号强度是否 > 13
  */
-eat_bool diag_gsmSignalCheck()
+static eat_bool diag_gsmSignalCheck(void)
 {
     int csq = eat_network_get_csq();
     if (csq < 13)
@@ -59,7 +59,7 @@ eat_bool diag_gsmSignalCheck()
 /*
  * 检测433的信号强度
  */
-eat_bool diag_433Check()
+static eat_bool diag_433Check(void)
 {
     eat_bool rc;
     u32 voltage;
@@ -75,6 +75,38 @@ eat_bool diag_433Check()
     if (voltage < 100 || voltage > 300)
     {
         LOG_ERROR("433 signal quality not enough: %d", voltage);
+        return EAT_FALSE;
+    }
+
+    return EAT_TRUE;
+}
+
+/*
+ * 自检总入口
+ */
+eat_bool diag_check(void)
+{
+    if (!diag_batterCheck())
+    {
+        LOG_ERROR("battery check failed!");
+        //TODO: light the led
+
+        return EAT_FALSE;
+    }
+
+    if (!diag_gsmSignalCheck())
+    {
+        LOG_ERROR("GSM check failed!");
+        //TODO: light the led
+
+        return EAT_FALSE;
+    }
+
+    if (!diag_433Check())
+    {
+        LOG_ERROR("433 check failed!");
+        //TODO: light the led
+
         return EAT_FALSE;
     }
 
