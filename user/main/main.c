@@ -7,12 +7,12 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "eat_modem.h"
-#include "eat_interface.h"
-#include "eat_uart.h"
-#include "eat_timer.h"
-#include "eat_socket.h"
-#include "eat_clib_define.h" //only in main.c
+#include <eat_modem.h>
+#include <eat_interface.h>
+#include <eat_uart.h>
+#include <eat_timer.h>
+#include <eat_socket.h>
+#include <eat_clib_define.h> //only in main.c
 
 #include "event.h"
 #include "gps.h"

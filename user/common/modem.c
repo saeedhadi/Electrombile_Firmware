@@ -10,6 +10,7 @@
 #include <eat_interface.h>
 #include <eat_modem.h>
 #include <eat_type.h>
+#include <eat_network.h>
 
 #include "modem.h"
 #include "log.h"
@@ -40,12 +41,6 @@ static eat_bool modem_cmd(const unsigned char *cmd)
     }
 }
 
-eat_bool modem_ReadGPRSStatus(void)
-{
-    unsigned char* cmd = AT_CGATT MODEM_READ_CMD LF;
-
-    return modem_cmd(cmd);
-}
 
 eat_bool modem_IsCallReady(char* modem_rsp)
 {
@@ -59,6 +54,15 @@ eat_bool modem_IsCallReady(char* modem_rsp)
     return EAT_FALSE;
 }
 
+#if 0
+eat_bool modem_ReadGPRSStatus(void)
+{
+    unsigned char* cmd = AT_CGATT MODEM_READ_CMD LF;
+
+
+    return modem_cmd(cmd);
+}
+
 eat_bool modem_IsGPRSAttached(char* modem_rsp)
 {
     char* ptr = strstr((const char *) modem_rsp, "+CGATT: 1");
@@ -70,4 +74,23 @@ eat_bool modem_IsGPRSAttached(char* modem_rsp)
 
     return EAT_FALSE;
 }
+#else
 
+eat_bool modem_GPRSAttach(void)
+{
+    int rc = eat_network_get_creg();
+
+    if (rc == EAT_REG_STATE_REGISTERED)
+    {
+        return eat_network_get_cgatt();
+    }
+    else
+    {
+        LOG_DEBUG("network register status: %d", rc);
+    }
+
+    return EAT_FALSE;
+
+}
+
+#endif

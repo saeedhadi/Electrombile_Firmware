@@ -11,6 +11,8 @@
 #define EAT_ADC0 EAT_PIN23_ADC1
 #define EAT_ADC1 EAT_PIN24_ADC2
 
+#define ADC_PERIOD_READ_ONCE 0
+
 #define ADC_433 EAT_ADC0
 #define ADC_433_PERIOD (2000)  //unit: ms
 

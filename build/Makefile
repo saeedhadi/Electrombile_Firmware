@@ -11,17 +11,13 @@ export PROJ_HOME=$(shell pwd)
 
 include $(PROJ_HOME)/build/option.mak
 
-#ĞèÒª±àÒëµÄÄ£¿é
+#éœ€è¦ç¼–è¯‘çš„æ¨¡å—
 TARGETS = $(SRC_OPEN_MODE_NAME)
 TARGGETS_LIB := $(TARGETS)
-ifeq ($(strip $(SRC_DIR)),demo)
-#demoÖĞµÄ¼¸¸öÊ¾ÀıÎªµ¥ÎÄ¼ş£¬²»ĞèÒª±àÒëÎª.aÎÄ¼ş
-TARGGETS_LIB := $(filter-out timer audio flash gpio uart system i2c sim other pwm interrupt tcptest watchdog gps,$(TARGETS))
-endif
 
 LIB_OBJS:=$(foreach var,$(TARGGETS_LIB),$(OUTPUT_LIB_DIR)/$(var).a )
 
-#±ØĞëÓĞÒ»¸ömain.o£¬°üº¬Ïß³ÌÈë¿Ú½á¹¹ÌåÖµ
+#å¿…é¡»æœ‰ä¸€ä¸ªmain.oï¼ŒåŒ…å«çº¿ç¨‹å…¥å£ç»“æ„ä½“å€¼ Öµ
 LIB_MAIN_OBJ := $(OUTPUT_LIB_DIR)/main.o
 LIB_OBJS += $(LIB_MAIN_OBJ)
 

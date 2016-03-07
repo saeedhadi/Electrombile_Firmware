@@ -82,7 +82,6 @@ int cmd_Seek_rsp(const void* msg)
     if (req->operator == SEEK_ON)
     {
         setSeekMode(EAT_TRUE);
-        seek_startAutoOffTimer();
 
         LOG_DEBUG("set seek on.");
     }

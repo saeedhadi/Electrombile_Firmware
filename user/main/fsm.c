@@ -97,9 +97,16 @@ static void start_mainloop(void)
 
 static int action_onCallReady(void)
 {
-    modem_ReadGPRSStatus();
+    if (modem_GPRSAttach())
+    {
+        LOG_DEBUG("gprs attach success");
+        fsm_run(EVT_GPRS_ATTACHED);
+    }
+    else
+    {
+        fsm_trans(STATE_WAIT_GPRS);
+    }
 
-    fsm_trans(STATE_WAIT_GPRS);
 
     start_mainloop();
 
@@ -225,7 +232,12 @@ static int action_onSocketDisconnected(void)
 
 static int action_waitGprsOnLoop(void)
 {
-    return modem_ReadGPRSStatus();
+    if (modem_GPRSAttach())
+    {
+        fsm_run(EVT_GPRS_ATTACHED);
+    }
+
+    return 0;
 }
 
 static int action_runningOnLoop(void)
