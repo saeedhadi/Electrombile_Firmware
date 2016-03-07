@@ -30,12 +30,11 @@ int log_catlog(void)
 
     static int file_offset = 0;
 
-    fh = eat_fs_Open(NEW_LOG_FILE, FS_READ_ONLY);
+    fh = eat_fs_Open(LOG_FILE_NAME, FS_READ_ONLY);
 
     //the log file is not found
     if(EAT_FS_FILE_NOT_FOUND == fh)
     {
-        /*log_file == LOG_ERROR,there should not be LOG_ERROR*/
         print("log file not exists.");
         file_offset = 0;
         uart_setWrite(0);
@@ -44,7 +43,6 @@ int log_catlog(void)
 
     if (fh < EAT_FS_NO_ERROR)
     {
-        /*log_file == LOG_ERROR,there should not be LOG_ERROR*/
         print("open file failed, eat_fs_Open return %d!", fh);
         file_offset = 0;
         uart_setWrite(0);
@@ -202,116 +200,105 @@ void log_hex(const char* data, int length)
     }
 }
 
-void log_file(const char* fmt, ...)
+static eat_bool log_checkLogFileSize(void)
 {
-    char buf[1024] = "\0";
-    FS_HANDLE fh_open, fh_write, fh_commit,seekRet;
-    UINT writedLen;
+    FS_HANDLE fh;
     int rc = 0;
     UINT filesize = 0;
 
+    fh = eat_fs_Open(LOG_FILE_NAME, FS_READ_WRITE);
+    if (fh == EAT_FS_FILE_NOT_FOUND)
+    {
+        return EAT_TRUE;
+    }
+
+    if(fh < EAT_FS_NO_ERROR)
+    {
+        return EAT_FALSE;
+    }
+
+    rc = eat_fs_GetFileSize(fh, &filesize);
+    if(rc < EAT_FS_NO_ERROR)
+    {
+        LOG_INFO("get file size error return:%d", rc);
+        eat_fs_Close(fh);
+        return EAT_FALSE;
+    }
+
+    if(filesize < MAX_LOGFILE_SIZE)
+    {
+        eat_fs_Close(fh);
+
+        return EAT_TRUE;
+    }
+
+    eat_fs_Close(fh);
+
+    //first delete the backup log file
+    rc = eat_fs_Delete(LOG_FILE_BAK);
+    if(EAT_FS_FILE_NOT_FOUND != rc && EAT_FS_NO_ERROR != rc)
+    {
+        LOG_INFO("delete old_log_file failed.rc= %d", rc);
+        return EAT_FALSE;
+    }
+
+    //rename the log file to backup log file
+    rc = eat_fs_Rename(LOG_FILE_NAME, LOG_FILE_BAK);
+    if(rc < EAT_FS_NO_ERROR)
+    {
+        LOG_ERROR("rename failed, rc= %d",rc);
+        return EAT_FALSE;
+    }
+
+    return EAT_TRUE;
+}
+
+void log_file(const char* fmt, ...)
+{
+#define MAX_LOG_BUFFER_SIZE 1024
+    char buf[MAX_LOG_BUFFER_SIZE + 2] = "\0";   // the additional 2 space is for the CR+LF appended to the end
+    FS_HANDLE fh_open;
+    int rc = 0;
+
     va_list arg;
     va_start(arg, fmt);
-    vsnprintf(buf, 1024, fmt, arg);
+    vsnprintf(buf, MAX_LOG_BUFFER_SIZE, fmt, arg);
     va_end(arg);
 
 
-    strcpy(buf+strlen(buf),"\r\n");
+    strcpy(buf + strlen(buf),"\r\n");
 
-    fh_open = eat_fs_Open(NEW_LOG_FILE, FS_READ_WRITE | FS_CREATE);
-
-    if(EAT_FS_NO_ERROR <= fh_open)
+    if (!log_checkLogFileSize())
     {
-        //TODO:judge the file size
-        rc = eat_fs_GetFileSize(fh_open,&filesize);
-        if(rc < EAT_FS_NO_ERROR)
-        {
-            LOG_INFO("get file size error , and return error:%d",rc);
-        }
-        else
-        {
-            LOG_DEBUG("get file size success:%d",filesize);
-        }
-        if(filesize > MAX_LOGFILE_SIZE)
-        {
-            eat_fs_Close(fh_open);
-
-            rc = eat_fs_Delete(OLD_LOG_FILE);
-            if(EAT_FS_FILE_NOT_FOUND != rc && EAT_FS_NO_ERROR != rc)
-            {
-                LOG_ERROR("delete old_log_file failed.rc= %d",rc);
-            }
-            else
-            {
-                LOG_DEBUG("delete old_log_file success.rc= %d",rc);
-            }
-
-            rc = eat_fs_Rename(NEW_LOG_FILE,OLD_LOG_FILE);
-            if(rc <0)
-            {
-                LOG_ERROR("rename failed.rc= %d",rc);
-            }
-            else
-            {
-                LOG_DEBUG("rename success.rc= %d",rc);
-            }
-            log_file(fmt);
-
-        }
-        LOG_INFO("open log_file success, fh = %d", fh_open);
-
-        seekRet = eat_fs_Seek(fh_open,0,EAT_FS_FILE_END);
-
-        if(seekRet < 0)
-        {
-            /*log_file == LOG_ERROR,there should not be LOG_ERROR*/
-            LOG_INFO("Seek File Pointer Fail");
-
-            eat_fs_Close(fh_open);
-
-            return;
-        }
-        else
-        {
-            LOG_DEBUG("Seek File Pointer Success");
-
-            fh_write = eat_fs_Write(fh_open, buf, strlen(buf), &writedLen);
-
-            if((EAT_FS_NO_ERROR == fh_write) && (strlen(buf) == writedLen))
-            {
-
-                fh_commit = eat_fs_Commit(fh_open);
-                if(EAT_FS_NO_ERROR == fh_commit)
-                {
-                    LOG_DEBUG("commit file success.");
-                }
-                else
-                {
-                    /*log_file == LOG_ERROR,there should not be LOG_ERROR*/
-                    LOG_INFO("commit file failed, and Return Error is %d.", fh_commit);
-                }
-            }
-            else
-            {
-                /*log_file == LOG_ERROR,there should not be LOG_ERROR*/
-                LOG_INFO("write file failed,Error is%d, writedLen is%d,strlen(buf) is%d",fh_write,writedLen,strlen(buf));
-            }
-            eat_fs_Close(fh_open);
-            return;
-        }
-
-    }
-    else
-    {
-        /*log_file == LOG_ERROR,there should not be LOG_ERROR*/
-        LOG_INFO("open file failed, fh=%d!", fh_open);
-        eat_fs_Close(fh_open);
+        LOG_INFO("log file size check failed");
         return;
     }
 
+    fh_open = eat_fs_Open(LOG_FILE_NAME, FS_READ_WRITE | FS_CREATE);
+
+    if(fh_open < EAT_FS_NO_ERROR)
+    {
+        LOG_INFO("open file failed, fh=%d!", fh_open);
+        return;
+    }
+
+    rc = eat_fs_Seek(fh_open, 0, EAT_FS_FILE_END);
+
+    if(rc < 0)
+    {
+        /*log_file == LOG_ERROR,there should not be LOG_ERROR*/
+        LOG_INFO("Seek File Pointer Fail");
+
+        eat_fs_Close(fh_open);
+
+        return;
+    }
+
+    rc = eat_fs_Write(fh_open, buf, strlen(buf), NULL);
+    if(EAT_FS_NO_ERROR > rc)
+    {
+        LOG_INFO("write file failed,Error %d", rc);
+    }
+    eat_fs_Close(fh_open);
+    return;
 }
-
-
-
-
-

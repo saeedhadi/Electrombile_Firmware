@@ -94,7 +94,7 @@ static void sms_factory_proc(u8 *p, u8 *number)
         }
 
 
-        fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(OLD_LOG_FILE);
+        fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(LOG_FILE_BAK);
 
         if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
         {
@@ -106,7 +106,7 @@ static void sms_factory_proc(u8 *p, u8 *number)
         }
 
 
-        fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(NEW_LOG_FILE);
+        fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(LOG_FILE_NAME);
 
         if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
         {
