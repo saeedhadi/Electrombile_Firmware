@@ -23,6 +23,7 @@
 #define CMD_STRING_LS   "ls"
 #define CMD_STRING_RM   "rm"
 #define CMD_STRING_CAT  "cat"
+#define CMD_STRING_TAIL  "tail"
 
 
 
@@ -91,15 +92,15 @@ static int fs_rm(const unsigned char* cmdString, unsigned short length)
     rc = eat_fs_Delete(filename_w);
     if (rc == EAT_FS_FILE_NOT_FOUND)
     {
-        LOG_INFO("file not found");
+        print("file not found");
     }
     else if(rc == EAT_FS_NO_ERROR)
     {
-        LOG_DEBUG("delete file Success");
+        print("delete file Success");
     }
     else
     {
-        LOG_ERROR("delete file %s fail, return code is %d", filename, rc);
+        print("delete file %s fail, return code is %d", filename, rc);
     }
 
     return rc;
@@ -111,17 +112,96 @@ static int fs_rm(const unsigned char* cmdString, unsigned short length)
  */
 static int fs_cat(const unsigned char* cmdString, unsigned short length)
 {
-    int rc = 0;
+    const unsigned char* filename = strstr(cmdString, CMD_STRING_CAT) + strlen(CMD_STRING_CAT);
+    int rc = EAT_FS_NO_ERROR;
+    WCHAR filename_w[MAX_FILENAME_LEN];
 
+
+    filename = string_trimLeft(filename);
+    if (strlen(filename) == 0)
+    {
+        print("parameter not correct");
+        return 0;
+    }
+
+    ascii2unicode(filename_w, filename);      //FIXME: overflow bug: the filename length may exceed MAX_FILENAME_LEN
+
+    //TODO: to be completed
     return rc;
 }
 
+
+static int fs_tail(const unsigned char* cmdString, unsigned short length)
+{
+#define MAX_TAIL_SIZE   1024
+    const unsigned char* filename = strstr(cmdString, CMD_STRING_TAIL) + strlen(CMD_STRING_TAIL);
+    int rc = EAT_FS_NO_ERROR;
+    WCHAR filename_w[MAX_TAIL_SIZE];
+    FS_HANDLE fh;
+    unsigned int filesize = 0;
+    char buf[MAX_TAIL_SIZE] = {0};
+
+    filename = string_trimLeft(filename);
+    if (strlen(filename) == 0)
+    {
+        print("parameter not correct");
+        return 0;
+    }
+
+    ascii2unicode(filename_w, filename);      //FIXME: overflow bug: the filename length may exceed MAX_FILENAME_LEN
+
+    fh = eat_fs_Open(NEW_LOG_FILE, FS_READ_ONLY);
+    if(EAT_FS_FILE_NOT_FOUND == fh)
+    {
+        print("log file not exists.");
+        return -1;
+    }
+
+    if (fh < EAT_FS_NO_ERROR)
+    {
+        print("open file failed, eat_fs_Open return %d!", fh);
+        return -1;
+    }
+
+    rc = eat_fs_GetFileSize(fh, &filesize);
+    if (rc < EAT_FS_NO_ERROR)
+    {
+        eat_fs_Close(fh);
+        print("get file size failed: return %d", rc);
+        return -1;
+    }
+
+    rc = eat_fs_Seek(fh, filesize - MAX_TAIL_SIZE, EAT_FS_FILE_BEGIN);
+    if (rc < EAT_FS_NO_ERROR)
+    {
+        print("seek file pointer failed:%d", rc);
+        eat_fs_Close(fh);
+
+        return -1;
+    }
+
+    rc = eat_fs_Read(fh, buf, MAX_TAIL_SIZE, NULL);
+    if (rc < EAT_FS_NO_ERROR)
+    {
+        print("read file failed:%d", rc);
+        eat_fs_Close(fh);
+
+        return -1;
+    }
+
+    print("%s\n", buf);
+
+    eat_fs_Close(fh);
+
+    return rc;
+}
 
 void fs_initial(void)
 {
     regist_cmd(CMD_STRING_LS, fs_ls);
     regist_cmd(CMD_STRING_RM, fs_rm);
     regist_cmd(CMD_STRING_CAT, fs_cat);
+    regist_cmd(CMD_STRING_TAIL, fs_tail);
 }
 
 SINT64 fs_getDiskFreeSize(void)
