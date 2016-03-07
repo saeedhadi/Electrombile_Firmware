@@ -15,8 +15,6 @@
 #include "debug.h"
 #include "log.h"
 
-#define UPGRADE_FILE_NAME  L"C:\\app.bin"
-
 
 int log_catlog(void)
 {
