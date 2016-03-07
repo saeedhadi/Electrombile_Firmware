@@ -254,7 +254,7 @@ static eat_bool gps_sendGps(u8 cmd)
 
         memcpy(last_gps, gps, sizeof(LOCAL_GPS));
         LOG_DEBUG("send gps to THREAD_MAIN");
-        ret = sendMsg(THREAD_GPS, THREAD_MAIN, msg, msgLen);
+        ret = sendMsg(THREAD_MAIN, msg, msgLen);
     }
 
     /* can not freeMsg(msg) here, if do, it will be crashed. */
@@ -312,7 +312,7 @@ static eat_bool gps_sendCell(u8 cmd)
 
         //GPS is different from before, send this msg, update the last_gps
         LOG_DEBUG("send cell to THREAD_MAIN: mcc(%d), mnc(%d), cellNo(%d).", mcc, mnc, cellNo);
-        ret = sendMsg(THREAD_GPS, THREAD_MAIN, msg, msgLen);
+        ret = sendMsg(THREAD_MAIN, msg, msgLen);
     }
 
     /* can not freeMsg(msg) here, if do, it will be crashed. */

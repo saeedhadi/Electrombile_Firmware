@@ -64,7 +64,7 @@ static eat_bool AutolockStateSend(eat_bool state)
     msg_state->state = state;
 
     LOG_DEBUG("send autolock state msg to main thread!");
-    ret = sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, msgLen);
+    ret = sendMsg(THREAD_MAIN, msg, msgLen);
 
     return ret;
 }
@@ -307,7 +307,7 @@ static eat_bool vibration_sendAlarm(void)
 
     LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
     avoid_freq_flag = EAT_TRUE;
-    return sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, msgLen);
+    return sendMsg(THREAD_MAIN, msg, msgLen);
 }
 static void avoid_fre_send(eat_bool state)
 {

@@ -57,6 +57,6 @@ typedef struct
 
 MSG_THREAD* allocMsg(u8 len);
 void freeMsg(MSG_THREAD* msg);
-eat_bool sendMsg(EatUser_enum from, EatUser_enum to, void* msg, u8 len);
+eat_bool sendMsg(EatUser_enum peer, void* msg, u8 len);
 
 #endif //ELECTROMBILE_FIRMWARE_MSG_H

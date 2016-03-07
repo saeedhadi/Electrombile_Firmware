@@ -115,7 +115,7 @@ int cmd_Location_rsp(const void* msgLocation)
     msg->length = 0;
 
     LOG_DEBUG("send CMD_THREAD_LOCATION to THREAD_GPS.");
-    sendMsg(THREAD_MAIN, THREAD_GPS, msg, msgLen);
+    sendMsg(THREAD_GPS, msg, msgLen);
 
     return 0;
 }
