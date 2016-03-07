@@ -11,7 +11,6 @@
 
 #define MILEAGEFILE_NAME   L"C:\\mileage"
 #define SETTINGFILE_NAME  L"C:\\setting"
-#define LOGFILE_NAME  L"C:\\log_file.txt"
 
 void fs_initial(void);
 SINT64 fs_getDiskFreeSize(void);

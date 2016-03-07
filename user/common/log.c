@@ -32,7 +32,7 @@ int log_catlog(void)
 
     static int file_offset = 0;
 
-    fh = eat_fs_Open(LOGFILE_NAME, FS_READ_ONLY);
+    fh = eat_fs_Open(NEW_LOG_FILE, FS_READ_ONLY);
 
     //the log file is not found
     if(EAT_FS_FILE_NOT_FOUND == fh)
@@ -116,19 +116,30 @@ int cmd_deletelog(const unsigned char* cmdString, unsigned short length)
 {
     eat_fs_error_enum fs_Op_ret;
 
-    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(LOGFILE_NAME);
+    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(OLD_LOG_FILE);
     if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
     {
-        LOG_ERROR("Delete logfile Fail,and Return Error is %d",fs_Op_ret);
+        LOG_ERROR("Delete old log file Fail,and Return Error is %d",fs_Op_ret);
         return EAT_FALSE;
     }
     else
     {
-        LOG_DEBUG("Delete logfile Success");
+        LOG_DEBUG("Delete old log file Success");
     }
+
+    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(NEW_LOG_FILE);
+    if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
+    {
+        LOG_ERROR("Delete new log file Fail,and Return Error is %d",fs_Op_ret);
+        return EAT_FALSE;
+    }
+    else
+    {
+        LOG_DEBUG("Delete new log file Success");
+    }
+
     return EAT_TRUE;
 }
-
 
 void log_initial(void)
 {
@@ -195,11 +206,11 @@ void log_hex(const char* data, int length)
 
 void log_file(const char* fmt, ...)
 {
-    //eat_bool ret = EAT_FALSE;
     char buf[1024] = "\0";
     FS_HANDLE fh_open, fh_write, fh_commit,seekRet;
-    //int seekRet = 0;
     UINT writedLen;
+    int rc = 0;
+    UINT filesize = 0;
 
     va_list arg;
     va_start(arg, fmt);
@@ -209,10 +220,46 @@ void log_file(const char* fmt, ...)
 
     strcpy(buf+strlen(buf),"\r\n");
 
-    fh_open = eat_fs_Open(LOGFILE_NAME, FS_READ_WRITE | FS_CREATE);
+    fh_open = eat_fs_Open(NEW_LOG_FILE, FS_READ_WRITE | FS_CREATE);
 
     if(EAT_FS_NO_ERROR <= fh_open)
     {
+        //TODO:judge the file size
+        rc = eat_fs_GetFileSize(fh_open,&filesize);
+        if(rc < EAT_FS_NO_ERROR)
+        {
+            LOG_INFO("get file size error , and return error:%d",rc);
+        }
+        else
+        {
+            LOG_DEBUG("get file size success:%d",filesize);
+        }
+        if(filesize > MAX_LOGFILE_SIZE)
+        {
+            eat_fs_Close(fh_open);
+
+            rc = eat_fs_Delete(OLD_LOG_FILE);
+            if(EAT_FS_FILE_NOT_FOUND != rc && EAT_FS_NO_ERROR != rc)
+            {
+                LOG_ERROR("delete old_log_file failed.rc= %d",rc);
+            }
+            else
+            {
+                LOG_DEBUG("delete old_log_file success.rc= %d",rc);
+            }
+
+            rc = eat_fs_Rename(NEW_LOG_FILE,OLD_LOG_FILE);
+            if(rc <0)
+            {
+                LOG_ERROR("rename failed.rc= %d",rc);
+            }
+            else
+            {
+                LOG_DEBUG("rename success.rc= %d",rc);
+            }
+            log_file(fmt);
+
+        }
         LOG_INFO("open log_file success, fh = %d", fh_open);
 
         seekRet = eat_fs_Seek(fh_open,0,EAT_FS_FILE_END);

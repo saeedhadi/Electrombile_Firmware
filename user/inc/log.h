@@ -46,8 +46,16 @@ void log_initial(void);
 void log_hex(const char* data, int length);
 void log_file(const char* fmt, ...)__attribute__((format(printf, 1, 2)));
 
-#define LOGFILE_NAME  L"C:\\log_file.txt"
+//#define LOGFILE_NAME  L"C:\\log_file.txt"
+
+#define OLD_LOG_FILE L"old_logfile.txt"
+#define NEW_LOG_FILE L"new_logfile.txt"
+#define LOG_FILE_NAME {OLD_LOG_FILE,NEW_LOG_FILE}
+
+#define LOG_FILE_NUM 2
+#define MAX_LOGFILE_SIZE 4096
 
 
 
 #endif /* USER_ELECTROMBILE_LOG_H_ */
+
