@@ -55,8 +55,9 @@ typedef struct
 }AUTOLOCK_INFO;
 
 
-MSG_THREAD* allocMsg(u8 len);
-void freeMsg(MSG_THREAD* msg);
+#define allocMsg(len) eat_mem_alloc(len)
+#define freeMsg(msg) eat_mem_free(msg)
+
 eat_bool sendMsg(EatUser_enum peer, void* msg, u8 len);
 
 #endif //ELECTROMBILE_FIRMWARE_MSG_H
