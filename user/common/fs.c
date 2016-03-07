@@ -171,7 +171,7 @@ static int fs_tail(const unsigned char* cmdString, unsigned short length)
         return -1;
     }
 
-    rc = eat_fs_Seek(fh, filesize - MAX_TAIL_SIZE, EAT_FS_FILE_BEGIN);
+    rc = eat_fs_Seek(fh, filesize > MAX_TAIL_SIZE ? filesize - MAX_TAIL_SIZE : 0, EAT_FS_FILE_BEGIN);
     if (rc < EAT_FS_NO_ERROR)
     {
         print("seek file pointer failed:%d", rc);
