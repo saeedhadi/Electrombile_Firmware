@@ -283,21 +283,21 @@ int cmd_Timer_rsp(const void* msg)
 {
     MSG_SET_TIMER_REQ* req = (MSG_SET_TIMER_REQ*)msg;
     MSG_SET_TIMER_RSP* rsp = NULL;
-    if(0 >= req->timer)
+    if(0 >= ntohl(req->timer))
     {
         ;//rsp at the end
     }
-    else if(10 >= req->timer)
+    else if(10 >= ntohl(req->timer))
     {
         setting_save();
 
     }
-    else if(21600 <= req->timer)
+    else if(21600 <= ntohl(req->timer))
     {
         setting_save();
 
     }
-    else if((10 < req->timer)&&(21600 > req->timer))
+    else if((10 < ntohl(req->timer))&&(21600 > ntohl(req->timer)))
     {
 
         setting_save();
@@ -306,11 +306,12 @@ int cmd_Timer_rsp(const void* msg)
     rsp = alloc_rspMsg(&req->header);
 
     //TODO: fix the gps upload time
-    rsp->result = 30;
+    rsp->result = htonl(30);
     socket_sendData(rsp,sizeof(MSG_SET_TIMER_RSP));
 
     return 0;
 }
+
 int cmd_Server_rsp(const void* msg)
 {
     MSG_SET_SERVER* msg_server = (MSG_SET_SERVER*)msg;
@@ -326,7 +327,7 @@ int cmd_Server_rsp(const void* msg)
         setting.ipaddr[1] = (u8)ip[1];
         setting.ipaddr[2] = (u8)ip[2];
         setting.ipaddr[3] = (u8)ip[3];
-        setting.port = (u16)msg_server->port;
+        setting.port = (u16)ntohl(msg_server->port);
 
         setting_save();
         LOG_DEBUG("server proc %s:%d successful!",msg_server->server,msg_server->port);
@@ -340,7 +341,7 @@ int cmd_Server_rsp(const void* msg)
         {
             setting.addr_type = ADDR_TYPE_DOMAIN;
             strcpy(setting.domain, msg_server->server);
-            setting.port = (u16)msg_server->port;
+            setting.port = (u16)ntohl(msg_server->port);
 
             setting_save();
             LOG_DEBUG("server proc %s:%d successful!",msg_server->server,msg_server->port);
@@ -363,17 +364,17 @@ int cmd_UpgradeStart_rsp(const void* msg)
     int rc = 0;
     SINT64 freeDiskSize = 0;
 
-    LOG_DEBUG("new app size : %d;new version : now version = %d:%d",req->size,req->version,VERSION_NUM);
+    LOG_DEBUG("new app size : %d;new version : now version = %d:%d",ntohl(req->size),ntohl(req->version),VERSION_NUM);
 
-    if (req->version <= VERSION_NUM)    //No need to upgrade, normally not happened
+    if (ntohl(req->version) <= VERSION_NUM)    //No need to upgrade, normally not happened
     {
         rc = MSG_VERSION_NOT_SUPPORTED;
-        LOG_DEBUG("No need to upgrade%d:%d",req->version,VERSION_NUM);
+        LOG_DEBUG("No need to upgrade%d:%d",ntohl(req->version),VERSION_NUM);
     }
     else
     {
         freeDiskSize = fs_getDiskFreeSize();
-        if (req->size >= freeDiskSize)      //TODO: equal is not enough, maybe should reserve some disk space
+        if (ntohl(req->size) >= freeDiskSize)      //TODO: equal is not enough, maybe should reserve some disk space
         {
             LOG_ERROR("Free disk is not enough , can not start app_upgrade!");
             rc = MSG_DISK_NO_SPACE;
@@ -406,7 +407,7 @@ int cmd_UpgradeData_rsp(const void* msg)
     int rc = 0;
     int expectLength = 0;
     short data_length ;
-    int data_offset = req->offset;//htonl(req->offset);
+    int data_offset = ntohl(req->offset);
 
     data_length = htons(req->header.length) - sizeof(req->offset);
 
@@ -432,7 +433,7 @@ int cmd_UpgradeData_rsp(const void* msg)
         return -1;
     }
 
-    rsp->offset = expectLength;
+    rsp->offset = htonl(expectLength);
     socket_sendData(rsp,sizeof(MSG_UPGRADE_DATA_RSP));
 
     return rc;
@@ -443,7 +444,8 @@ int cmd_UpgradeEnd_rsp(const void* msg)
     MSG_UPGRADE_END* req = (MSG_UPGRADE_END*)msg;
     MSG_UPGRADE_END_RSP* rsp = NULL;
 
-    int rc =  upgrade_CheckAppfile(req->size,req->checksum);
+    int rc =  upgrade_CheckAppfile(ntohl(req->size),ntohl(req->checksum
+));
 
     rsp = alloc_rspMsg(msg);
     if (!rsp)
