@@ -59,7 +59,7 @@ static MC_MSG_PROC msgProcs[] =
     {CMD_UPGRADE_END, cmd_UpgradeEnd_rsp},
 };
 
-int handle_one_msg(const void* m, int msgLen)
+int client_handleOnePkt(const void* m, int msgLen)
 {
     MSG_HEADER* msg = (MSG_HEADER*)m;
     size_t i = 0;
@@ -107,10 +107,10 @@ int client_proc(const void *m, int msgLen)
             LOG_ERROR("receive message header signature error:%x", (unsigned)ntohs(msg->signature));
             return -1;
         }
-        handle_one_msg(msg, ntohs(msg->length) + MSG_HEADER_LEN);
+        client_handleOnePkt(msg, ntohs(msg->length) + MSG_HEADER_LEN);
         leftLen = leftLen - MSG_HEADER_LEN - ntohs(msg->length);
         msg = (const MSG_HEADER *)((const char *)m + msgLen - leftLen);
-        LOG_HEX((const char *)msg,leftLen);
+//        LOG_HEX((const char *)msg, leftLen);
     }
     return 0;
 }
