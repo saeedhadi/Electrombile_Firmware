@@ -23,7 +23,7 @@ const unsigned char* string_trimLeft(const unsigned char* string)
 
 
 //equivalent to eat_acsii_to_ucs2
-void ascii_2_unicode(unsigned short* out, const unsigned char* in)
+void ascii2unicode(unsigned short* out, const unsigned char* in)
 {
     int i = 0;
     unsigned char* outp = (unsigned char*)out;
@@ -31,9 +31,23 @@ void ascii_2_unicode(unsigned short* out, const unsigned char* in)
 
     while( inp[i] )
     {
-        outp[i*2] = inp[i];
-        outp[i*2+1] = 0x00;
+        outp[i * 2] = inp[i];
+        outp[i * 2 + 1] = 0x00;
         i++;
     }
 
+    out[i] = 0;
+}
+
+void unicode2ascii(unsigned char* out, const unsigned short* in)
+{
+    int i = 0;
+
+    while( in[i] )
+    {
+        out[i] = in[i] & 0xFF;
+        i++;
+    }
+
+    out[i] = 0;
 }

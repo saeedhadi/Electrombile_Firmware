@@ -31,19 +31,22 @@ static int fs_ls(const unsigned char* cmdString, unsigned short length)
 {
     FS_HANDLE fh;
     EAT_FS_DOSDirEntry fileinfo;
-    WCHAR filename[MAX_FILENAME_LEN];
+    WCHAR filename_w[MAX_FILENAME_LEN];
+    char filename[MAX_FILENAME_LEN];
 
 
-    fh = eat_fs_FindFirst(L"C:\\*.*", 0, 0, &fileinfo, filename, sizeof(filename));
+    fh = eat_fs_FindFirst(L"C:\\*.*", 0, 0, &fileinfo, filename_w, sizeof(filename_w));
 
     if (fh > 0)
     {
 
         do
         {
+            unicode2ascii(filename, filename_w);
+
             //filename, file size, file attr, date
-            print("%s\t %d\t %c%c%c%c%c\t %d-%d-%d %d:%d:%d\r\n",
-                    fileinfo.FileName,
+            print("%-16s\t %d\t %c%c%c%c%c\t %d-%d-%d %d:%d:%d\r\n",
+                    filename,   //fileinfo.FileName,
                     fileinfo.FileSize,
                     fileinfo.Attributes & FS_ATTR_DIR ? 'D' : '-',
                     fileinfo.Attributes & FS_ATTR_READ_ONLY ? 'R' : '-',
@@ -56,7 +59,7 @@ static int fs_ls(const unsigned char* cmdString, unsigned short length)
                     fileinfo.CreateDateTime.Hour,
                     fileinfo.CreateDateTime.Minute,
                     fileinfo.CreateDateTime.Second2);
-        }while (eat_fs_FindNext(fh, &fileinfo, filename, sizeof(filename)) == EAT_FS_NO_ERROR);
+        }while (eat_fs_FindNext(fh, &fileinfo, filename_w, sizeof(filename_w)) == EAT_FS_NO_ERROR);
     }
 
     eat_fs_FindClose(fh);
@@ -71,7 +74,7 @@ static int fs_ls(const unsigned char* cmdString, unsigned short length)
  */
 static int fs_rm(const unsigned char* cmdString, unsigned short length)
 {
-    const unsigned char* filename = strstr(cmdString, CMD_STRING_RM);
+    const unsigned char* filename = strstr(cmdString, CMD_STRING_RM) + strlen(CMD_STRING_RM);
     int rc = EAT_FS_NO_ERROR;
     WCHAR filename_w[MAX_FILENAME_LEN];
 
@@ -83,7 +86,7 @@ static int fs_rm(const unsigned char* cmdString, unsigned short length)
         return 0;
     }
 
-    ascii_2_unicode(filename_w, filename);      //FIXME: overflow bug: the filename length may exceed MAX_FILENAME_LEN
+    ascii2unicode(filename_w, filename);      //FIXME: overflow bug: the filename length may exceed MAX_FILENAME_LEN
 
     rc = eat_fs_Delete(filename_w);
     if (rc == EAT_FS_FILE_NOT_FOUND)
@@ -96,7 +99,7 @@ static int fs_rm(const unsigned char* cmdString, unsigned short length)
     }
     else
     {
-        LOG_ERROR("delete file fail, return code is %d", rc);
+        LOG_ERROR("delete file %s fail, return code is %d", filename, rc);
     }
 
     return rc;
