@@ -121,9 +121,9 @@ static void setting_initial(void)
 #else
     setting.addr_type = ADDR_TYPE_IP;
     setting.ipaddr[0] = 121;
-    setting.ipaddr[1] = 40;
-    setting.ipaddr[2] = 117;
-    setting.ipaddr[3] = 200;
+    setting.ipaddr[1] = 42;
+    setting.ipaddr[2] = 38;
+    setting.ipaddr[3] = 93;
 #endif
 
     setting.port = 9880;
