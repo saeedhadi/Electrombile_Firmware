@@ -150,7 +150,7 @@ static int fs_tail(const unsigned char* cmdString, unsigned short length)
 
     ascii2unicode(filename_w, filename);      //FIXME: overflow bug: the filename length may exceed MAX_FILENAME_LEN
 
-    fh = eat_fs_Open(NEW_LOG_FILE, FS_READ_ONLY);
+    fh = eat_fs_Open(filename_w, FS_READ_ONLY);
     if(EAT_FS_FILE_NOT_FOUND == fh)
     {
         print("log file not exists.");
