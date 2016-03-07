@@ -5,6 +5,8 @@
  *      Author: jk
  */
 
+#include <string.h>
+
 #include "utils.h"
 
 /*
@@ -21,6 +23,20 @@ const unsigned char* string_trimLeft(const unsigned char* string)
 }
 
 
+/*
+ * 去掉字符串末尾的空格
+ *
+ */
+void string_trimRight(unsigned char* string)
+{
+    unsigned char* p = string + strlen(string);
+
+    while(*p == ' ') p--;
+
+    *(p + 1) = 0;
+
+    return;
+}
 
 //equivalent to eat_acsii_to_ucs2
 void ascii2unicode(unsigned short* out, const unsigned char* in)

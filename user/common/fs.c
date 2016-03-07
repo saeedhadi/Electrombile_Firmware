@@ -81,6 +81,7 @@ static int fs_rm(const unsigned char* cmdString, unsigned short length)
 
 
     filename = string_trimLeft(filename);
+    string_trimLeft(filename);
     if (strlen(filename) == 0)
     {
         LOG_INFO("parameter not correct");
