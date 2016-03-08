@@ -139,18 +139,7 @@ static void sendGPS2Server(LOCAL_GPS* gps)
 
     if (gps->isGps)
     {
-        MSG_GPS* msg = alloc_msg(CMD_GPS, sizeof(MSG_GPS));
-        if (!msg)
-        {
-            LOG_ERROR("alloc GPS message failed!");
-            return;
-        }
-
-        memcpy(&msg->gps, &gps->gps, sizeof(GPS));
-
-        LOG_DEBUG("send GPS message.");
-
-        socket_sendData(msg, sizeof(MSG_GPS));
+        cmd_GPS(&gps->gps);
     }
 #if 0
     else

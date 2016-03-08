@@ -80,3 +80,20 @@ int cmd_Seek(unsigned int value)
     return 0;
 }
 
+int cmd_GPS(GPS* gps)
+{
+    MSG_GPS* msg = alloc_msg(CMD_GPS, sizeof(MSG_GPS));
+    if (!msg)
+    {
+        LOG_ERROR("alloc GPS message failed!");
+        return -1;
+    }
+
+    memcpy(&msg->gps, gps, sizeof(GPS));
+    msg->gps.timestamp = htonl(gps->timestamp);
+    msg->gps.course = htons(gps->course);
+
+    LOG_DEBUG("send GPS message.");
+
+    socket_sendData(msg, sizeof(MSG_GPS));
+}

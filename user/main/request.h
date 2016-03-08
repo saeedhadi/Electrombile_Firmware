@@ -8,10 +8,13 @@
 #ifndef USER_MAIN_REQUEST_H_
 #define USER_MAIN_REQUEST_H_
 
+#include "protocol.h"
+
 int cmd_Login(void);
 int cmd_SMS(const void* msg);
 void cmd_Heartbeat(void);
 int cmd_Seek(unsigned int value);
+int cmd_GPS(GPS* gps);
 
 
 #endif /* USER_MAIN_REQUEST_H_ */
