@@ -90,7 +90,7 @@ int client_proc(const void *m, int msgLen)
     const MSG_HEADER *msg = (const MSG_HEADER *)m;
     size_t leftLen = 0;
 
-    LOG_HEX(m,msgLen);
+    LOG_HEX(m, msgLen);
 
     if(msgLen < MSG_HEADER_LEN)
     {
@@ -101,12 +101,11 @@ int client_proc(const void *m, int msgLen)
     leftLen = msgLen;
     while(leftLen >= ntohs(msg->length) + MSG_HEADER_LEN)
     {
-        const unsigned char *status = (const unsigned char *)(&(msg->signature));
-        if((status[0] != 0xaa) || (status[1] != 0x55))
-        {
-            LOG_ERROR("receive message header signature error:%x", (unsigned)ntohs(msg->signature));
+        if (ntohs(msg->signature) != START_FLAG)        {
+            LOG_ERROR("receive message header signature error:%#x", (unsigned)ntohs(msg->signature));
             return -1;
         }
+
         client_handleOnePkt(msg, ntohs(msg->length) + MSG_HEADER_LEN);
         leftLen = leftLen - MSG_HEADER_LEN - ntohs(msg->length);
         msg = (const MSG_HEADER *)((const char *)m + msgLen - leftLen);
