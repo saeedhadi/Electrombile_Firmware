@@ -23,6 +23,7 @@
 #include "timer.h"
 #include "setting.h"
 #include "mileage.h"
+#include "diagnosis.h"
 #include "log.h"
 #include "fs.h"
 #include "version.h"
@@ -146,6 +147,8 @@ void app_main(void *data)
     seek_initial();
 
     startWatchdog();
+
+    diag_check();
 
     while(EAT_TRUE)
     {
