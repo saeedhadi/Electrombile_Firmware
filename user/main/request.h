@@ -11,7 +11,7 @@
 int cmd_Login(void);
 int cmd_SMS(const void* msg);
 void cmd_Heartbeat(void);
-int cmd_seek(unsigned int value);
+int cmd_Seek(unsigned int value);
 
 
 #endif /* USER_MAIN_REQUEST_H_ */

@@ -25,7 +25,7 @@ void seek_initial(void)
 
 int seek_proc(unsigned int value)
 {
-    return cmd_seek(value);
+    return cmd_Seek(value);
 }
 
 

@@ -64,7 +64,7 @@ void cmd_Wild(const void* m, int len)
     socket_sendData(msg, msgLen);
 }
 
-int cmd_seek(unsigned int value)
+int cmd_Seek(unsigned int value)
 {
     MSG_433* seek_msg = alloc_msg(CMD_433, sizeof(MSG_433));
     if (!seek_msg)
