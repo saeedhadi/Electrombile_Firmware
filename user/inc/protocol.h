@@ -112,11 +112,11 @@ typedef MSG_HEADER MSG_LOGIN_RSP;
  */
 typedef struct
 {
+    int timestamp;
     float longitude;
     float latitude;
-    float altitude;
-    float speed;
-    float course;
+    char speed;
+    short course;
 }__attribute__((__packed__)) GPS;
 
 /*

@@ -224,9 +224,9 @@ static eat_bool gps_sendGps(u8 cmd)
     gps = (LOCAL_GPS*)msg->data;
 
     gps->isGps = EAT_TRUE;
+    gps->gps.timestamp = rtc_getTimestamp();
     gps->gps.latitude = latitude;
     gps->gps.longitude = longitude;
-    gps->gps.altitude = altitude;
     gps->gps.speed = speed;
     gps->gps.course = course;
 

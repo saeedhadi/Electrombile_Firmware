@@ -146,11 +146,7 @@ static void sendGPS2Server(LOCAL_GPS* gps)
             return;
         }
 
-        msg->gps.longitude = gps->gps.longitude;
-        msg->gps.latitude = gps->gps.latitude;
-        msg->gps.altitude = gps->gps.altitude;
-        msg->gps.speed = gps->gps.speed;
-        msg->gps.course = gps->gps.course;
+        memcpy(&msg->gps, &gps->gps, sizeof(GPS));
 
         LOG_DEBUG("send GPS message.");
 
@@ -276,11 +272,7 @@ static int threadCmd_Location(const MSG_THREAD* msg)
             return -1;
         }
         msg->isGps= gps->isGps;
-        msg->gps.longitude = gps->gps.longitude;
-        msg->gps.latitude = gps->gps.latitude;
-        msg->gps.altitude = gps->gps.altitude;
-        msg->gps.speed = gps->gps.speed;
-        msg->gps.course = gps->gps.course;
+        memcpy(&msg->gps, &gps->gps, sizeof(GPS));
 
         LOG_DEBUG("send GPS_LOCATION message.");
         socket_sendData(msg, sizeof(MSG_GPSLOCATION_RSP));
