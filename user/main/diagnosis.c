@@ -13,6 +13,7 @@
 #include "adc.h"
 #include "log.h"
 
+#define Realvalue_2_ADvalue(x) x*1000*3/103 //unit mV, 3K & 100k divider
 
 /*
  * 检测输入电压范围
@@ -29,9 +30,9 @@ static eat_bool diag_batterCheck(void)
         return EAT_FALSE;
     }
 
-    //电池电压介于[36v, 60v]之间
+    //电池电压介于[36v, 66v]之间
     //FIXME: 根据分压计算区间
-    if (voltage < 36 || voltage > 60)
+    if (voltage < Realvalue_2_ADvalue(36) || voltage > Realvalue_2_ADvalue(66))
     {
         LOG_ERROR("battery voltage check failed: %d", voltage);
         return EAT_FALSE;
