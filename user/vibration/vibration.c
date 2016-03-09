@@ -95,9 +95,9 @@ static eat_bool vibration_sendAlarm(void)
 static eat_bool vivration_SendItinerarayState(char state)
 {
     eat_bool ret;
-    u8 msgLen = sizeof(MSG_THREAD) + sizeof(ITINERARY_INFO);
+    u8 msgLen = sizeof(MSG_THREAD) + sizeof(VIBRATION_ITINERARY_INFO);
     MSG_THREAD* msg = allocMsg(msgLen);
-    ITINERARY_INFO* msg_state = 0;
+    VIBRATION_ITINERARY_INFO* msg_state = 0;
 
     if (!msg)
     {
@@ -106,9 +106,9 @@ static eat_bool vivration_SendItinerarayState(char state)
     }
 
     msg->cmd = CMD_THREAD_ITINERARY;
-    msg->length = sizeof(ITINERARY_INFO);
+    msg->length = sizeof(VIBRATION_ITINERARY_INFO);
 
-    msg_state = (ITINERARY_INFO*)msg->data;
+    msg_state = (VIBRATION_ITINERARY_INFO*)msg->data;
     msg_state->state = state;
 
     LOG_DEBUG("send itinerary state msg to GPS thread!");

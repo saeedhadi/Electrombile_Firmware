@@ -60,7 +60,18 @@ typedef struct
 {
     char state;
 
-}ITINERARY_INFO;
+}VIBRATION_ITINERARY_INFO;
+
+typedef struct
+{
+    int starttime;
+    int endtime;
+    int itinerary;
+
+}GPS_ITINERARY_INFO;
+
+
+
 
 #define allocMsg(len) eat_mem_alloc(len)
 #define freeMsg(msg) eat_mem_free(msg)

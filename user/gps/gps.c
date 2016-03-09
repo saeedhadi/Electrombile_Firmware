@@ -19,6 +19,7 @@
 #include "thread_msg.h"
 #include "log.h"
 #include "setting.h"
+#include "vibration.h"
 #include "tool.h"
 #include "rtc.h"
 
@@ -76,10 +77,9 @@ static char  cellNo = 0;//cell count
 static CELL  cells[7] = {0};
 static LOCAL_GPS last_gps_info;
 
-double mileage = 0.f;
+static double mileage = 0.f;
 
-static LOCAL_GPS* last_gps =&last_gps_info;//gps sent for the last time
-
+static LOCAL_GPS* last_gps = &last_gps_info;//gps sent for the last time
 
 void app_gps_thread(void *data)
 {
@@ -189,6 +189,61 @@ static void location_handler(u8 cmd)
     }
 }
 
+static void gps_ResetMileage(void)
+{
+    mileage = 0.f;
+}
+
+static void gps_MileageSend(int starttime, int endtime ,int mileage)
+{
+    u8 msgLen = sizeof(MSG_HEADER)+sizeof(GPS_ITINERARY_INFO);
+    MSG_THREAD* msg = allocMsg(msgLen);
+    GPS_ITINERARY_INFO* msg_state = 0;
+
+    if (!msg)
+    {
+        LOG_ERROR("alloc msg failed!");
+        return ;
+    }
+    msg->cmd = CMD_THREAD_ITINERARY;
+    msg->length = sizeof(GPS_ITINERARY_INFO);
+
+    msg_state = (GPS_ITINERARY_INFO*)msg->data;
+
+    msg_state->endtime = endtime;
+    msg_state->starttime = starttime;
+    msg_state->itinerary= mileage;
+
+    LOG_INFO("send mileage to MainThread");
+
+    sendMsg(THREAD_MAIN, msg, msgLen);
+}
+
+
+static void gps_ItinerarayHandler(const MSG_THREAD* msg)
+{
+    static int starttime;
+    VIBRATION_ITINERARY_INFO* msg_state = (VIBRATION_ITINERARY_INFO*) msg->data;
+
+    if (msg->length < sizeof(VIBRATION_ITINERARY_INFO) || !msg_state)
+    {
+         LOG_ERROR("msg from THREAD_ITINERARY error!");
+         return ;
+    }
+
+    if(ITINERARY_START == msg_state->state)
+    {
+        gps_ResetMileage();
+        starttime = rtc_getTimestamp();
+    }
+
+    if(ITINERARY_END == msg_state->state)
+    {
+        gps_MileageSend(starttime,rtc_getTimestamp(),(int)mileage);
+    }
+
+    freeMsg((void*)msg);
+}
 
 static eat_bool gps_isGpsFixed(void)
 {

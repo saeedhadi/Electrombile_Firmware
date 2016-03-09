@@ -207,6 +207,27 @@ static int threadCmd_AutolockState(const MSG_THREAD* msg)
     return 0;
 }
 
+static int threadCmd_Itinerary(const MSG_THREAD* msg)
+{
+    GPS_ITINERARY_INFO* msg_data = (GPS_ITINERARY_INFO*) msg->data;
+    MSG_ITINERARY_REQ* itinerary_msg;
+
+    if (msg->length < sizeof(MSG_ITINERARY_REQ) || !msg_data)
+    {
+         LOG_ERROR("msg from THREAD_GPS error!");
+         return -1;
+    }
+    itinerary_msg = alloc_msg(CMD_ITINERARY, sizeof(MSG_ITINERARY_REQ));
+    itinerary_msg->starttime = htonl(msg_data->starttime);
+    itinerary_msg->endtime = htonl(msg_data->endtime);
+    itinerary_msg->mileage = htonl(msg_data->itinerary);
+
+    LOG_DEBUG("send itinerary msg,start%d end%d itinerary%d",msg_data->starttime,msg_data->endtime,msg_data->itinerary);
+    socket_sendData((MSG_ITINERARY_REQ*)msg, sizeof(MSG_ITINERARY_REQ));
+
+    return 0;
+}
+
 
 static int threadCmd_SMS(const MSG_THREAD* msg)
 {
@@ -306,6 +327,7 @@ static THREAD_MSG_PROC msgProcs[] =
         {CMD_THREAD_VIBRATE, threadCmd_Vibrate},
         {CMD_THREAD_LOCATION, threadCmd_Location},
         {CMD_THREAD_AUTOLOCK, threadCmd_AutolockState},
+        {CMD_THREAD_ITINERARY,threadCmd_Itinerary}
 };
 
 static int event_threadMsg(const EatEvent_st* event)

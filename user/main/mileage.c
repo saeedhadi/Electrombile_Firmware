@@ -34,10 +34,10 @@ static unsigned int adcvalue;               //usually used to detect the value o
 static unsigned int adcvalue_start;         //Before starting the detection of electricity
 
 
-extern double mileage;
+static int mileage;
 
 
-static void msg_mileage_send(MSG_MILEAGE_REQ msg_mileage);
+static void msg_mileage_send(MSG_ITINERARY_REQ msg_mileage);
 static eat_bool mileage_reload(void);
 
 /*
@@ -415,7 +415,7 @@ void adc_voltage_proc(EatAdc_st* adc)
 
 void mileagehandle(short MILEAGE_STATE)
 {
-    static MSG_MILEAGE_REQ msg_mileage;
+    static MSG_ITINERARY_REQ msg_mileage;
     static eat_bool mileage_flag = EAT_FALSE;
     time_t timestamp;
 
@@ -450,10 +450,10 @@ void mileagehandle(short MILEAGE_STATE)
     }
 }
 
-static void msg_mileage_send(MSG_MILEAGE_REQ msg_mileage)
+static void msg_mileage_send(MSG_ITINERARY_REQ msg_mileage)
 {
-    u8 msgLen = sizeof(MSG_MILEAGE_REQ);
-    MSG_MILEAGE_REQ* msg = alloc_msg(CMD_ITINERARY, msgLen);
+    u8 msgLen = sizeof(MSG_ITINERARY_REQ);
+    MSG_ITINERARY_REQ* msg = alloc_msg(CMD_ITINERARY, msgLen);
     msg->endtime = msg_mileage.endtime;
     msg->starttime = msg_mileage.starttime;
     msg->mileage = (int)msg_mileage.mileage;
