@@ -28,12 +28,12 @@ static int isItineraryStart = ITINERARY_END;
 
 eat_bool isMoved = EAT_FALSE;
 
-static int itinerary_state(void)
+static char itinerary_state(void)
 {
     return isItineraryStart;
 }
 
-static void set_itinerary_state(int state)
+static void set_itinerary_state(char state)
 {
     isItineraryStart = state;
 }
@@ -92,7 +92,7 @@ static eat_bool vibration_sendAlarm(void)
 }
 
 
-static void vivration_SendItinerarayState(int state)
+static eat_bool vivration_SendItinerarayState(char state)
 {
     eat_bool ret;
     u8 msgLen = sizeof(MSG_THREAD) + sizeof(ITINERARY_INFO);
@@ -113,6 +113,7 @@ static void vivration_SendItinerarayState(int state)
 
     LOG_DEBUG("send itinerary state msg to GPS thread!");
     ret = sendMsg(THREAD_GPS, msg, msgLen);
+
     set_itinerary_state(state);
 
     return ret;

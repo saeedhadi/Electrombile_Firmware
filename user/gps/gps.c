@@ -134,6 +134,11 @@ void app_gps_thread(void *data)
                         LOG_DEBUG("gps get CMD_THREAD_LOCATION.");
                         location_handler(CMD_THREAD_LOCATION);
                         break;
+
+                    case CMD_THREAD_ITINERARY:
+                        LOG_DEBUG("gps get CMD_THREAD_ITINERARY.");
+
+                        break;
                     default:
                         LOG_ERROR("cmd(%d) not processed!", msg->cmd);
                         break;
