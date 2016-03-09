@@ -18,18 +18,25 @@
 #include "setting.h"
 #include "mma8652.h"
 
-static eat_bool vibration_sendAlarm(void);
-static void vibration_timer_handler(void);
-static void avoid_fre_send(eat_bool state);
-
-
 #define MAX_MOVE_DATA_LEN   500
 #define MOVE_TIMER_PERIOD    10
 
 #define MOVE_THRESHOLD 5
 
 static eat_bool avoid_freq_flag = EAT_FALSE;
+static int isItineraryStart = ITINERARY_END;
+
 eat_bool isMoved = EAT_FALSE;
+
+static int itinerary_state(void)
+{
+    return isItineraryStart;
+}
+
+static void set_itinerary_state(int state)
+{
+    isItineraryStart = state;
+}
 
 void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
 {
@@ -44,7 +51,7 @@ void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
 }
 
 
-static eat_bool AutolockStateSend(eat_bool state)
+static eat_bool vivration_AutolockStateSend(eat_bool state)
 {
     eat_bool ret;
     u8 msgLen = sizeof(MSG_THREAD) + sizeof(AUTOLOCK_INFO);
@@ -67,6 +74,26 @@ static eat_bool AutolockStateSend(eat_bool state)
     ret = sendMsg(THREAD_MAIN, msg, msgLen);
 
     return ret;
+}
+
+static eat_bool vibration_sendAlarm(void)
+{
+    u8 msgLen = sizeof(MSG_THREAD) + 1;
+    MSG_THREAD* msg = allocMsg(msgLen);
+    unsigned char* alarmType = (unsigned char*)msg->data;
+
+    msg->cmd = CMD_THREAD_VIBRATE;
+    msg->length = 1;
+    *alarmType = ALARM_VIBRATE;
+
+    LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
+    avoid_freq_flag = EAT_TRUE;
+    return sendMsg(THREAD_MAIN, msg, msgLen);
+}
+
+static void vivration_SendItinerarayState(int state)
+{
+    set_itinerary_state(state);
 }
 
 static void move_alarm_timer_handler()
@@ -122,6 +149,11 @@ static void move_alarm_timer_handler()
                     LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, x_data[i]);
                 }
 
+                if(ITINERARY_END == itinerary_state())
+                {
+                    vivration_SendItinerarayState(ITINERARY_START);
+                }
+
                return;
             }
 
@@ -138,6 +170,11 @@ static void move_alarm_timer_handler()
                 {
                     vibration_sendAlarm();
                     LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, y_data[i]);
+                }
+
+                if(ITINERARY_END == itinerary_state())
+                {
+                    vivration_SendItinerarayState(ITINERARY_START);
                 }
 
                 return;
@@ -160,6 +197,12 @@ static void move_alarm_timer_handler()
                     vibration_sendAlarm();
                     LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, z_data[i]);
                 }
+
+                if(ITINERARY_END == itinerary_state())
+                {
+                    vivration_SendItinerarayState(ITINERARY_START);
+                }
+
                 return;
             }
             if(z_data[0]<abs(z_data[i]))
@@ -173,54 +216,24 @@ static void move_alarm_timer_handler()
 
 }
 
-
-void app_vibration_thread(void *data)
+static void avoid_fre_send(eat_bool state)
 {
-	EatEvent_st event;
-	bool ret;
+    static u16 avoid_freq_count;
 
-	LOG_INFO("vibration thread start.");
-
-	ret = mma8652_init();
-	if (!ret)
-	{
-        LOG_ERROR("mma8652 init failed");
-	}
-	else
-	{
-	    mma8652_config();
-	}
-
-	eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
-
-	while(EAT_TRUE)
-	{
-        eat_get_event_for_user(THREAD_VIBRATION, &event);
-        switch(event.event)
+    if(state == EAT_TRUE)
+    {
+        if(++avoid_freq_count == 10)
         {
-            case EAT_EVENT_TIMER:
-                switch (event.data.timer.timer_id)
-                {
-                    case TIMER_VIBRATION:
-                        vibration_timer_handler();
-                        eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
-                        break;
-                    case TIMER_MOVE_ALARM:
-                        move_alarm_timer_handler();
-                        break;
-
-                    default:
-                        LOG_ERROR("timer(%d) expire!", event.data.timer.timer_id);
-                        break;
-                }
-                break;
-
-            default:
-            	LOG_ERROR("event(%d) not processed!", event.event);
-                break;
+            avoid_freq_count = 0;
+            avoid_freq_flag = EAT_FALSE;
         }
     }
+    else
+    {
+        avoid_freq_count = 0;
+    }
 }
+
 
 static void vibration_timer_handler(void)
 {
@@ -283,9 +296,11 @@ static void vibration_timer_handler(void)
                 {
                     LOG_DEBUG("vibration state auto locked.");
 
-                    AutolockStateSend(EAT_TRUE);    //TODO:send autolock_msg to main thread
+                    vivration_AutolockStateSend(EAT_TRUE);    //TODO:send autolock_msg to main thread
 
                     set_vibration_state(EAT_TRUE);
+
+                    vivration_SendItinerarayState(ITINERARY_END);
 
                 }
             }
@@ -295,35 +310,52 @@ static void vibration_timer_handler(void)
     return;
 }
 
-static eat_bool vibration_sendAlarm(void)
+
+void app_vibration_thread(void *data)
 {
-    u8 msgLen = sizeof(MSG_THREAD) + 1;
-    MSG_THREAD* msg = allocMsg(msgLen);
-    unsigned char* alarmType = (unsigned char*)msg->data;
+	EatEvent_st event;
+	bool ret;
 
-    msg->cmd = CMD_THREAD_VIBRATE;
-    msg->length = 1;
-    *alarmType = ALARM_VIBRATE;
+	LOG_INFO("vibration thread start.");
 
-    LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
-    avoid_freq_flag = EAT_TRUE;
-    return sendMsg(THREAD_MAIN, msg, msgLen);
-}
-static void avoid_fre_send(eat_bool state)
-{
-    static u16 avoid_freq_count;
+	ret = mma8652_init();
+	if (!ret)
+	{
+        LOG_ERROR("mma8652 init failed");
+	}
+	else
+	{
+	    mma8652_config();
+	}
 
-    if(state == EAT_TRUE)
-    {
-        if(++avoid_freq_count == 10)
+	eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
+
+	while(EAT_TRUE)
+	{
+        eat_get_event_for_user(THREAD_VIBRATION, &event);
+        switch(event.event)
         {
-            avoid_freq_count = 0;
-            avoid_freq_flag = EAT_FALSE;
+            case EAT_EVENT_TIMER:
+                switch (event.data.timer.timer_id)
+                {
+                    case TIMER_VIBRATION:
+                        vibration_timer_handler();
+                        eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
+                        break;
+                    case TIMER_MOVE_ALARM:
+                        move_alarm_timer_handler();
+                        break;
+
+                    default:
+                        LOG_ERROR("timer(%d) expire!", event.data.timer.timer_id);
+                        break;
+                }
+                break;
+
+            default:
+            	LOG_ERROR("event(%d) not processed!", event.event);
+                break;
         }
-    }
-    else
-    {
-        avoid_freq_count = 0;
     }
 }
 

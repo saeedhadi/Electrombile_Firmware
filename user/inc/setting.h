@@ -43,9 +43,8 @@ typedef struct
     //Switch configuration
     eat_bool isVibrateFixed;
 
+
 }SETTING;
-
-
 
 
 
@@ -53,7 +52,6 @@ extern SETTING setting;
 
 eat_bool vibration_fixed(void) __attribute__((always_inline));
 void set_vibration_state(eat_bool fixed) __attribute__((always_inline));
-
 
 eat_bool setting_restore(void);
 eat_bool setting_save(void);
