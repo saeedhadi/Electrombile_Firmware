@@ -234,33 +234,18 @@ int cmd_Battery_rsp(const void* msg)
 }
 
 
-int cmd_Defend_rsp(const void* msg)
+int cmd_DefendOn_rsp(const void* msg)
 {
     MSG_DEFEND_REQ* req = (MSG_DEFEND_REQ*)msg;
     MSG_DEFEND_RSP* rsp = NULL;
     unsigned char result = MSG_SUCCESS;
 
-    switch (req->operator)
+    LOG_DEBUG("set defend switch on.");
+
+    set_vibration_state(EAT_TRUE);
+    if(EAT_TRUE != vibration_fixed())
     {
-        case DEFEND_ON:
-            LOG_DEBUG("set defend switch on.");
-            set_vibration_state(EAT_TRUE);
-            break;
-
-        case DEFEND_OFF:
-            LOG_DEBUG("set defend switch off.");
-
-            set_vibration_state(EAT_FALSE);
-            break;
-
-        case DEFEND_GET:
-            result = vibration_fixed() ? DEFEND_ON : DEFEND_OFF;
-            LOG_DEBUG("get defend switch state(%d).", result);
-            break;
-
-        default:
-            LOG_ERROR("unknown operator %d!", req->operator);
-            return 0;
+        result =-1;
     }
 
     rsp = alloc_rspMsg(&req->header);
@@ -277,6 +262,60 @@ int cmd_Defend_rsp(const void* msg)
 
     return 0;
 }
+
+int cmd_DefendOff_rsp(const void* msg)
+{
+    MSG_DEFEND_REQ* req = (MSG_DEFEND_REQ*)msg;
+    MSG_DEFEND_RSP* rsp = NULL;
+    unsigned char result = MSG_SUCCESS;
+
+    LOG_DEBUG("set defend switch off.");
+
+    set_vibration_state(EAT_FALSE);
+    if(EAT_FALSE != vibration_fixed())
+    {
+        result =-1;
+    }
+
+    rsp = alloc_rspMsg(&req->header);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc defend rsp message failed!");
+        return -1;
+    }
+
+    rsp->token = req->token;
+    rsp->result = result;
+
+    socket_sendData(rsp, sizeof(MSG_DEFEND_REQ));
+
+    return 0;
+}
+int cmd_DefendGet_rsp(const void* msg)
+{
+    MSG_DEFEND_REQ* req = (MSG_DEFEND_REQ*)msg;
+    MSG_DEFEND_RSP* rsp = NULL;
+    unsigned char result = MSG_SUCCESS;
+
+    result = vibration_fixed() ? DEFEND_ON : DEFEND_OFF;
+    LOG_DEBUG("get defend switch state(%d).", result);
+
+    rsp = alloc_rspMsg(&req->header);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc defend rsp message failed!");
+        return -1;
+    }
+
+    rsp->token = req->token;
+    rsp->result = result;
+
+    socket_sendData(rsp, sizeof(MSG_DEFEND_REQ));
+
+    return 0;
+}
+
+
 
 int cmd_Timer_rsp(const void* msg)
 {

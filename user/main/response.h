@@ -13,7 +13,9 @@ int cmd_Ping_rsp(const void* msg);
 int cmd_Alarm_rsp(const void* msg);
 int cmd_Sms_rsp(const void* msg);
 
-int cmd_Defend_rsp(const void* msg);
+int cmd_DefendOn_rsp(const void* msg);
+int cmd_DefendOff_rsp(const void* msg);
+int cmd_DefendGet_rsp(const void* msg);
 int cmd_Seek_rsp(const void* msg);
 int cmd_Location_rsp(const void* msgLocation);
 int cmd_AutodefendSwitchSet_rsp(const void* msg);
