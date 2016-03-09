@@ -91,9 +91,31 @@ static eat_bool vibration_sendAlarm(void)
     return sendMsg(THREAD_MAIN, msg, msgLen);
 }
 
+
 static void vivration_SendItinerarayState(int state)
 {
+    eat_bool ret;
+    u8 msgLen = sizeof(MSG_THREAD) + sizeof(ITINERARY_INFO);
+    MSG_THREAD* msg = allocMsg(msgLen);
+    ITINERARY_INFO* msg_state = 0;
+
+    if (!msg)
+    {
+        LOG_ERROR("alloc msg failed!");
+        return EAT_FALSE;
+    }
+
+    msg->cmd = CMD_THREAD_ITINERARY;
+    msg->length = sizeof(ITINERARY_INFO);
+
+    msg_state = (ITINERARY_INFO*)msg->data;
+    msg_state->state = state;
+
+    LOG_DEBUG("send itinerary state msg to GPS thread!");
+    ret = sendMsg(THREAD_GPS, msg, msgLen);
     set_itinerary_state(state);
+
+    return ret;
 }
 
 static void move_alarm_timer_handler()
