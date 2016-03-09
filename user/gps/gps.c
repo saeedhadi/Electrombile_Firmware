@@ -77,7 +77,7 @@ static char  cellNo = 0;//cell count
 static CELL  cells[7] = {0};
 static LOCAL_GPS last_gps_info;
 
-static double mileage = 0.f;
+static double itinerary = 0.f;
 
 static LOCAL_GPS* last_gps = &last_gps_info;//gps sent for the last time
 
@@ -191,10 +191,10 @@ static void location_handler(u8 cmd)
 
 static void gps_ResetMileage(void)
 {
-    mileage = 0.f;
+    itinerary = 0.f;
 }
 
-static void gps_MileageSend(int starttime, int endtime ,int mileage)
+static void gps_MileageSend(int starttime, int endtime ,int itinerary)
 {
     u8 msgLen = sizeof(MSG_HEADER)+sizeof(GPS_ITINERARY_INFO);
     MSG_THREAD* msg = allocMsg(msgLen);
@@ -212,9 +212,9 @@ static void gps_MileageSend(int starttime, int endtime ,int mileage)
 
     msg_state->endtime = endtime;
     msg_state->starttime = starttime;
-    msg_state->itinerary= mileage;
+    msg_state->itinerary= itinerary;
 
-    LOG_INFO("send mileage to MainThread");
+    LOG_INFO("send itinerary to MainThread");
 
     sendMsg(THREAD_MAIN, msg, msgLen);
 }
@@ -239,7 +239,7 @@ static void gps_ItinerarayHandler(const MSG_THREAD* msg)
 
     if(ITINERARY_END == msg_state->state)
     {
-        gps_MileageSend(starttime,rtc_getTimestamp(),(int)mileage);
+        gps_MileageSend(starttime,rtc_getTimestamp(),(int)itinerary);
     }
 
     freeMsg((void*)msg);
@@ -530,7 +530,7 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
             }
             else
             {
-                mileage += distance;
+                itinerary += distance;
                 LOG_DEBUG("GPS is different. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
                 return EAT_FALSE;
             }
