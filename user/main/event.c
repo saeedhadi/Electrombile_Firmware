@@ -263,6 +263,9 @@ static int threadCmd_Location(const MSG_THREAD* msg)
         msg->isGps= gps->isGps;
         memcpy(&msg->gps, &gps->gps, sizeof(GPS));
 
+        msg->gps.timestamp = htonl(gps->gps.timestamp);
+        msg->gps.course = htons(gps->gps.course);
+
         LOG_DEBUG("send GPS_LOCATION message.");
         socket_sendData(msg, sizeof(MSG_GPSLOCATION_RSP));
     }
