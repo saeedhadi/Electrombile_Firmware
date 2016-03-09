@@ -231,15 +231,22 @@ static void gps_ItinerarayHandler(const MSG_THREAD* msg)
          return ;
     }
 
-    if(ITINERARY_START == msg_state->state)
+    if(ITINERARY_START == msg_state->state && 0 == starttime)
     {
+        LOG_DEBUG("start itinerary");
         gps_ResetMileage();
         starttime = rtc_getTimestamp();
     }
-
-    if(ITINERARY_END == msg_state->state)
+    else if(ITINERARY_END == msg_state->state && starttime)
     {
+        LOG_DEBUG("end itinerary");
         gps_MileageSend(starttime,rtc_getTimestamp(),(int)itinerary);
+        starttime = 0;
+    }
+    else
+    {
+        LOG_ERROR("Itinerary error , set state to default");
+        starttime = 0;
     }
 
     freeMsg((void*)msg);
