@@ -59,6 +59,7 @@ static MC_MSG_PROC msgProcs[] =
     {CMD_UPGRADE_START, cmd_UpgradeStart_rsp},
     {CMD_UPGRADE_DATA, cmd_UpgradeData_rsp},
     {CMD_UPGRADE_END, cmd_UpgradeEnd_rsp},
+    {CMD_REBOOT,cmd_Reboot_rsp},
 };
 
 int client_handleOnePkt(const void* m, int msgLen)

@@ -63,6 +63,7 @@ enum
     CMD_UPGRADE_DATA    = 24,
     CMD_UPGRADE_END     = 25,
     CMD_SIM_INFO        = 26,
+    CMD_REBOOT          = 27,
 };
 
 enum

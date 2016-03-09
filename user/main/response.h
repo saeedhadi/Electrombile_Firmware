@@ -25,6 +25,8 @@ int cmd_AutodefendPeriodGet_rsp(const void* msg);
 int cmd_Server_rsp(const void* msg);
 int cmd_Timer_rsp(const void* msg);
 int cmd_Battery_rsp(const void* msg);
+int cmd_Reboot_rsp(const void* msg);
+
 
 int cmd_UpgradeStart_rsp(const void* msg);
 int cmd_UpgradeData_rsp(const void* msg);
