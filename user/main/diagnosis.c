@@ -33,7 +33,7 @@ static eat_bool diag_batterCheck(void)
 
     //电池电压介于[36v, 66v]之间
     //FIXME: 根据分压计算区间
-    if (voltage < Realvalue_2_ADvalue(10) || voltage > Realvalue_2_ADvalue(66))// 10 for test
+    if (voltage < Realvalue_2_ADvalue(36) || voltage > Realvalue_2_ADvalue(66))// while testing, 10 and 66 is OK
     {
         LOG_ERROR("battery voltage check failed: %d", voltage);
         return EAT_FALSE;
