@@ -11,8 +11,10 @@
 
 #include "diagnosis.h"
 #include "adc.h"
+#include "led.h"
 #include "log.h"
 
+#define Realvalue_2_ADvalue(x) x*1000*3/103 //unit mV, 3K & 100k divider
 
 /*
  * 检测输入电压范围
@@ -29,9 +31,9 @@ static eat_bool diag_batterCheck(void)
         return EAT_FALSE;
     }
 
-    //电池电压介于[36v, 60v]之间
+    //电池电压介于[36v, 66v]之间
     //FIXME: 根据分压计算区间
-    if (voltage < 36 || voltage > 60)
+    if (voltage < Realvalue_2_ADvalue(36) || voltage > Realvalue_2_ADvalue(66))// while testing, 10 and 66 is OK
     {
         LOG_ERROR("battery voltage check failed: %d", voltage);
         return EAT_FALSE;
@@ -86,18 +88,19 @@ static eat_bool diag_433Check(void)
  */
 eat_bool diag_check(void)
 {
+    LED_on();
+
     if (!diag_batterCheck())
     {
         LOG_ERROR("battery check failed!");
-        //TODO: light the led
-
+        LED_off();
         return EAT_FALSE;
     }
 
     if (!diag_gsmSignalCheck())
     {
         LOG_ERROR("GSM check failed!");
-        //TODO: light the led
+        LED_off();
 
         return EAT_FALSE;
     }
@@ -105,10 +108,11 @@ eat_bool diag_check(void)
     if (!diag_433Check())
     {
         LOG_ERROR("433 check failed!");
-        //TODO: light the led
+        LED_off();
 
         return EAT_FALSE;
     }
 
+    LOG_DEBUG("System check OK");
     return EAT_TRUE;
 }
