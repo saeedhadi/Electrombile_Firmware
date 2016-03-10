@@ -315,7 +315,7 @@ static void vibration_timer_handler(void)
             {
                 timerCount++;
 
-                if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
+                if(timerCount * setting.vibration_timer_period*10 >= (get_autodefend_period() * 60000))
                 {
                     LOG_DEBUG("vibration state auto locked.");
 

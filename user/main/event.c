@@ -284,6 +284,9 @@ static int threadCmd_Location(const MSG_THREAD* msg)
         msg->isGps= gps->isGps;
         memcpy(&msg->gps, &gps->gps, sizeof(GPS));
 
+        msg->gps.timestamp = htonl(gps->gps.timestamp);
+        msg->gps.course = htons(gps->gps.course);
+
         LOG_DEBUG("send GPS_LOCATION message.");
         socket_sendData(msg, sizeof(MSG_GPSLOCATION_RSP));
     }
@@ -338,6 +341,7 @@ static int event_threadMsg(const EatEvent_st* event)
     int rc = 0;
 
     //check the message length
+    LOG_DEBUG("%d,%d,%d",msg->length,sizeof(MSG_THREAD),msgLen);
     if (msg->length + sizeof(MSG_THREAD) != msgLen)
     {
         LOG_ERROR("Message length error");

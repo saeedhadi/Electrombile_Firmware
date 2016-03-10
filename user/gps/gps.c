@@ -89,7 +89,7 @@ static void gps_ResetMileage(void)
 
 static void gps_MileageSend(int starttime, int endtime ,int itinerary)
 {
-    u8 msgLen = sizeof(MSG_HEADER)+sizeof(GPS_ITINERARY_INFO);
+    u8 msgLen = sizeof(MSG_THREAD)+sizeof(GPS_ITINERARY_INFO);
     MSG_THREAD* msg = allocMsg(msgLen);
     GPS_ITINERARY_INFO* msg_state = 0;
 
@@ -100,12 +100,13 @@ static void gps_MileageSend(int starttime, int endtime ,int itinerary)
     }
     msg->cmd = CMD_THREAD_ITINERARY;
     msg->length = sizeof(GPS_ITINERARY_INFO);
-
     msg_state = (GPS_ITINERARY_INFO*)msg->data;
 
     msg_state->endtime = endtime;
     msg_state->starttime = starttime;
     msg_state->itinerary= itinerary;
+
+    LOG_DEBUG("%d,%d,%d,%d",msg->length,sizeof(GPS_ITINERARY_INFO),sizeof(MSG_THREAD),msgLen);
 
     LOG_INFO("send itinerary to MainThread");
 

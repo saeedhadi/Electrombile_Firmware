@@ -51,6 +51,9 @@ void* alloc_rspMsg(const MSG_HEADER* pMsg)
 
             {CMD_SET_TIMER,   sizeof(MSG_SET_TIMER_RSP)},
             {CMD_ITINERARY,   sizeof(MSG_ITINERARY_REQ)},
+            {CMD_DEFEND_ON,   sizeof(MSG_DEFEND_RSP)},
+            {CMD_DEFEND_OFF,   sizeof(MSG_DEFEND_RSP)},
+            {CMD_DEFEND_GET,   sizeof(MSG_DEFEND_RSP)},
 
             {CMD_UPGRADE_START, sizeof(MSG_UPGRADE_START_RSP)},
             {CMD_UPGRADE_DATA,  sizeof(MSG_UPGRADE_DATA_RSP)},
