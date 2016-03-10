@@ -33,7 +33,7 @@ static eat_bool diag_batterCheck(void)
 
     //电池电压介于[36v, 66v]之间
     //FIXME: 根据分压计算区间
-    if (voltage < Realvalue_2_ADvalue(36) || voltage > Realvalue_2_ADvalue(66))
+    if (voltage < Realvalue_2_ADvalue(10) || voltage > Realvalue_2_ADvalue(66))// 10 for test
     {
         LOG_ERROR("battery voltage check failed: %d", voltage);
         return EAT_FALSE;
@@ -105,7 +105,6 @@ eat_bool diag_check(void)
     if (!diag_batterCheck())
     {
         LOG_ERROR("battery check failed!");
-        //TODO: light the led
         LED_off();
         return EAT_FALSE;
     }
@@ -113,7 +112,6 @@ eat_bool diag_check(void)
     if (!diag_gsmSignalCheck())
     {
         LOG_ERROR("GSM check failed!");
-        //TODO: light the led
         LED_off();
 
         return EAT_FALSE;
@@ -122,7 +120,6 @@ eat_bool diag_check(void)
     if (!diag_433Check())
     {
         LOG_ERROR("433 check failed!");
-        //TODO: light the led
         LED_off();
 
         return EAT_FALSE;

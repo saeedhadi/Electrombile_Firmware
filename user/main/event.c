@@ -15,6 +15,7 @@
 #include "uart.h"
 #include "socket.h"
 #include "setting.h"
+#include "diagnosis.h"
 #include "msg.h"
 #include "data.h"
 #include "client.h"
@@ -87,6 +88,8 @@ static int event_mod_ready_rd(const EatEvent_st* event)
 
     if (modem_IsCallReady(buf))
     {
+        diag_check();
+
         fsm_run(EVT_CALL_READY);
     }
 
