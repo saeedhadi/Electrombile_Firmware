@@ -38,6 +38,22 @@ void string_trimRight(unsigned char* string)
     return;
 }
 
+/*
+ * locates the first occurrence of string s2 in the string
+ * and return the next pointer by s2 in s1
+ * if not found, the return null
+ */
+char *string_bypass(const char *s1, const char *s2)
+{
+    char *p = strstr(s1, s2);
+    if(p)
+    {
+        p += strlen(s2);
+    }
+
+    return p;
+}
+
 //equivalent to eat_acsii_to_ucs2
 void ascii2unicode(unsigned short* out, const unsigned char* in)
 {

@@ -10,6 +10,7 @@
 
 const unsigned char* string_trimLeft(const unsigned char* string);
 void string_trimRight(unsigned char* string);
+char *string_bypass(const char *str1, const char *str2);
 
 void ascii2unicode(unsigned short* out, const unsigned char* in);
 
