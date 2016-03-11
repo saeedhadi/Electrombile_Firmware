@@ -17,7 +17,6 @@
 #include "setting.h"
 #include "diagnosis.h"
 #include "msg.h"
-#include "data.h"
 #include "client.h"
 #include "modem.h"
 #include "fsm.h"
@@ -346,8 +345,7 @@ static int event_threadMsg(const EatEvent_st* event)
     size_t i = 0;
     int rc = 0;
     LOG_HEX((const char *)msg,msgLen);
-    //check the message length
-    LOG_DEBUG("%d,%d,%d",msg->length,sizeof(MSG_THREAD),msgLen);
+
     if (msg->length + sizeof(MSG_THREAD) != msgLen)
     {
         LOG_ERROR("Message length error");

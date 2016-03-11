@@ -24,7 +24,6 @@
 #include "setting.h"
 #include "mileage.h"
 #include "seek.h"
-#include "data.h"
 
 
 int cmd_Login_rsp(const void* msg)

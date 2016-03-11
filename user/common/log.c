@@ -11,7 +11,6 @@
 #include <stdarg.h>
 
 #include "uart.h"
-#include "data.h"
 #include "debug.h"
 #include "log.h"
 

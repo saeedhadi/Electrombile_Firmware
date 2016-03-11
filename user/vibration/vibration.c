@@ -13,7 +13,6 @@
 #include "thread.h"
 #include "log.h"
 #include "timer.h"
-#include "data.h"
 #include "thread_msg.h"
 #include "setting.h"
 #include "mma8652.h"

@@ -43,6 +43,13 @@ typedef struct
     //Switch configuration
     eat_bool isVibrateFixed;
 
+    //autolock configration
+    struct
+    {
+        eat_bool isAutodefendFixed;
+        unsigned char autodefendPeriod;
+    };
+
 
 }SETTING;
 
@@ -52,6 +59,12 @@ extern SETTING setting;
 
 eat_bool vibration_fixed(void) __attribute__((always_inline));
 void set_vibration_state(eat_bool fixed) __attribute__((always_inline));
+
+void set_autodefend_state(eat_bool fixed);
+unsigned char get_autodefend_period(void);
+
+void set_autodefend_period(unsigned char period);
+eat_bool get_autodefend_state(void);
 
 eat_bool setting_restore(void);
 eat_bool setting_save(void);

@@ -17,7 +17,6 @@
 #include  "msg.h"
 #include "log.h"
 #include "uart.h"
-#include "data.h"
 #include "setting.h"
 #include "thread.h"
 #include "thread_msg.h"

@@ -13,7 +13,6 @@
 #include "log.h"
 #include "client.h"
 #include "msg.h"
-#include "data.h"
 #include "timer.h"
 #include "fsm.h"
 #include "error.h"

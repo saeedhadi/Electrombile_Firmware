@@ -134,8 +134,13 @@ static void setting_initial(void)
     setting.vibration_timer_period = 1000;
     setting.seek_timer_period = 2000;
     setting.timeupdate_timer_peroid = 24 * 60 * 60 * 1000;      //24h * 60m * 60s * 1000ms
+
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;
+
+    //autolock configuration
+    setting.isAutodefendFixed = EAT_TRUE;
+    setting.autodefendPeriod = 5;
 
     return;
 }
@@ -149,6 +154,28 @@ void set_vibration_state(eat_bool fixed)
 {
     setting.isVibrateFixed = fixed;
 }
+
+eat_bool get_autodefend_state(void)
+{
+    return setting.isAutodefendFixed;
+}
+
+void set_autodefend_state(eat_bool fixed)
+{
+    setting.isAutodefendFixed = fixed;
+}
+
+unsigned char get_autodefend_period(void)
+{
+    return setting.autodefendPeriod;
+}
+
+void set_autodefend_period(unsigned char period)
+{
+    setting.autodefendPeriod = period;
+}
+
+
 
 eat_bool setting_restore(void)
 {
