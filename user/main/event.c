@@ -212,7 +212,7 @@ static int threadCmd_Itinerary(const MSG_THREAD* msg)
     GPS_ITINERARY_INFO* msg_data = (GPS_ITINERARY_INFO*) msg->data;
     MSG_ITINERARY_REQ* itinerary_msg;
 
-    if (msg->length < sizeof(MSG_ITINERARY_REQ) || !msg_data)
+    if (msg->length < sizeof(GPS_ITINERARY_INFO) || !msg_data)
     {
          LOG_ERROR("msg from THREAD_GPS error!");
          return -1;
@@ -223,7 +223,7 @@ static int threadCmd_Itinerary(const MSG_THREAD* msg)
     itinerary_msg->mileage = htonl(msg_data->itinerary);
 
     LOG_DEBUG("send itinerary msg,start%d end%d itinerary%d",msg_data->starttime,msg_data->endtime,msg_data->itinerary);
-    socket_sendData((MSG_ITINERARY_REQ*)msg, sizeof(MSG_ITINERARY_REQ));
+    socket_sendData((MSG_ITINERARY_REQ*)itinerary_msg, sizeof(MSG_ITINERARY_REQ));
 
     return 0;
 }
@@ -339,7 +339,7 @@ static int event_threadMsg(const EatEvent_st* event)
     u8 msgLen = event->data.user_msg.len;
     size_t i = 0;
     int rc = 0;
-
+    LOG_HEX((const char *)msg,msgLen);
     //check the message length
     LOG_DEBUG("%d,%d,%d",msg->length,sizeof(MSG_THREAD),msgLen);
     if (msg->length + sizeof(MSG_THREAD) != msgLen)

@@ -304,30 +304,32 @@ static void vibration_timer_handler(void)
     }
     else
     {
-        if(get_autodefend_state())
-        {
-            if(isMoved)
-            {
-                timerCount = 0;
-                LOG_DEBUG("timerCount = 0 now !");
-            }
-            else
-            {
-                timerCount++;
 
-                if(timerCount * setting.vibration_timer_period*10 >= (get_autodefend_period() * 60000))
+        if(isMoved)
+        {
+            timerCount = 0;
+            LOG_DEBUG("timerCount = 0 now !");
+        }
+        else
+        {
+            timerCount++;
+
+            if(timerCount * setting.vibration_timer_period*10*3 >= (get_autodefend_period() * 60000))
+            {
+                if(get_autodefend_state())
                 {
                     LOG_DEBUG("vibration state auto locked.");
 
                     vivration_AutolockStateSend(EAT_TRUE);    //TODO:send autolock_msg to main thread
 
                     set_vibration_state(EAT_TRUE);
-
-                    vivration_SendItinerarayState(ITINERARY_END);
-
                 }
+
+                vivration_SendItinerarayState(ITINERARY_END);
+
             }
         }
+
     }
 
     return;

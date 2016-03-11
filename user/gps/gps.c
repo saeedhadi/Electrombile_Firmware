@@ -98,13 +98,19 @@ static void gps_MileageSend(int starttime, int endtime ,int itinerary)
         LOG_ERROR("alloc msg failed!");
         return ;
     }
+
+    LOG_DEBUG("%d,%d,%d",starttime,endtime,itinerary);
+    LOG_HEX((const char *)msg,msgLen);
     msg->cmd = CMD_THREAD_ITINERARY;
     msg->length = sizeof(GPS_ITINERARY_INFO);
-    msg_state = (GPS_ITINERARY_INFO*)msg->data;
+    msg_state = (GPS_ITINERARY_INFO*)(msg->data);
 
     msg_state->endtime = endtime;
     msg_state->starttime = starttime;
     msg_state->itinerary= itinerary;
+
+    LOG_DEBUG("%d,%d,%d",msg_state->starttime,msg_state->endtime,msg_state->itinerary);
+    LOG_HEX((const char *)msg,msgLen);
 
     LOG_DEBUG("%d,%d,%d,%d",msg->length,sizeof(GPS_ITINERARY_INFO),sizeof(MSG_THREAD),msgLen);
 

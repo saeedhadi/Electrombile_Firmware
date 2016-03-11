@@ -68,7 +68,7 @@ typedef struct
     u32 endtime;
     u32 itinerary;
 
-}GPS_ITINERARY_INFO;
+}__attribute__((__packed__))GPS_ITINERARY_INFO;
 
 
 
