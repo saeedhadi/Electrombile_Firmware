@@ -18,18 +18,25 @@
 #include "setting.h"
 #include "mma8652.h"
 
-static eat_bool vibration_sendAlarm(void);
-static void vibration_timer_handler(void);
-static void avoid_fre_send(eat_bool state);
-
-
 #define MAX_MOVE_DATA_LEN   500
 #define MOVE_TIMER_PERIOD    10
 
 #define MOVE_THRESHOLD 5
 
 static eat_bool avoid_freq_flag = EAT_FALSE;
+static int isItineraryStart = ITINERARY_END;
+
 eat_bool isMoved = EAT_FALSE;
+
+static char itinerary_state(void)
+{
+    return isItineraryStart;
+}
+
+static void set_itinerary_state(char state)
+{
+    isItineraryStart = state;
+}
 
 void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
 {
@@ -44,7 +51,7 @@ void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
 }
 
 
-static eat_bool AutolockStateSend(eat_bool state)
+static eat_bool vivration_AutolockStateSend(eat_bool state)
 {
     eat_bool ret;
     u8 msgLen = sizeof(MSG_THREAD) + sizeof(AUTOLOCK_INFO);
@@ -65,6 +72,52 @@ static eat_bool AutolockStateSend(eat_bool state)
 
     LOG_DEBUG("send autolock state msg to main thread!");
     ret = sendMsg(THREAD_MAIN, msg, msgLen);
+
+    return ret;
+}
+
+static eat_bool vibration_sendAlarm(void)
+{
+    u8 msgLen = sizeof(MSG_THREAD) + 1;
+    MSG_THREAD* msg = allocMsg(msgLen);
+    unsigned char* alarmType = (unsigned char*)msg->data;
+
+    msg->cmd = CMD_THREAD_VIBRATE;
+    msg->length = 1;
+    *alarmType = ALARM_VIBRATE;
+
+    LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
+    avoid_freq_flag = EAT_TRUE;
+    return sendMsg(THREAD_MAIN, msg, msgLen);
+}
+
+/*
+*fun:send itinerary state to gps thread
+*note:ITINERARY_START express itinerary start, ITINERARY_END express itinerary end
+*/
+static eat_bool vivration_SendItinerarayState(char state)
+{
+    eat_bool ret;
+    u8 msgLen = sizeof(MSG_THREAD) + sizeof(VIBRATION_ITINERARY_INFO);
+    MSG_THREAD* msg = allocMsg(msgLen);
+    VIBRATION_ITINERARY_INFO* msg_state = 0;
+
+    if (!msg)
+    {
+        LOG_ERROR("alloc itinerary msg failed!");
+        return EAT_FALSE;
+    }
+
+    msg->cmd = CMD_THREAD_ITINERARY;
+    msg->length = sizeof(VIBRATION_ITINERARY_INFO);
+
+    msg_state = (VIBRATION_ITINERARY_INFO*)msg->data;
+    msg_state->state = state;
+
+    LOG_DEBUG("send itinerary state msg to GPS_thread:%d",state);
+    ret = sendMsg(THREAD_GPS, msg, msgLen);
+
+    set_itinerary_state(state);
 
     return ret;
 }
@@ -122,6 +175,11 @@ static void move_alarm_timer_handler()
                     LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, x_data[i]);
                 }
 
+                if(ITINERARY_END == itinerary_state())
+                {
+                    vivration_SendItinerarayState(ITINERARY_START);
+                }
+
                return;
             }
 
@@ -138,6 +196,11 @@ static void move_alarm_timer_handler()
                 {
                     vibration_sendAlarm();
                     LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, y_data[i]);
+                }
+
+                if(ITINERARY_END == itinerary_state())
+                {
+                    vivration_SendItinerarayState(ITINERARY_START);
                 }
 
                 return;
@@ -160,6 +223,12 @@ static void move_alarm_timer_handler()
                     vibration_sendAlarm();
                     LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, z_data[i]);
                 }
+
+                if(ITINERARY_END == itinerary_state())
+                {
+                    vivration_SendItinerarayState(ITINERARY_START);
+                }
+
                 return;
             }
             if(z_data[0]<abs(z_data[i]))
@@ -171,6 +240,102 @@ static void move_alarm_timer_handler()
     }
 
 
+}
+
+static void avoid_fre_send(eat_bool state)
+{
+    static u16 avoid_freq_count;
+
+    if(state == EAT_TRUE)
+    {
+        if(++avoid_freq_count == 10)
+        {
+            avoid_freq_count = 0;
+            avoid_freq_flag = EAT_FALSE;
+        }
+    }
+    else
+    {
+        avoid_freq_count = 0;
+    }
+}
+
+
+static void vibration_timer_handler(void)
+{
+    static eat_bool isFirstTime = EAT_TRUE;
+
+    static int timerCount = 0;
+
+    uint8_t transient_src = 0;
+
+    avoid_fre_send(EAT_TRUE);
+
+    mma8652_i2c_register_read(MMA8652_REG_TRANSIENT_SRC, &transient_src, sizeof(transient_src));
+    if(transient_src & MMA8652_TRANSIENT_SRC_EA)
+    {
+        /* At the first time, the value of MMA8X5X_TRANSIENT_SRC is strangely 0x60.
+         * Do not send alarm at the first time.
+         */
+        if(isFirstTime)
+        {
+            isFirstTime = EAT_FALSE;
+
+            isMoved = EAT_FALSE;
+        }
+        else
+        {
+            isMoved = EAT_TRUE;
+        }
+    }
+    else
+    {
+        isMoved = EAT_FALSE;
+    }
+
+    if(EAT_TRUE == vibration_fixed())
+    {
+        timerCount = 0;
+
+        if(isMoved && avoid_freq_flag == EAT_FALSE)
+        {
+
+            avoid_fre_send(EAT_FALSE);
+            eat_timer_start(TIMER_MOVE_ALARM, MOVE_TIMER_PERIOD);
+            //vibration_sendAlarm();  //bec use displacement judgement , there do not alarm
+        }
+    }
+    else
+    {
+
+        if(isMoved)
+        {
+            timerCount = 0;
+            LOG_DEBUG("timerCount = 0 now !");
+        }
+        else
+        {
+            timerCount++;
+
+            if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
+            {
+                if(get_autodefend_state())
+                {
+                    LOG_DEBUG("vibration state auto locked.");
+
+                    vivration_AutolockStateSend(EAT_TRUE);    //TODO:send autolock_msg to main thread
+
+                    set_vibration_state(EAT_TRUE);
+                }
+
+                vivration_SendItinerarayState(ITINERARY_END);
+
+            }
+        }
+
+    }
+
+    return;
 }
 
 
@@ -219,111 +384,6 @@ void app_vibration_thread(void *data)
             	LOG_ERROR("event(%d) not processed!", event.event);
                 break;
         }
-    }
-}
-
-static void vibration_timer_handler(void)
-{
-    static eat_bool isFirstTime = EAT_TRUE;
-
-    static int timerCount = 0;
-
-    uint8_t transient_src = 0;
-
-    avoid_fre_send(EAT_TRUE);
-
-    mma8652_i2c_register_read(MMA8652_REG_TRANSIENT_SRC, &transient_src, sizeof(transient_src));
-    if(transient_src & MMA8652_TRANSIENT_SRC_EA)
-    {
-        /* At the first time, the value of MMA8X5X_TRANSIENT_SRC is strangely 0x60.
-         * Do not send alarm at the first time.
-         */
-        if(isFirstTime)
-        {
-            isFirstTime = EAT_FALSE;
-
-            isMoved = EAT_FALSE;
-        }
-        else
-        {
-            isMoved = EAT_TRUE;
-        }
-    }
-    else
-    {
-        isMoved = EAT_FALSE;
-    }
-
-    if(EAT_TRUE == vibration_fixed())
-    {
-        timerCount = 0;
-
-        if(isMoved && avoid_freq_flag == EAT_FALSE)
-        {
-
-            avoid_fre_send(EAT_FALSE);
-            eat_timer_start(TIMER_MOVE_ALARM, MOVE_TIMER_PERIOD);
-            //vibration_sendAlarm();  //bec use displacement judgement , there do not alarm
-        }
-    }
-    else
-    {
-        if(get_autodefend_state())
-        {
-            if(isMoved)
-            {
-                timerCount = 0;
-                LOG_DEBUG("timerCount = 0 now !");
-            }
-            else
-            {
-                timerCount++;
-
-                if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
-                {
-                    LOG_DEBUG("vibration state auto locked.");
-
-                    AutolockStateSend(EAT_TRUE);    //TODO:send autolock_msg to main thread
-
-                    set_vibration_state(EAT_TRUE);
-
-                }
-            }
-        }
-    }
-
-    return;
-}
-
-static eat_bool vibration_sendAlarm(void)
-{
-    u8 msgLen = sizeof(MSG_THREAD) + 1;
-    MSG_THREAD* msg = allocMsg(msgLen);
-    unsigned char* alarmType = (unsigned char*)msg->data;
-
-    msg->cmd = CMD_THREAD_VIBRATE;
-    msg->length = 1;
-    *alarmType = ALARM_VIBRATE;
-
-    LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
-    avoid_freq_flag = EAT_TRUE;
-    return sendMsg(THREAD_MAIN, msg, msgLen);
-}
-static void avoid_fre_send(eat_bool state)
-{
-    static u16 avoid_freq_count;
-
-    if(state == EAT_TRUE)
-    {
-        if(++avoid_freq_count == 10)
-        {
-            avoid_freq_count = 0;
-            avoid_freq_flag = EAT_FALSE;
-        }
-    }
-    else
-    {
-        avoid_freq_count = 0;
     }
 }
 

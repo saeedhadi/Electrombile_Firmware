@@ -19,6 +19,7 @@
 #include "thread_msg.h"
 #include "log.h"
 #include "setting.h"
+#include "vibration.h"
 #include "tool.h"
 #include "rtc.h"
 
@@ -76,10 +77,84 @@ static char  cellNo = 0;//cell count
 static CELL  cells[7] = {0};
 static LOCAL_GPS last_gps_info;
 
-double mileage = 0.f;
+static double itinerary = 0.f;  //unit km
 
-static LOCAL_GPS* last_gps =&last_gps_info;//gps sent for the last time
+static LOCAL_GPS* last_gps = &last_gps_info;//gps sent for the last time
 
+
+static void gps_ResetMileage(void)
+{
+    itinerary = 0.f;
+}
+
+/*
+*fun: send itinerary information to main thread
+*para: starttime    endtime     itinerary
+*/
+static void gps_MileageSend(int starttime, int endtime ,int itinerary)
+{
+    u8 msgLen = sizeof(MSG_THREAD)+sizeof(GPS_ITINERARY_INFO);
+    MSG_THREAD* msg = allocMsg(msgLen);
+    GPS_ITINERARY_INFO* msg_state = 0;
+
+    if (!msg)
+    {
+        LOG_ERROR("alloc msg failed!");
+        return ;
+    }
+
+    msg->cmd = CMD_THREAD_ITINERARY;
+    msg->length = sizeof(GPS_ITINERARY_INFO);
+    msg_state = (GPS_ITINERARY_INFO*)(msg->data);
+
+    msg_state->endtime = endtime;
+    msg_state->starttime = starttime;
+    msg_state->itinerary= itinerary;
+
+    LOG_DEBUG("send itinerary to MainThread");
+    sendMsg(THREAD_MAIN, msg, msgLen);
+
+    return;
+}
+
+/*
+*fun: receive msg from vibration thread and caculate the itinerary
+*note:
+    ITINERARY_START express itinerary start
+    ITINERARY_END express itinerary end
+    this two msg must be send in order, if not, default it
+*/
+static void gps_ItinerarayHandler(const MSG_THREAD* msg)
+{
+    static int starttime;
+    VIBRATION_ITINERARY_INFO* msg_state = (VIBRATION_ITINERARY_INFO*) msg->data;
+
+    if (msg->length < sizeof(VIBRATION_ITINERARY_INFO) || !msg_state)
+    {
+         LOG_ERROR("msg from THREAD_ITINERARY error!");
+         return ;
+    }
+
+    if(ITINERARY_START == msg_state->state && 0 == starttime)
+    {
+        LOG_DEBUG("itinerary start");
+        gps_ResetMileage();
+        starttime = rtc_getTimestamp();
+    }
+    else if(ITINERARY_END == msg_state->state && starttime)
+    {
+        LOG_DEBUG("itinerary end");
+        gps_MileageSend(starttime,rtc_getTimestamp(),(int)itinerary);
+        starttime = 0;
+    }
+    else
+    {
+        LOG_DEBUG("Itinerary error , set state to default");
+        starttime = 0;
+    }
+
+    freeMsg((void*)msg);
+}
 
 void app_gps_thread(void *data)
 {
@@ -134,6 +209,11 @@ void app_gps_thread(void *data)
                         LOG_DEBUG("gps get CMD_THREAD_LOCATION.");
                         location_handler(CMD_THREAD_LOCATION);
                         break;
+
+                    case CMD_THREAD_ITINERARY:
+                        LOG_DEBUG("gps get CMD_THREAD_ITINERARY.");
+                        gps_ItinerarayHandler(msg);
+                        break;
                     default:
                         LOG_ERROR("cmd(%d) not processed!", msg->cmd);
                         break;
@@ -183,6 +263,7 @@ static void location_handler(u8 cmd)
         gps_sendCell(cmd);
     }
 }
+
 
 
 static eat_bool gps_isGpsFixed(void)
@@ -470,7 +551,7 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
             }
             else
             {
-                mileage += distance;
+                itinerary += distance;
                 LOG_DEBUG("GPS is different. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
                 return EAT_FALSE;
             }

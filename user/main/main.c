@@ -23,6 +23,7 @@
 #include "timer.h"
 #include "setting.h"
 #include "mileage.h"
+#include "diagnosis.h"
 #include "log.h"
 #include "fs.h"
 #include "version.h"

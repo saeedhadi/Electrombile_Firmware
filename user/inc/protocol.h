@@ -366,7 +366,7 @@ typedef struct
     int starttime;
     int endtime;
     int mileage;
-}__attribute__((__packed__)) MSG_MILEAGE_REQ;
+}__attribute__((__packed__)) MSG_ITINERARY_REQ;
 
 typedef struct
 {

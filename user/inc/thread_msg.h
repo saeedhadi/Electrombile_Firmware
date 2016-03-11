@@ -18,6 +18,7 @@ enum CMD
     CMD_THREAD_VIBRATE,
     CMD_THREAD_LOCATION,
     CMD_THREAD_AUTOLOCK,
+    CMD_THREAD_ITINERARY,
 };
 
 
@@ -52,7 +53,24 @@ typedef struct
 typedef struct
 {
     char state;
+
 }AUTOLOCK_INFO;
+
+typedef struct
+{
+    char state;
+
+}VIBRATION_ITINERARY_INFO;
+
+typedef struct
+{
+    u32 starttime;
+    u32 endtime;
+    u32 itinerary;
+
+}__attribute__((__packed__))GPS_ITINERARY_INFO;
+
+
 
 
 #define allocMsg(len) eat_mem_alloc(len)

@@ -11,8 +11,8 @@
 
 /*
  * Changelog
- * 1.0。0: initial framework
- * 1.1。1: add diagnosis function
+ * 1.0.0: initial framework
+ * 1.1.1: add diagnosis function
  */
 
 #define VERSION_MAJOR   1

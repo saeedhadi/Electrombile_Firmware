@@ -307,7 +307,7 @@ int cmd_DefendOff_rsp(const void* msg)
     rsp->token = req->token;
     rsp->result = result;
 
-    socket_sendData(rsp, sizeof(MSG_DEFEND_RSP));
+    socket_sendData(rsp, sizeof(MSG_DEFEND_REQ));
 
     return 0;
 }
@@ -334,8 +334,6 @@ int cmd_DefendGet_rsp(const void* msg)
 
     return 0;
 }
-
-
 
 int cmd_Timer_rsp(const void* msg)
 {

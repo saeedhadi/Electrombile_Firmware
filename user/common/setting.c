@@ -135,6 +135,7 @@ static void setting_initial(void)
     setting.timeupdate_timer_peroid = 24 * 60 * 60 * 1000;      //24h * 60m * 60s * 1000ms
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;
+
     return;
 }
 
