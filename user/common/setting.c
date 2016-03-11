@@ -5,6 +5,7 @@
  *      Author: jk
  */
 #include <string.h>
+#include <stdio.h>
 
 #include <eat_fs_type.h>
 #include <eat_fs.h>
@@ -18,6 +19,9 @@
 #include "debug.h"
 #include "log.h"
 #include "fs.h"
+#include "cJSON.h"
+#include "mem.h"
+#include "utils.h"
 
 typedef struct
 {
@@ -38,81 +42,78 @@ typedef struct
 
 SETTING setting;
 
+//for debug command
+#define CMD_STRING_SERVER   "server"
 
-//int cmd_deletesetting(const unsigned char* cmdString, unsigned short length)
-//{
-//    eat_fs_error_enum fs_Op_ret;
-//
-//    fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(SETTINGFILE_NAME);
-//    if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
-//    {
-//        LOG_ERROR("Delete settingfile Fail,and Return Error is %d",fs_Op_ret);
-//        return EAT_FALSE;
-//    }
-//    else
-//    {
-//        LOG_DEBUG("Delete settingfile Success");
-//    }
-//    return EAT_TRUE;
-//}
+//for JSON tag
+#define TAG_SERVER  "SERVER"
+#define TAG_ADDR_TYPE   "ADDR_TYPE"
+#define TAG_ADDR   "ADDR"
+#define TAG_PORT    "PORT"
 
-int cmd_catsetting(const unsigned char* cmdString, unsigned short length)
+static int setting_changeServer(const unsigned char* cmdString, unsigned short length)
 {
+    char address[MAX_DOMAIN_NAME_LEN] = {0};
+    int ip[4] = {0};
+    int port = 0;
+    int count = 0;
 
-    FS_HANDLE fh;
-    eat_bool ret = EAT_FALSE;
-    int rc;
+    const char *serverString = string_bypass(cmdString, CMD_STRING_SERVER);
+    serverString = string_trimLeft(serverString);
 
-    STORAGE storage;
-
-    LOG_DEBUG("cat setting...");
-
-    fh = eat_fs_Open(SETTINGFILE_NAME, FS_READ_ONLY);
-    if(EAT_FS_FILE_NOT_FOUND == fh)
+    count = sscanf(serverString, "%[^:]:%d", address, &port);
+    if (count != 2)
     {
-        LOG_INFO("setting file not exists.");
-        return EAT_TRUE;
+        LOG_DEBUG("format not correct, should be like 'server 10.11.12.23:9876' or 'server server.xiaoan.com:9876'");
+        return -1;
     }
 
-    if (fh < EAT_FS_NO_ERROR)
+    count = sscanf(address, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
+    if (4 == count)   //domainORip is ip
     {
-        LOG_ERROR("read setting file fail, rc: %d", fh);
-        return EAT_FALSE;
-    }
-
-    rc = eat_fs_Read(fh, &storage, sizeof(STORAGE), NULL);
-    if (EAT_FS_NO_ERROR == rc)
-    {
-        LOG_DEBUG("read setting file success.");
-
-        if(ADDR_TYPE_DOMAIN == storage.addr_type)
+        //validity check
+        if (ip[0] <= 255 && ip[1] <= 255 && ip[2] <= 255 && ip[3] <= 255)
         {
-            LOG_DEBUG("server domain = %s:%d.", storage.addr.domain, storage.port);
+            setting.addr_type = ADDR_TYPE_IP;
+            setting.ipaddr[0] = (u8) ip[0];
+            setting.ipaddr[1] = (u8) ip[1];
+            setting.ipaddr[2] = (u8) ip[2];
+            setting.ipaddr[3] = (u8) ip[3];
+            setting.port = (u16) port;
+
+            setting_save();
         }
-        else if(ADDR_TYPE_IP == storage.addr_type)
+        else
         {
-            LOG_DEBUG("server ip = %d.%d.%d.%d:%d.", storage.addr.ipaddr[0], storage.addr.ipaddr[1], storage.addr.ipaddr[2], storage.addr.ipaddr[3], storage.port);
+            LOG_DEBUG("ip addrss format not correct!");
+            return -1;
         }
-        ret = EAT_TRUE;
     }
     else
     {
-        LOG_ERROR("read settingfile fail, and return error: %d", fh);
+        setting.addr_type = ADDR_TYPE_DOMAIN;
+        strncpy(setting.domain, address, MAX_DOMAIN_NAME_LEN);
+        setting.port = (u16) port;
+
+        setting_save();
     }
-
-    eat_fs_Close(fh);
-
-    return ret;
-
+    return 0;
 }
-
 
 static void setting_initial(void)
 {
-//    regist_cmd("deletesetting", cmd_deletesetting);
-    regist_cmd("catsetting", cmd_catsetting);
+    cJSON_Hooks mem_hooks;
+
+    mem_hooks.malloc_fn = malloc;
+    mem_hooks.free_fn = free;
 
     LOG_DEBUG("setting initial to default value.");
+
+    //initial the cJSON memory hook
+    cJSON_InitHooks(&mem_hooks);
+
+    //register the debug command
+    regist_cmd(CMD_STRING_SERVER, setting_changeServer);
 
     /* Server configuration */
 #if 1
@@ -152,16 +153,17 @@ void set_vibration_state(eat_bool fixed)
 eat_bool setting_restore(void)
 {
     FS_HANDLE fh;
-    eat_bool ret = EAT_FALSE;
     int rc;
-
-    STORAGE storage;
+    UINT filesize = 0;
+    char *buf = 0;
+    cJSON *conf = 0;
+    cJSON *addr = 0;
 
     setting_initial();
 
     LOG_DEBUG("restore setting from file");
 
-    /*setting reload*/
+    //open the file
     fh = eat_fs_Open(SETTINGFILE_NAME, FS_READ_ONLY);
     if(EAT_FS_FILE_NOT_FOUND == fh)
     {
@@ -175,83 +177,124 @@ eat_bool setting_restore(void)
         return EAT_FALSE;
     }
 
-    rc = eat_fs_Read(fh, &storage, sizeof(STORAGE), NULL);
-    if (EAT_FS_NO_ERROR == rc)
+    //get the file length
+    rc = eat_fs_GetFileSize(fh, &filesize);
+    if(EAT_FS_NO_ERROR != rc)
     {
-        LOG_DEBUG("read setting file success.");
-
-        if(storage.port != 0)
-        {
-            setting.port = storage.port;
-        }
-
-        if(ADDR_TYPE_DOMAIN == storage.addr_type)
-        {
-            setting.addr_type = ADDR_TYPE_DOMAIN;
-            strncpy(setting.domain, storage.addr.domain, MAX_DOMAIN_NAME_LEN);
-
-            LOG_DEBUG("server domain = %s:%d.", storage.addr.domain, storage.port);
-        }
-        else if(ADDR_TYPE_IP == storage.addr_type)
-        {
-            setting.addr_type = ADDR_TYPE_IP;
-            setting.ipaddr[0] = storage.addr.ipaddr[0];
-            setting.ipaddr[1] = storage.addr.ipaddr[1];
-            setting.ipaddr[2] = storage.addr.ipaddr[2];
-            setting.ipaddr[3] = storage.addr.ipaddr[3];
-
-            LOG_DEBUG("server ip = %d.%d.%d.%d:%d.", storage.addr.ipaddr[0], storage.addr.ipaddr[1], storage.addr.ipaddr[2], storage.addr.ipaddr[3], storage.port);
-        }
-
-        if(storage.gps_send_timer_period >= 10 * 1000 && storage.gps_send_timer_period <= 6* 60 * 60 * 1000)
-        {
-            //FIXME: change it
-//            setting.gps_send_timer_period = storage.gps_send_timer_period;
-        }
-
-        ret = EAT_TRUE;
+        LOG_ERROR("get file size error, return %d",rc);
+        eat_fs_Close(fh);
+        return EAT_FALSE;
     }
     else
     {
-        LOG_ERROR("read file fail, and return error: %d", fh);
+        LOG_DEBUG("file size %d",filesize);
     }
 
-    eat_fs_Close(fh);
+    //malloc memory to read the file
+    buf = malloc(filesize);
+    if (!buf)
+    {
+        LOG_ERROR("malloc file content buffer failed");
+        eat_fs_Close(fh);
+        return EAT_FALSE;
+    }
+    else
+    {
+        LOG_DEBUG("malloc %d bytes for read setting", filesize);
+    }
 
-    return ret;
+
+    //read the file
+    rc = eat_fs_Read(fh, buf, filesize, NULL);
+    if (rc != EAT_FS_NO_ERROR)
+    {
+        LOG_ERROR("read file fail, and return error: %d", fh);
+        eat_fs_Close(fh);
+        free(buf);
+        return EAT_FALSE;
+    }
+
+    //parse the JSON data
+    conf = cJSON_Parse(buf);
+    if (!conf)
+    {
+        LOG_ERROR("setting config file format error!");
+        eat_fs_Close(fh);
+        free(buf);
+        cJSON_Delete(conf);
+        return EAT_FALSE;
+    }
+
+    addr = cJSON_GetObjectItem(conf, TAG_SERVER);
+    setting.addr_type = cJSON_GetObjectItem(addr, TAG_ADDR_TYPE)->valueint;
+    if (setting.addr_type == ADDR_TYPE_DOMAIN)
+    {
+        char *domain = cJSON_GetObjectItem(addr, TAG_ADDR)->valuestring;
+        LOG_DEBUG("restore domain name");
+        strncpy(setting.domain, domain, MAX_DOMAIN_NAME_LEN);
+    }
+    else
+    {
+        char *ipaddr = cJSON_GetObjectItem(addr, TAG_ADDR)->valuestring;
+        int ip[4] = {0};
+        int count = sscanf(ipaddr, "%u.%u.%u.%u", ip, ip + 1, ip + 2, ip + 3);
+
+        LOG_DEBUG("restore ip address");
+        if (count != 4) //4 means got four number of ip
+        {
+            LOG_ERROR("restore ip address failed");
+            eat_fs_Close(fh);
+            free(buf);
+            cJSON_Delete(conf);
+            return EAT_FALSE;
+        }
+        setting.ipaddr[0] = ip[0];
+        setting.ipaddr[1] = ip[1];
+        setting.ipaddr[2] = ip[2];
+        setting.ipaddr[3] = ip[3];
+
+    }
+
+    setting.port = cJSON_GetObjectItem(addr, TAG_PORT)->valueint;
+
+    free(buf);
+    eat_fs_Close(fh);
+    cJSON_Delete(conf);
+
+    return EAT_TRUE;
 }
 
 
 eat_bool setting_save(void)
 {
     FS_HANDLE fh, rc;
-    UINT writedLen;
     eat_bool ret = EAT_FALSE;
 
-    STORAGE storage;
+    cJSON *root = cJSON_CreateObject();
+    cJSON *address = cJSON_CreateObject();
+    cJSON *autolock = cJSON_CreateObject();
 
-    if(ADDR_TYPE_DOMAIN == setting.addr_type)
+    char *content = 0;
+
+
+    cJSON_AddNumberToObject(address, TAG_ADDR_TYPE, setting.addr_type);
+    if (setting.addr_type == ADDR_TYPE_DOMAIN)
     {
-        storage.addr_type = ADDR_TYPE_DOMAIN;
-        strncpy(storage.addr.domain, setting.domain, MAX_DOMAIN_NAME_LEN);
-
-        LOG_DEBUG("server domain = %s:%d.", setting.domain, setting.port);
+        cJSON_AddStringToObject(address, "ADDR", setting.domain);
     }
-    else if(ADDR_TYPE_IP == setting.addr_type)
+    else
     {
-        storage.addr_type = ADDR_TYPE_IP;
-        storage.addr.ipaddr[0] = setting.ipaddr[0];
-        storage.addr.ipaddr[1] = setting.ipaddr[1];
-        storage.addr.ipaddr[2] = setting.ipaddr[2];
-        storage.addr.ipaddr[3] = setting.ipaddr[3];
-
-        LOG_DEBUG("server ip = %d.%d.%d.%d:%d.", setting.ipaddr[0], setting.ipaddr[1], setting.ipaddr[2], setting.ipaddr[3], setting.port);
+        char server[MAX_DOMAIN_NAME_LEN] = {0};
+        snprintf(server, MAX_DOMAIN_NAME_LEN, "%d.%d.%d.%d", setting.ipaddr[0], setting.ipaddr[1], setting.ipaddr[2], setting.ipaddr[3]);
+        cJSON_AddStringToObject(address, TAG_ADDR, server);
     }
-    storage.port = setting.port;
-    //FIXME: change it
-//    storage.gps_send_timer_period = setting.gps_send_timer_period;
+    cJSON_AddNumberToObject(address, TAG_PORT, setting.port);
 
+    cJSON_AddItemToObject(root, TAG_SERVER, address);
 
+    //TODO: the lock switch and the autolock switch plus the auto lock period
+
+    content = cJSON_Print(root);
     LOG_DEBUG("save setting...");
 
     fh = eat_fs_Open(SETTINGFILE_NAME, FS_READ_WRITE|FS_CREATE);
@@ -259,20 +302,23 @@ eat_bool setting_save(void)
     {
         LOG_DEBUG("open file success, fh=%d.", fh);
 
-        rc = eat_fs_Write(fh, &storage, sizeof(STORAGE), &writedLen);
-        if(EAT_FS_NO_ERROR == rc && sizeof(STORAGE) == writedLen)
+        rc = eat_fs_Write(fh, content, strlen(content), 0);
+        if(EAT_FS_NO_ERROR == rc)
         {
             LOG_DEBUG("write file success.");
         }
         else
         {
-            LOG_ERROR("write file failed, and Return Error is %d, writedLen is %d.", rc, writedLen);
+            LOG_ERROR("write file failed, and Return Error is %d", rc);
         }
     }
     else
     {
         LOG_ERROR("open file failed, fh=%d.", fh);
     }
+
+    free(content);
+    cJSON_Delete(root);
     eat_fs_Close(fh);
 
     return ret;

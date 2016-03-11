@@ -60,7 +60,12 @@ int event_uart_ready_wr(const EatEvent_st* event)
     return 0;
 }
 
-
+/*
+ * print message via UART
+ *
+ * Note:
+ *      the message length is limited to 1024 bytes
+ */
 int print(const char* fmt, ...)
 {
     char buf[1024] = {0};
