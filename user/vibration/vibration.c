@@ -91,7 +91,10 @@ static eat_bool vibration_sendAlarm(void)
     return sendMsg(THREAD_MAIN, msg, msgLen);
 }
 
-
+/*
+*fun:send itinerary state to gps thread
+*note:ITINERARY_START express itinerary start, ITINERARY_END express itinerary end
+*/
 static eat_bool vivration_SendItinerarayState(char state)
 {
     eat_bool ret;
@@ -101,7 +104,7 @@ static eat_bool vivration_SendItinerarayState(char state)
 
     if (!msg)
     {
-        LOG_ERROR("alloc msg failed!");
+        LOG_ERROR("alloc itinerary msg failed!");
         return EAT_FALSE;
     }
 
@@ -111,7 +114,7 @@ static eat_bool vivration_SendItinerarayState(char state)
     msg_state = (VIBRATION_ITINERARY_INFO*)msg->data;
     msg_state->state = state;
 
-    LOG_DEBUG("send itinerary state msg to GPS thread!");
+    LOG_DEBUG("send itinerary state msg to GPS_thread:%d",state);
     ret = sendMsg(THREAD_GPS, msg, msgLen);
 
     set_itinerary_state(state);
@@ -314,7 +317,7 @@ static void vibration_timer_handler(void)
         {
             timerCount++;
 
-            if(timerCount * setting.vibration_timer_period*10*3 >= (get_autodefend_period() * 60000))
+            if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
             {
                 if(get_autodefend_state())
                 {

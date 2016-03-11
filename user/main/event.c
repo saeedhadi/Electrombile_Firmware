@@ -207,6 +207,9 @@ static int threadCmd_AutolockState(const MSG_THREAD* msg)
     return 0;
 }
 
+/*
+*fun: receive msg from GPS_Thread and send itinerary msg to server
+*/
 static int threadCmd_Itinerary(const MSG_THREAD* msg)
 {
     GPS_ITINERARY_INFO* msg_data = (GPS_ITINERARY_INFO*) msg->data;
@@ -222,7 +225,7 @@ static int threadCmd_Itinerary(const MSG_THREAD* msg)
     itinerary_msg->endtime = htonl(msg_data->endtime);
     itinerary_msg->mileage = htonl(msg_data->itinerary);
 
-    LOG_DEBUG("send itinerary msg,start%d end%d itinerary%d",msg_data->starttime,msg_data->endtime,msg_data->itinerary);
+    LOG_DEBUG("send itinerary msg,start:%d end:%d itinerary:%d",msg_data->starttime,msg_data->endtime,msg_data->itinerary);
     socket_sendData((MSG_ITINERARY_REQ*)itinerary_msg, sizeof(MSG_ITINERARY_REQ));
 
     return 0;

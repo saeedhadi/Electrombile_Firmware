@@ -77,7 +77,7 @@ static char  cellNo = 0;//cell count
 static CELL  cells[7] = {0};
 static LOCAL_GPS last_gps_info;
 
-static double itinerary = 0.f;
+static double itinerary = 0.f;  //unit km
 
 static LOCAL_GPS* last_gps = &last_gps_info;//gps sent for the last time
 
@@ -87,6 +87,10 @@ static void gps_ResetMileage(void)
     itinerary = 0.f;
 }
 
+/*
+*fun: send itinerary information to main thread
+*para: starttime    endtime     itinerary
+*/
 static void gps_MileageSend(int starttime, int endtime ,int itinerary)
 {
     u8 msgLen = sizeof(MSG_THREAD)+sizeof(GPS_ITINERARY_INFO);
@@ -99,8 +103,6 @@ static void gps_MileageSend(int starttime, int endtime ,int itinerary)
         return ;
     }
 
-    LOG_DEBUG("%d,%d,%d",starttime,endtime,itinerary);
-    LOG_HEX((const char *)msg,msgLen);
     msg->cmd = CMD_THREAD_ITINERARY;
     msg->length = sizeof(GPS_ITINERARY_INFO);
     msg_state = (GPS_ITINERARY_INFO*)(msg->data);
@@ -109,16 +111,19 @@ static void gps_MileageSend(int starttime, int endtime ,int itinerary)
     msg_state->starttime = starttime;
     msg_state->itinerary= itinerary;
 
-    LOG_DEBUG("%d,%d,%d",msg_state->starttime,msg_state->endtime,msg_state->itinerary);
-    LOG_HEX((const char *)msg,msgLen);
-
-    LOG_DEBUG("%d,%d,%d,%d",msg->length,sizeof(GPS_ITINERARY_INFO),sizeof(MSG_THREAD),msgLen);
-
-    LOG_INFO("send itinerary to MainThread");
-
+    LOG_DEBUG("send itinerary to MainThread");
     sendMsg(THREAD_MAIN, msg, msgLen);
+
+    return;
 }
 
+/*
+*fun: receive msg from vibration thread and caculate the itinerary
+*note:
+    ITINERARY_START express itinerary start
+    ITINERARY_END express itinerary end
+    this two msg must be send in order, if not, default it
+*/
 static void gps_ItinerarayHandler(const MSG_THREAD* msg)
 {
     static int starttime;
@@ -132,19 +137,19 @@ static void gps_ItinerarayHandler(const MSG_THREAD* msg)
 
     if(ITINERARY_START == msg_state->state && 0 == starttime)
     {
-        LOG_DEBUG("start itinerary");
+        LOG_DEBUG("itinerary start");
         gps_ResetMileage();
         starttime = rtc_getTimestamp();
     }
     else if(ITINERARY_END == msg_state->state && starttime)
     {
-        LOG_DEBUG("end itinerary");
+        LOG_DEBUG("itinerary end");
         gps_MileageSend(starttime,rtc_getTimestamp(),(int)itinerary);
         starttime = 0;
     }
     else
     {
-        LOG_ERROR("Itinerary error , set state to default");
+        LOG_DEBUG("Itinerary error , set state to default");
         starttime = 0;
     }
 

@@ -22,7 +22,6 @@
 #include "watchdog.h"
 #include "timer.h"
 #include "setting.h"
-#include "response.h"
 #include "mileage.h"
 #include "diagnosis.h"
 #include "log.h"
@@ -148,9 +147,6 @@ void app_main(void *data)
     seek_initial();
 
     startWatchdog();
-
-    regist_cmd("defendon", cmd_DefendOn_rsp);
-    regist_cmd("defendoff", cmd_DefendOff_rsp);
 
     while(EAT_TRUE)
     {
