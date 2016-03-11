@@ -81,7 +81,7 @@ static int fs_rm(const unsigned char* cmdString, unsigned short length)
 
 
     filename = string_trimLeft(filename);
-    string_trimLeft(filename);
+    string_trimRight((unsigned char*)filename);
     if (strlen(filename) == 0)
     {
         LOG_INFO("parameter not correct");
@@ -93,7 +93,7 @@ static int fs_rm(const unsigned char* cmdString, unsigned short length)
     rc = eat_fs_Delete(filename_w);
     if (rc == EAT_FS_FILE_NOT_FOUND)
     {
-        print("file not found");
+        print("file %s not found", filename);
     }
     else if(rc == EAT_FS_NO_ERROR)
     {
@@ -119,6 +119,8 @@ static int fs_cat(const unsigned char* cmdString, unsigned short length)
 
 
     filename = string_trimLeft(filename);
+    string_trimRight((unsigned char*)filename);
+
     if (strlen(filename) == 0)
     {
         print("parameter not correct");
@@ -143,6 +145,8 @@ static int fs_tail(const unsigned char* cmdString, unsigned short length)
     char buf[MAX_TAIL_SIZE] = {0};
 
     filename = string_trimLeft(filename);
+    string_trimRight((unsigned char*)filename);
+
     if (strlen(filename) == 0)
     {
         print("parameter not correct");
