@@ -72,6 +72,7 @@ static char* fsm_getEventName(EVENT event)
         DESC_DEF(EVT_HEARTBEAT_LOSE);
         DESC_DEF(EVT_SOCKET_DISCONNECTED);
         DESC_DEF(EVT_BEARER_DEACTIVATED);
+        DESC_DEF(EVT_HOSTNAME2IP_FAILED);
 #endif
         default:
         {
