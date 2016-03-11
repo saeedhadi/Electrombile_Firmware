@@ -5,6 +5,7 @@
  *      Author: jk
  */
 #include <string.h>
+#include <stdio.h>
 
 #include <eat_fs_type.h>
 #include <eat_fs.h>
@@ -15,10 +16,12 @@
 
 #include "setting.h"
 #include "version.h"
+#include "debug.h"
 #include "log.h"
 #include "fs.h"
 #include "cJSON.h"
 #include "mem.h"
+#include "utils.h"
 
 typedef struct
 {
@@ -39,11 +42,63 @@ typedef struct
 
 SETTING setting;
 
+//for debug command
+#define CMD_STRING_SERVER   "server"
+
+//for JSON tag
 #define TAG_SERVER  "SERVER"
 #define TAG_ADDR_TYPE   "ADDR_TYPE"
 #define TAG_ADDR   "ADDR"
 #define TAG_PORT    "PORT"
 
+static int setting_changeServer(const unsigned char* cmdString, unsigned short length)
+{
+    char address[MAX_DOMAIN_NAME_LEN] = {0};
+    int ip[4] = {0};
+    int port = 0;
+    int count = 0;
+
+    const char *serverString = string_bypass(cmdString, CMD_STRING_SERVER);
+    serverString = string_trimLeft(serverString);
+
+    count = sscanf(serverString, "%[^:]:%d", address, &port);
+    if (count != 2)
+    {
+        LOG_DEBUG("format not correct, should be like 'server 10.11.12.23:9876' or 'server server.xiaoan.com:9876'");
+        return -1;
+    }
+
+    count = sscanf(address, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
+    if (4 == count)   //domainORip is ip
+    {
+        //validity check
+        if (ip[0] <= 255 && ip[1] <= 255 && ip[2] <= 255 && ip[3] <= 255)
+        {
+            setting.addr_type = ADDR_TYPE_IP;
+            setting.ipaddr[0] = (u8) ip[0];
+            setting.ipaddr[1] = (u8) ip[1];
+            setting.ipaddr[2] = (u8) ip[2];
+            setting.ipaddr[3] = (u8) ip[3];
+            setting.port = (u16) port;
+
+            setting_save();
+        }
+        else
+        {
+            LOG_DEBUG("ip addrss format not correct!");
+            return -1;
+        }
+    }
+    else
+    {
+        setting.addr_type = ADDR_TYPE_DOMAIN;
+        strncpy(setting.domain, address, MAX_DOMAIN_NAME_LEN);
+        setting.port = (u16) port;
+
+        setting_save();
+    }
+    return 0;
+}
 
 static void setting_initial(void)
 {
@@ -56,6 +111,9 @@ static void setting_initial(void)
 
     //initial the cJSON memory hook
     cJSON_InitHooks(&mem_hooks);
+
+    //register the debug command
+    regist_cmd(CMD_STRING_SERVER, setting_changeServer);
 
     /* Server configuration */
 #if 1
@@ -94,7 +152,6 @@ void set_vibration_state(eat_bool fixed)
 eat_bool setting_restore(void)
 {
     FS_HANDLE fh;
-    eat_bool ret = EAT_FALSE;
     int rc;
     UINT filesize = 0;
     char *buf = 0;
@@ -129,7 +186,7 @@ eat_bool setting_restore(void)
     }
     else
     {
-        LOG_DEBUG("get file size success , file size %d",filesize);
+        LOG_DEBUG("file size %d",filesize);
     }
 
     //malloc memory to read the file
@@ -140,6 +197,10 @@ eat_bool setting_restore(void)
         eat_fs_Close(fh);
         return EAT_FALSE;
     }
+    else
+    {
+        LOG_DEBUG("malloc %d bytes for read setting", filesize);
+    }
 
 
     //read the file
@@ -148,6 +209,7 @@ eat_bool setting_restore(void)
     {
         LOG_ERROR("read file fail, and return error: %d", fh);
         eat_fs_Close(fh);
+        free(buf);
         return EAT_FALSE;
     }
 
@@ -157,6 +219,8 @@ eat_bool setting_restore(void)
     {
         LOG_ERROR("setting config file format error!");
         eat_fs_Close(fh);
+        free(buf);
+        cJSON_Delete(conf);
         return EAT_FALSE;
     }
 
@@ -165,27 +229,38 @@ eat_bool setting_restore(void)
     if (setting.addr_type == ADDR_TYPE_DOMAIN)
     {
         char *domain = cJSON_GetObjectItem(addr, TAG_ADDR)->valuestring;
+        LOG_DEBUG("restore domain name");
         strncpy(setting.domain, domain, MAX_DOMAIN_NAME_LEN);
     }
     else
     {
-        char *ip = cJSON_GetObjectItem(addr, TAG_ADDR)->valuestring;
-        int count = sscanf(ip,"%u.%u.%u.%u", setting.ipaddr, setting.addr_type + 1, setting.addr_type +2, setting.ipaddr + 3);
+        char *ipaddr = cJSON_GetObjectItem(addr, TAG_ADDR)->valuestring;
+        int ip[4] = {0};
+        int count = sscanf(ipaddr, "%u.%u.%u.%u", ip, ip + 1, ip + 2, ip + 3);
+
+        LOG_DEBUG("restore ip address");
         if (count != 4) //4 means got four number of ip
         {
             LOG_ERROR("restore ip address failed");
+            eat_fs_Close(fh);
+            free(buf);
+            cJSON_Delete(conf);
             return EAT_FALSE;
         }
+        setting.ipaddr[0] = ip[0];
+        setting.ipaddr[1] = ip[1];
+        setting.ipaddr[2] = ip[2];
+        setting.ipaddr[3] = ip[3];
+
     }
 
     setting.port = cJSON_GetObjectItem(addr, TAG_PORT)->valueint;
 
-    ret = EAT_TRUE;
-
-
+    free(buf);
     eat_fs_Close(fh);
+    cJSON_Delete(conf);
 
-    return ret;
+    return EAT_TRUE;
 }
 
 
@@ -208,7 +283,7 @@ eat_bool setting_save(void)
     }
     else
     {
-        char server[MAX_DOMAIN_NAME_LEN] = 0;
+        char server[MAX_DOMAIN_NAME_LEN] = {0};
         snprintf(server, MAX_DOMAIN_NAME_LEN, "%d.%d.%d.%d", setting.ipaddr[0], setting.ipaddr[1], setting.ipaddr[2], setting.ipaddr[3]);
         cJSON_AddStringToObject(address, TAG_ADDR, server);
     }
