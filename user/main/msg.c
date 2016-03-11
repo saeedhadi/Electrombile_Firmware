@@ -9,7 +9,7 @@
 
 #include "msg.h"
 
-static unsigned short seq = 0;
+static char seq = 0;
 
 void* alloc_msg(char cmd, size_t length)
 {

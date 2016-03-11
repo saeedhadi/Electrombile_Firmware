@@ -306,7 +306,7 @@ int upgrade_do(void)
         }
         else
         {
-            LOG_DEBUG("delete app file success , and return is %d",rc);
+            LOG_DEBUG("delete old app file success");
         }
     }
     else
@@ -316,10 +316,10 @@ int upgrade_do(void)
     }
 
     APP_DATA_RUN_BASE = eat_get_app_base_addr(); //get app addr
-    LOG_DEBUG("APP_DATA_RUN_BASE : %ld",APP_DATA_RUN_BASE);
+    LOG_DEBUG("APP_DATA_RUN_BASE : %#x",APP_DATA_RUN_BASE);
 
     app_space_value = eat_get_app_space();  //get app space size
-    LOG_DEBUG("app_space_value : %ld",app_space_value);
+    LOG_DEBUG("app_space_value : %#x",app_space_value);
 
     APP_DATA_STORAGE_BASE = APP_DATA_RUN_BASE + (app_space_value>>1);//second half is space use to storage app_upgrade_data
 
