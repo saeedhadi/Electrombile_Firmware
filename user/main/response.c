@@ -278,7 +278,7 @@ int cmd_DefendOn_rsp(const void* msg)
     rsp->token = req->token;
     rsp->result = result;
 
-    socket_sendData(rsp, sizeof(MSG_DEFEND_REQ));
+    socket_sendData(rsp, sizeof(MSG_DEFEND_RSP));
 
     return 0;
 }
@@ -307,7 +307,7 @@ int cmd_DefendOff_rsp(const void* msg)
     rsp->token = req->token;
     rsp->result = result;
 
-    socket_sendData(rsp, sizeof(MSG_DEFEND_REQ));
+    socket_sendData(rsp, sizeof(MSG_DEFEND_RSP));
 
     return 0;
 }
@@ -330,7 +330,7 @@ int cmd_DefendGet_rsp(const void* msg)
     rsp->token = req->token;
     rsp->result = result;
 
-    socket_sendData(rsp, sizeof(MSG_DEFEND_REQ));
+    socket_sendData(rsp, sizeof(MSG_DEFEND_RSP));
 
     return 0;
 }
@@ -512,7 +512,7 @@ int cmd_UpgradeEnd_rsp(const void* msg)
         return -1;
     }
     rsp->code = rc;
-    socket_sendData(rsp,sizeof(MSG_UPGRADE_DATA_RSP));
+    socket_sendData(rsp,sizeof(MSG_UPGRADE_END_RSP));
 
     //启动升级
     if(0 <= rc)
