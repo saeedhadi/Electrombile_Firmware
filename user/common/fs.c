@@ -34,6 +34,8 @@ static int fs_ls(const unsigned char* cmdString, unsigned short length)
     EAT_FS_DOSDirEntry fileinfo;
     WCHAR filename_w[MAX_FILENAME_LEN];
     char filename[MAX_FILENAME_LEN];
+    SINT64 size = 0;
+    int rc = 0;
 
 
     fh = eat_fs_FindFirst(L"C:\\*.*", 0, 0, &fileinfo, filename_w, sizeof(filename_w));
@@ -64,6 +66,26 @@ static int fs_ls(const unsigned char* cmdString, unsigned short length)
     }
 
     eat_fs_FindClose(fh);
+
+    rc = eat_fs_GetDiskSize(EAT_FS, &size);
+    if (rc == EAT_FS_NO_ERROR)
+    {
+        print("\r\n\t total disk size: %ld", size);
+    }
+    else
+    {
+        print("\r\n\t total disk size:---(error:%d)", rc);
+    }
+
+    rc = eat_fs_GetDiskFreeSize(EAT_FS, &size);
+    if (rc == EAT_FS_NO_ERROR)
+    {
+        print("\t free disk size:%ld\r\n", size);
+    }
+    else
+    {
+        print("\t free disk size:---(error:%d)\r\n", rc);
+    }
 
     return 0;
 }
