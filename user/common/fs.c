@@ -11,7 +11,6 @@
 #include <eat_fs.h>
 
 #include "fs.h"
-#include "tool.h"
 #include "uart.h"
 #include "log.h"
 #include "debug.h"

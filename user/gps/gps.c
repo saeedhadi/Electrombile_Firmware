@@ -12,6 +12,7 @@
 
 #include <eat_interface.h>
 #include <eat_modem.h>
+#include <eat_gps.h>
 
 #include "gps.h"
 #include "timer.h"
@@ -20,8 +21,8 @@
 #include "log.h"
 #include "setting.h"
 #include "vibration.h"
-#include "tool.h"
 #include "rtc.h"
+#include "utils.h"
 
 #define TIMER_GPS_PERIOD (30 * 1000)
 #define EARTH_RADIUS 6378137 //radius of our earth unit :  m
@@ -165,8 +166,8 @@ void app_gps_thread(void *data)
     LOG_INFO("gps thread start.");
 
     eat_timer_start(TIMER_GPS, TIMER_GPS_PERIOD);
-    tool_modem_write("AT+CGNSPWR=1\r");//turn on GNSS power supply
-    tool_modem_write("AT+CENG=3,1\r");//set cell on
+    eat_gps_power_req(EAT_TRUE);    //turn on GNSS power supply, equal to AT+CGNSPWR=1
+    modem_switchEngineeringMode(3, 1);  //set cell on, AT+CENG=3,1\r
 
     while(EAT_TRUE)
     {
@@ -271,7 +272,7 @@ static eat_bool gps_isGpsFixed(void)
     eat_bool ret = isGpsFixed;
 
     isGpsFixed = EAT_FALSE;
-    tool_modem_write("AT+CGNSINF\r");
+    modem_GNSS();   //AT+CGNSINF\r"
 
     return ret;
 }
@@ -281,7 +282,7 @@ static eat_bool gps_isCellGet(void)
     eat_bool ret = isCellGet;
 
     isCellGet = EAT_FALSE;
-    tool_modem_write("AT+CENG?\r");
+    modem_readCellInfo();   //AT+CENG?\r
 
     return ret;
 }
@@ -418,7 +419,7 @@ static void gps_at_read_handler(void)
     len = eat_modem_read(buf, READ_BUFF_SIZE);
     LOG_DEBUG("modem read, len=%d, buf=\r\n%s", len, buf);
 
-    buf_p1 = tool_StrstrAndReturnEndPoint(buf, "AT+CGNSPWR=1\r\r\n");
+    buf_p1 = string_bypass(buf, "AT+CGNSPWR=1\r\r\n");
     if(NULL != buf_p1)
     {
         buf_p2 = (unsigned char*)strstr(buf_p1, "OK");
@@ -428,7 +429,7 @@ static void gps_at_read_handler(void)
         }
     }
 
-    buf_p1 = tool_StrstrAndReturnEndPoint(buf, "AT+CENG=3,1\r\r\n");
+    buf_p1 = string_bypass(buf, "AT+CENG=3,1\r\r\n");
     if(NULL != buf_p1)
     {
         buf_p2 = (unsigned char*)strstr(buf_p1, "OK");
@@ -445,7 +446,7 @@ static void gps_at_read_handler(void)
      * <GNSS run status>,<Fix status>,<UTC date & Time>,<Latitude>,<Longitude>,<MSL Altitude>,<Speed Over Ground>,<Course Over Ground>,
      * <Fix Mode>,<Reserved1>,<HDOP>,<PDOP>,<VDOP>,<Reserved2>,<Satellites in View>,<Satellites Used>,<Reserved3>,<C/N0 max>,<HPA>,<VPA>
      */
-    buf_p1 = tool_StrstrAndReturnEndPoint(buf, "+CGNSINF: ");
+    buf_p1 = string_bypass(buf, "+CGNSINF: ");
     if(NULL != buf_p1)
     {
         count = sscanf(buf_p1, "%*d,%d,%lf,%f,%f,%f,%f,%f,%*s",&isGpsFixed,&gpstimes, &latitude, &longitude,&altitude,&speed,&course);
@@ -485,12 +486,12 @@ static void gps_at_read_handler(void)
      */
     if(EAT_FALSE == isGpsFixed)
     {
-        buf_p1 = tool_StrstrAndReturnEndPoint(buf, "+CENG: 3,1\r\n\r\n");
+        buf_p1 = string_bypass(buf, "+CENG: 3,1\r\n\r\n");
         if(NULL != buf_p1)
         {
             while(buf_p1)
             {
-                buf_p1 = tool_StrstrAndReturnEndPoint(buf_p1, "+CENG: ");
+                buf_p1 = string_bypass(buf_p1, "+CENG: ");
 
                 count = sscanf(buf_p1, "%d,\"%d,%d,%x,%x,%*d,%d\"", &cellCount, &_mcc, &_mnc, &lac, &cellid, &rxl);
                 if(6 != count)

@@ -18,4 +18,9 @@ eat_bool modem_IsGPRSAttached(char* modem_rsp);
 eat_bool modem_GPRSAttach(void);
 #endif
 
+eat_bool modem_switchEngineeringMode(int mode, int Ncell);
+eat_bool modem_readCellInfo(void);
+
+eat_bool modem_GNSS(void);
+
 #endif /* USER_INC_MODEM_H_ */

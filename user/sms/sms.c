@@ -16,10 +16,10 @@
 #include "sms.h"
 #include "log.h"
 #include "thread.h"
-#include "tool.h"
 #include "version.h"
 #include "timer.h"
 #include "fs.h"
+#include "utils.h"
 
 //because #include "mileage" can't pass compile , so define again there
 #define MILEAGEFILE_NAME   L"C:\\mileage"
@@ -56,7 +56,7 @@ static void sms_version_proc(u8 *p, u8 *number)
     unsigned char *ptr1;
     unsigned char ack_message[64]={0};
 
-    ptr1 = tool_StrstrAndReturnEndPoint(p, "VERSION?");
+    ptr1 = string_bypass(p, "VERSION?");
     if(NULL != ptr1)
     {
         sprintf(ack_message, "VER:%s\r\nCORE:%s", VERSION_STR, eat_get_version());
@@ -73,7 +73,7 @@ static void sms_factory_proc(u8 *p, u8 *number)
     eat_fs_error_enum fs_Op_ret;
 
 
-    ptr1 = tool_StrstrAndReturnEndPoint(p, "Factory");
+    ptr1 = string_bypass(p, "Factory");
     if(NULL != ptr1)
     {
 
@@ -144,7 +144,7 @@ static void sms_reboot_proc(u8 *p, u8 *number)
     char ack_message[64] = {0};
 
 
-    ptr1 = tool_StrstrAndReturnEndPoint(p, "RESET");
+    ptr1 = string_bypass(p, "RESET");
     if(NULL != ptr1)
     {
 
@@ -172,7 +172,7 @@ static void sms_server_proc(u8 *p, u8 *number)
     u32 port = 0;
     int count = 0;
 
-    ptr1 = tool_StrstrAndReturnEndPoint(p, "SERVER?");
+    ptr1 = string_bypass(p, "SERVER?");
     if(NULL != ptr1)
     {
         if(setting.addr_type == ADDR_TYPE_IP)
@@ -188,7 +188,7 @@ static void sms_server_proc(u8 *p, u8 *number)
         eat_send_text_sms(number, ack_message);
     }
 
-    ptr1 = tool_StrstrAndReturnEndPoint(p, "SERVER ");
+    ptr1 = string_bypass(p, "SERVER ");
     if(NULL != ptr1)
     {
         count = sscanf(ptr1, "%[^:]:%u", domainORip, &port);
@@ -268,7 +268,7 @@ static void sms_timer_proc(u8 *p, u8 *number)
     u32 timer_period = 0;
     int count = 0;
 
-    ptr1 = tool_StrstrAndReturnEndPoint(p, "TIMER?");
+    ptr1 = string_bypass(p, "TIMER?");
     if(NULL != ptr1)
     {
         sprintf(ack_message, "TIMER:%u", (30 * 1000 / 1000));
@@ -277,7 +277,7 @@ static void sms_timer_proc(u8 *p, u8 *number)
         eat_send_text_sms(number, ack_message);
     }
 
-    ptr1 = tool_StrstrAndReturnEndPoint(p, "TIMER ");
+    ptr1 = string_bypass(p, "TIMER ");
     if(NULL != ptr1)
     {
         count = sscanf(ptr1, "%u", &timer_period);
