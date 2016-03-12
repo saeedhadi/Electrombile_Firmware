@@ -137,6 +137,7 @@ static int action_onGprsAttached(void)
         break;
 
     case ERR_SOCKET_CONNECTED:
+        cmd_Login();
         fsm_trans(STATE_WAIT_LOGIN);
         break;
 

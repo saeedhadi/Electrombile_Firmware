@@ -16,7 +16,6 @@
 #include "timer.h"
 #include "fsm.h"
 #include "error.h"
-#include "request.h"
 
 
 static s8 socket_id = 0;
@@ -206,7 +205,6 @@ int socket_connect(u8 ip_addr[4])
     if(rc >= 0)
     {
         LOG_DEBUG("socket id of new connection is :%d.", rc);
-        cmd_Login();
         return ERR_SOCKET_CONNECTED;
     }
     else if (rc == SOC_WOULDBLOCK)
