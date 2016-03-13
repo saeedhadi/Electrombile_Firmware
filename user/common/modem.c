@@ -19,7 +19,7 @@
 #define MODEM_READ_CMD  "?"
 #define MODEM_WRITE_CMD "="
 
-#define CR  "\d"    //CR (carriage return)
+#define CR  "\r"    //CR (carriage return)
 #define LF  "\n"    //LF (line feed - new line)
 
 
