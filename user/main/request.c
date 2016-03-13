@@ -15,6 +15,7 @@
 #include "log.h"
 #include "socket.h"
 #include "version.h"
+#include "data.h"
 
 int cmd_Login(void)
 {
@@ -96,4 +97,14 @@ int cmd_GPS(GPS* gps)
     LOG_DEBUG("send GPS message.");
 
     socket_sendData(msg, sizeof(MSG_GPS));
+
+    return 0;
 }
+
+int cmd_GPSPack(void)
+{
+    //TODO: send all the gps data in the queue
+
+    return 0;
+}
+

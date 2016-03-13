@@ -16,5 +16,7 @@ void cmd_Heartbeat(void);
 int cmd_Seek(unsigned int value);
 int cmd_GPS(GPS* gps);
 
+int cmd_GPSPack(void);
+
 
 #endif /* USER_MAIN_REQUEST_H_ */
