@@ -164,10 +164,12 @@ void app_gps_thread(void *data)
 	u8 msgLen = 0;
 
     LOG_INFO("gps thread start.");
+    eat_gps_power_req(EAT_TRUE);    //turn on GNSS power supply, equal to AT+CGNSPWR=1
+    LOG_INFO("gps sleep mode %d", eat_gps_sleep_read());
+
+    modem_switchEngineeringMode(3, 1);  //set cell on, AT+CENG=3,1\r
 
     eat_timer_start(TIMER_GPS, TIMER_GPS_PERIOD);
-    eat_gps_power_req(EAT_TRUE);    //turn on GNSS power supply, equal to AT+CGNSPWR=1
-    modem_switchEngineeringMode(3, 1);  //set cell on, AT+CENG=3,1\r
 
     while(EAT_TRUE)
     {
