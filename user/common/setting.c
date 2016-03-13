@@ -55,6 +55,20 @@ SETTING setting;
 #define TAG_LOCK    "lock"
 #define TAG_PERIOD  "period"
 
+//the setting file format is as follow
+//{
+//    "SERVER":   {
+//        "ADDR_TYPE":    1,
+//        "ADDR": "www.xiaoantech.com",
+//        "PORT": 9880
+//    },
+//    "autolock": {
+//        "autolock": true,
+//        "period":   15
+//    }
+//}
+
+
 static int setting_changeServer(const unsigned char* cmdString, unsigned short length)
 {
     char address[MAX_DOMAIN_NAME_LEN] = {0};
@@ -346,7 +360,7 @@ eat_bool setting_save(void)
 
     cJSON_AddItemToObject(root, TAG_SERVER, address);
 
-    cJSON_AddBoolToObject(autolock, TAG_AUTOLOCK, setting.isAutodefendFixed);
+    cJSON_AddBoolToObject(autolock, TAG_LOCK, setting.isAutodefendFixed);
     cJSON_AddNumberToObject(autolock, TAG_PERIOD, setting.autodefendPeriod);
 
     cJSON_AddItemToObject(root, TAG_AUTOLOCK, autolock);
