@@ -51,6 +51,24 @@ SETTING setting;
 #define TAG_ADDR   "ADDR"
 #define TAG_PORT    "PORT"
 
+#define TAG_AUTOLOCK    "autolock"
+#define TAG_LOCK    "lock"
+#define TAG_PERIOD  "period"
+
+//the setting file format is as follow
+//{
+//    "SERVER":   {
+//        "ADDR_TYPE":    1,
+//        "ADDR": "www.xiaoantech.com",
+//        "PORT": 9880
+//    },
+//    "autolock": {
+//        "autolock": true,
+//        "period":   15
+//    }
+//}
+
+
 static int setting_changeServer(const unsigned char* cmdString, unsigned short length)
 {
     char address[MAX_DOMAIN_NAME_LEN] = {0};
@@ -163,6 +181,7 @@ eat_bool get_autodefend_state(void)
 void set_autodefend_state(eat_bool fixed)
 {
     setting.isAutodefendFixed = fixed;
+    setting_save();
 }
 
 unsigned char get_autodefend_period(void)
@@ -173,6 +192,7 @@ unsigned char get_autodefend_period(void)
 void set_autodefend_period(unsigned char period)
 {
     setting.autodefendPeriod = period;
+    setting_save();
 }
 
 
@@ -185,6 +205,7 @@ eat_bool setting_restore(void)
     char *buf = 0;
     cJSON *conf = 0;
     cJSON *addr = 0;
+    cJSON *autolock = 0;
 
     setting_initial();
 
@@ -253,6 +274,14 @@ eat_bool setting_restore(void)
     }
 
     addr = cJSON_GetObjectItem(conf, TAG_SERVER);
+    if (!addr)
+    {
+        LOG_ERROR("no server config in setting file!");
+        eat_fs_Close(fh);
+        free(buf);
+        cJSON_Delete(conf);
+        return EAT_FALSE;
+    }
     setting.addr_type = cJSON_GetObjectItem(addr, TAG_ADDR_TYPE)->valueint;
     if (setting.addr_type == ADDR_TYPE_DOMAIN)
     {
@@ -283,6 +312,18 @@ eat_bool setting_restore(void)
     }
 
     setting.port = cJSON_GetObjectItem(addr, TAG_PORT)->valueint;
+
+    autolock = cJSON_GetObjectItem(conf, TAG_AUTOLOCK);
+    if (!autolock)
+    {
+        LOG_ERROR("no autolock config in setting file!");
+        eat_fs_Close(fh);
+        free(buf);
+        cJSON_Delete(conf);
+        return EAT_FALSE;
+    }
+    setting.isAutodefendFixed = cJSON_GetObjectItem(addr, TAG_LOCK)->valueint ? EAT_TRUE : EAT_FALSE;
+    setting.autodefendPeriod = cJSON_GetObjectItem(addr, TAG_PERIOD)->valueint;
 
     free(buf);
     eat_fs_Close(fh);
@@ -319,7 +360,11 @@ eat_bool setting_save(void)
 
     cJSON_AddItemToObject(root, TAG_SERVER, address);
 
-    //TODO: the lock switch and the autolock switch plus the auto lock period
+    cJSON_AddBoolToObject(autolock, TAG_LOCK, setting.isAutodefendFixed);
+    cJSON_AddNumberToObject(autolock, TAG_PERIOD, setting.autodefendPeriod);
+
+    cJSON_AddItemToObject(root, TAG_AUTOLOCK, autolock);
+
 
     content = cJSON_Print(root);
     LOG_DEBUG("save setting...");
