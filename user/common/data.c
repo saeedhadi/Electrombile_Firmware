@@ -24,7 +24,7 @@ QUEUE gps_queue = {0, 0};
 /*
  * to judge whether the queue is full
  */
-static eat_bool gps_isQueueFull(void)
+eat_bool gps_isQueueFull(void)
 {
     return gps_queue.front == (gps_queue.rear + 1) % MAX_GPS_COUNT;
 }
@@ -32,7 +32,7 @@ static eat_bool gps_isQueueFull(void)
 /*
  * to judge whether the queue is empty
  */
-static eat_bool gps_isQueueEmpty(void)
+eat_bool gps_isQueueEmpty(void)
 {
     return gps_queue.front == gps_queue.rear;
 }

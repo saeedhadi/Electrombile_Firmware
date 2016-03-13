@@ -11,6 +11,9 @@
 #include <eat_type.h>
 #include "protocol.h"
 
+eat_bool gps_isQueueFull(void);
+eat_bool gps_isQueueEmpty(void);
+
 eat_bool gps_enqueue(GPS* gps);
 eat_bool gps_dequeue(GPS* gps);
 
