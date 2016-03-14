@@ -105,14 +105,23 @@ int cmd_GPSPack(void)
 {
     //TODO: send all the gps data in the queue
     u8 msgLen = sizeof(MSG_HEADER) + gps_size()*sizeof(GPS);
-    MSG_GPS_PACK* msg = alloc_msg(CMD_GPS_PACK, msgLen);
+    MSG_GPS_PACK* msg;
     int count = 0;
 
+    if(gps_isQueueEmpty())//if queue is empty , do not send gps msg
+    {
+        return 0;
+    }
+
+    LOG_DEBUG("msgLen %d, sizeof(GPS) %d", msgLen, sizeof(GPS));
+
+    msg = alloc_msg(CMD_GPS_PACK, msgLen);
     if (!msg)
     {
         LOG_ERROR("alloc GPSPack message failed!");
         return -1;
     }
+
     for(count = 0;count < MAX_GPS_COUNT;count++)
     {
         if(gps_isQueueEmpty())
@@ -122,8 +131,6 @@ int cmd_GPSPack(void)
         msg->gps[count].timestamp = htonl(msg->gps[count].timestamp);
         msg->gps[count].course = htons(msg->gps[count].timestamp);
     }
-
-    gps_Resetqueue();
 
     socket_sendData(msg, msgLen);
 

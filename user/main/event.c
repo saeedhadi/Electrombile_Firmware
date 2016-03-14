@@ -113,6 +113,7 @@ static int event_timer(const EatEvent_st* event)
 
         case TIMER_GPS_SEND:
             cmd_GPSPack();
+            eat_timer_start(event->data.timer.timer_id, setting.gps_send_period);
             break;
 
         default:

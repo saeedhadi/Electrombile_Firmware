@@ -7,8 +7,6 @@
 
 
 #include "data.h"
-#include "log.h"
-
 
 typedef struct queue
 {
@@ -34,7 +32,7 @@ eat_bool gps_isQueueFull(void)
  */
 eat_bool gps_isQueueEmpty(void)
 {
-    return (gps_queue.front == gps_queue.rear) && gps_queue.rear;
+    return gps_queue.front == gps_queue.rear;
 }
 
 /*
@@ -56,17 +54,6 @@ eat_bool gps_enqueue(GPS* gps)
     gps_queue.gps[gps_queue.rear].course = gps->course;
 
     gps_queue.rear = (gps_queue.rear + 1) % MAX_GPS_COUNT;
-
-    LOG_DEBUG("front:%d,rear:%d",gps_queue.front,gps_queue.rear);
-
-    return EAT_TRUE;
-}
-/*
- * reset the queue
- */
-eat_bool gps_Resetqueue(void)
-{
-    gps_queue.front = gps_queue.rear = 0;
 
     return EAT_TRUE;
 }
@@ -96,8 +83,6 @@ eat_bool gps_dequeue(GPS* gps)
     gps->course = gps_queue.gps[gps_queue.front].course;
 
     gps_queue.front = (gps_queue.front + 1) % MAX_GPS_COUNT;
-
-    LOG_DEBUG("front:%d,rear:%d",gps_queue.front,gps_queue.rear);
 
     return EAT_TRUE;
 }

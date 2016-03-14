@@ -13,7 +13,6 @@
 
 eat_bool gps_isQueueFull(void);
 eat_bool gps_isQueueEmpty(void);
-eat_bool gps_Resetqueue(void);
 
 
 eat_bool gps_enqueue(GPS* gps);
