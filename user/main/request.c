@@ -104,7 +104,30 @@ int cmd_GPS(GPS* gps)
 int cmd_GPSPack(void)
 {
     //TODO: send all the gps data in the queue
+    u8 msgLen = sizeof(MSG_HEADER) + gps_size()*sizeof(GPS);
+    MSG_GPS_PACK* msg = alloc_msg(CMD_GPS_PACK, msgLen);
+    int count = 0;
+
+    if (!msg)
+    {
+        LOG_ERROR("alloc GPSPack message failed!");
+        return -1;
+    }
+    for(count = 0;count < MAX_GPS_COUNT;count++)
+    {
+        if(gps_isQueueEmpty())
+            break;
+
+        gps_dequeue(&(msg->gps[count]));
+        msg->gps[count].timestamp = htonl(msg->gps[count].timestamp);
+        msg->gps[count].course = htons(msg->gps[count].timestamp);
+    }
+
+    gps_Resetqueue();
+
+    socket_sendData(msg, msgLen);
 
     return 0;
+
 }
 

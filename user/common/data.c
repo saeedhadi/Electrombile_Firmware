@@ -7,8 +7,8 @@
 
 
 #include "data.h"
+#include "log.h"
 
-#define MAX_GPS_COUNT 10
 
 typedef struct queue
 {
@@ -34,7 +34,7 @@ eat_bool gps_isQueueFull(void)
  */
 eat_bool gps_isQueueEmpty(void)
 {
-    return gps_queue.front == gps_queue.rear;
+    return (gps_queue.front == gps_queue.rear) && gps_queue.rear;
 }
 
 /*
@@ -47,11 +47,30 @@ eat_bool gps_enqueue(GPS* gps)
         return EAT_FALSE;
     }
 
-    memcpy(gps_queue.gps + gps_queue.rear, gps, sizeof(GPS));
+    /*memcpy is not useful, dont know why*/
+    //memcpy(gps_queue.gps[gps_queue.rear], gps, sizeof(GPS));
+
+    gps_queue.gps[gps_queue.rear].latitude = gps->latitude;
+    gps_queue.gps[gps_queue.rear].longitude = gps->longitude;
+    gps_queue.gps[gps_queue.rear].speed = gps->speed;
+    gps_queue.gps[gps_queue.rear].course = gps->course;
+
     gps_queue.rear = (gps_queue.rear + 1) % MAX_GPS_COUNT;
+
+    LOG_DEBUG("front:%d,rear:%d",gps_queue.front,gps_queue.rear);
 
     return EAT_TRUE;
 }
+/*
+ * reset the queue
+ */
+eat_bool gps_Resetqueue(void)
+{
+    gps_queue.front = gps_queue.rear = 0;
+
+    return EAT_TRUE;
+}
+
 
 /*
  * get a GPS in the queue
@@ -68,8 +87,17 @@ eat_bool gps_dequeue(GPS* gps)
         return EAT_FALSE;
     }
 
-    memcpy(gps, gps_queue.gps[gps_queue.front], sizeof(GPS));
+    /*memcpy is not useful, dont know why*/
+    //memcpy(gps, gps_queue.gps[gps_queue.front], sizeof(GPS));
+
+    gps->latitude = gps_queue.gps[gps_queue.front].latitude;
+    gps->longitude = gps_queue.gps[gps_queue.front].longitude;
+    gps->speed = gps_queue.gps[gps_queue.front].speed;
+    gps->course = gps_queue.gps[gps_queue.front].course;
+
     gps_queue.front = (gps_queue.front + 1) % MAX_GPS_COUNT;
+
+    LOG_DEBUG("front:%d,rear:%d",gps_queue.front,gps_queue.rear);
 
     return EAT_TRUE;
 }
