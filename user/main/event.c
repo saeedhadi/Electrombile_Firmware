@@ -111,6 +111,11 @@ static int event_timer(const EatEvent_st* event)
             setSeekMode(EAT_FALSE);
             break;
 
+        case TIMER_GPS_SEND:
+            cmd_GPSPack();
+            eat_timer_start(event->data.timer.timer_id, setting.gps_send_period);
+            break;
+
         default:
             LOG_ERROR ("timer(%d) not processed!", event->data.timer.timer_id);
             break;
@@ -174,6 +179,7 @@ static void sendGPS2Server(LOCAL_GPS* gps)
     }
 #endif
 }
+
 static int threadCmd_GPS(const MSG_THREAD* msg)
 {
     LOCAL_GPS* gps = (LOCAL_GPS*) msg->data;
@@ -184,8 +190,16 @@ static int threadCmd_GPS(const MSG_THREAD* msg)
          return -1;
      }
 
-     //just forward it to the server
-     sendGPS2Server(gps);
+
+     if (gps->isGps)
+     {
+         gps_enqueue(&gps->gps);
+     }
+
+     if (gps_isQueueFull())
+     {
+         cmd_GPSPack();
+     }
 
     return 0;
 }

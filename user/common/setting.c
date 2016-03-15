@@ -152,6 +152,7 @@ static void setting_initial(void)
     setting.vibration_timer_period = 1000;
     setting.seek_timer_period = 2000;
     setting.timeupdate_timer_peroid = 24 * 60 * 60 * 1000;      //24h * 60m * 60s * 1000ms
+    setting.gps_send_period = 30 * 1000;
 
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;

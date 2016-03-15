@@ -64,6 +64,8 @@ enum
     CMD_UPGRADE_END     = 25,
     CMD_SIM_INFO        = 26,
     CMD_REBOOT          = 27,
+    CMD_DEVICE_INFO_GET = 28,
+    CMD_GPS_PACK        = 29,
 };
 
 enum
@@ -427,6 +429,52 @@ typedef struct
     char CCID[MAX_CCID_LENGTH];
     char IMSI[IMSI_LENGTH];
 }__attribute__((__packed__)) MSG_SIM_INFO;
+
+typedef MSG_HEADER MSG_DEVICE_INFO_GET_REQ;
+#pragma anon_unions
+typedef struct
+{
+    MSG_HEADER header;
+    char isGps;
+    union
+    {
+        GPS gps;        //GPS
+        struct          //CELL
+        {
+            short mcc;
+            short mnc;
+            short lac;
+            short cid;
+        }__attribute__((__packed__));
+    }__attribute__((__packed__));
+
+    //auto lock related configuration
+    struct
+    {
+        char autolock;
+        char autoperiod;
+    }__attribute__((__packed__));
+
+    //battery configuration
+    struct
+    {
+        char percent;
+        char miles;
+    }__attribute__((__packed__));
+
+    //defend switch status
+    char defend;
+}__attribute__((__packed__)) MSG_DEVICE_INFO_GET_RSP;
+
+/*
+ * packed GPS message structure
+ */
+typedef struct
+{
+    MSG_HEADER header;
+    GPS gps[];
+}__attribute__((__packed__)) MSG_GPS_PACK;
+
 
 #pragma pack(pop)
 
