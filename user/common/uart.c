@@ -78,5 +78,5 @@ int print(const char* fmt, ...)
 
     length = strlen(buf);
 
-    return eat_uart_write(EAT_UART_1, buf, length);
+    return eat_uart_write(EAT_UART_1,(const unsigned char *)buf, length);
 }

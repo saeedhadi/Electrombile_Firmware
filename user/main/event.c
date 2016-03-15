@@ -22,6 +22,7 @@
 #include "fsm.h"
 #include "request.h"
 #include "seek.h"
+#include "data.h"
 #include "adc.h"
 
 typedef int (*EVENT_FUNC)(const EatEvent_st* event);
@@ -358,7 +359,6 @@ static int event_threadMsg(const EatEvent_st* event)
     u8 msgLen = event->data.user_msg.len;
     size_t i = 0;
     int rc = 0;
-    LOG_HEX((const char *)msg,msgLen);
 
     if (msg->length + sizeof(MSG_THREAD) != msgLen)
     {

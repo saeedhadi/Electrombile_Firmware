@@ -20,6 +20,7 @@
 #include "thread_msg.h"
 #include "log.h"
 #include "setting.h"
+#include "modem.h"
 #include "vibration.h"
 #include "rtc.h"
 #include "utils.h"

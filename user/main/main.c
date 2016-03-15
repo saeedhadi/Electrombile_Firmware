@@ -22,7 +22,6 @@
 #include "watchdog.h"
 #include "timer.h"
 #include "setting.h"
-#include "mileage.h"
 #include "diagnosis.h"
 #include "log.h"
 #include "fs.h"
@@ -140,7 +139,7 @@ void app_main(void *data)
     log_initial();
 
     setting_restore();
-    mileage_restore();
+    //mileage_restore();
 
     fs_initial();
 

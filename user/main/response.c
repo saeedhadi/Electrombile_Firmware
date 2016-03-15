@@ -22,7 +22,6 @@
 #include "adler32.h"
 #include "fs.h"
 #include "setting.h"
-#include "mileage.h"
 #include "seek.h"
 
 
@@ -244,7 +243,7 @@ int cmd_Battery_rsp(const void* msg)
         LOG_ERROR("alloc baterry rsp message failed!");
         return -1;
     }
-    rsp->miles = get_mileage();
+    //rsp->miles = get_mileage();
     rsp->percent = get_battery();
     socket_sendData(rsp, sizeof(MSG_BATTERY_RSP));
 

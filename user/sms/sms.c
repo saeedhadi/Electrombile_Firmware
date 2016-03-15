@@ -21,8 +21,6 @@
 #include "fs.h"
 #include "utils.h"
 
-//because #include "mileage" can't pass compile , so define again there
-#define MILEAGEFILE_NAME   L"C:\\mileage"
 
 static eat_bool ResetFlag = EAT_FALSE;
 
@@ -117,17 +115,6 @@ static void sms_factory_proc(u8 *p, u8 *number)
             LOG_DEBUG("Delete new logfile Success");
         }
 
-
-        fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(MILEAGEFILE_NAME);
-
-        if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
-        {
-            LOG_ERROR("Delete mileagefile Fail,and Return Error is %d",fs_Op_ret);
-        }
-        else
-        {
-            LOG_DEBUG("Delete mileagefile Success");
-        }
 
         // if time is less , send text will send fail,so proposal not to reply sms there
         eat_sleep(10*1000);
