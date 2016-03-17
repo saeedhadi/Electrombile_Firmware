@@ -19,6 +19,7 @@ enum CMD
     CMD_THREAD_LOCATION,
     CMD_THREAD_AUTOLOCK,
     CMD_THREAD_ITINERARY,
+    CMD_THREAD_BATTERY,
 };
 
 
@@ -61,6 +62,14 @@ typedef struct
     char state;
 
 }VIBRATION_ITINERARY_INFO;
+
+typedef struct
+{
+    char percent;
+    char miles;
+
+}BATTERY_INFO;
+
 
 typedef struct
 {

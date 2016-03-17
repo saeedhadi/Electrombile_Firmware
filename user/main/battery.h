@@ -1,8 +1,7 @@
 #ifndef USER_MAIN_BATTERY_H_
 #define USER_MAIN_BATTERY_H_
 
-char battery_GetBattery(void);
-
+void app_battery_thread(void *data);
 
 
 
