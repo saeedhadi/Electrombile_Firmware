@@ -8,6 +8,19 @@
 #include <string.h>
 
 #include "utils.h"
+#include "minilzo.h"
+
+
+/* Work-memory needed for compression. Allocate memory in units
+ * of 'lzo_align_t' (instead of 'char') to make sure it is properly aligned.
+ */
+
+#define HEAP_ALLOC(var,size) \
+    lzo_align_t __LZO_MMODEL var [ ((size) + (sizeof(lzo_align_t) - 1)) / sizeof(lzo_align_t) ]
+
+static HEAP_ALLOC(wrkmem, LZO1X_1_MEM_COMPRESS);
+
+
 
 /*
  * 去掉字符串开头的空格
@@ -83,3 +96,24 @@ void unicode2ascii(unsigned char* out, const unsigned short* in)
 
     out[i] = 0;
 }
+
+/*
+ * return
+ *  0: success
+ *  other: fail(refer to lzoconf.h)
+ */
+int miniLZO_compress(const char* src, int src_len, char* dst, int dst_len)
+{
+    return lzo1x_1_compress(src, src_len, dst, &dst_len,wrkmem);
+}
+
+/*
+ * return
+ *  0: success
+ *  other: fail(refer to lzoconf.h)
+ */
+int miniLZO_decompress(const char* src, int src_len, char* dst, int dst_len)
+{
+    return lzo1x_decompress(src, src_len, dst, &dst_len, NULL);
+}
+
