@@ -323,7 +323,7 @@ static eat_bool gps_sendGps(u8 cmd)
     }
     else
     {
-        cmp = 0;//gps_DuplicateCheck(last_gps, gps);
+        cmp = gps_DuplicateCheck(last_gps, gps);
     }
 
     if(EAT_TRUE == cmp)
