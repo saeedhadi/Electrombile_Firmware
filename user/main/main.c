@@ -26,6 +26,8 @@
 #include "log.h"
 #include "fs.h"
 #include "version.h"
+#include "minilzo.h"
+
 /********************************************************************
  * Macros
  ********************************************************************/
@@ -133,6 +135,11 @@ void app_main(void *data)
     if (!rc)
     {
     	LOG_ERROR("eat memory initial error:%d!", rc);
+        return;
+    }
+
+    if (lzo_init() != LZO_E_OK)
+    {
         return;
     }
 
