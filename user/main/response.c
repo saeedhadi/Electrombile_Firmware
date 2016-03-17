@@ -22,13 +22,12 @@
 #include "adler32.h"
 #include "fs.h"
 #include "setting.h"
+#include "battery.h"
 #include "seek.h"
-
 
 int cmd_Login_rsp(const void* msg)
 {
     LOG_DEBUG("get login respond.");
-
     fsm_run(EVT_LOGINED);
 
     return 0;
@@ -243,8 +242,8 @@ int cmd_Battery_rsp(const void* msg)
         LOG_ERROR("alloc baterry rsp message failed!");
         return -1;
     }
-    //rsp->miles = get_mileage();
-    rsp->percent = get_battery();
+    rsp->percent = battery_GetBattery();
+    //rsp->miles = get_miles();
     socket_sendData(rsp, sizeof(MSG_BATTERY_RSP));
 
     return 0;
@@ -498,8 +497,7 @@ int cmd_UpgradeEnd_rsp(const void* msg)
     MSG_UPGRADE_END* req = (MSG_UPGRADE_END*)msg;
     MSG_UPGRADE_END_RSP* rsp = NULL;
 
-    int rc =  upgrade_CheckAppfile(ntohl(req->size),ntohl(req->checksum
-));
+    int rc =  upgrade_CheckAppfile(ntohl(req->size),ntohl(req->checksum));
 
     rsp = alloc_rspMsg(msg);
     if (!rsp)
