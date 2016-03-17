@@ -20,11 +20,12 @@
 #include "thread_msg.h"
 #include "log.h"
 #include "setting.h"
+#include "modem.h"
 #include "vibration.h"
 #include "rtc.h"
 #include "utils.h"
 
-#define TIMER_GPS_PERIOD (30 * 1000)
+#define TIMER_GPS_PERIOD (5 * 1000)
 #define EARTH_RADIUS 6378137 //radius of our earth unit :  m
 #define PI 3.141592653
 

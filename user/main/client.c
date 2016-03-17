@@ -13,7 +13,6 @@
 
 #include "client.h"
 #include "socket.h"
-#include "mileage.h"
 #include  "msg.h"
 #include "log.h"
 #include "uart.h"

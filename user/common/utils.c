@@ -29,7 +29,7 @@ const unsigned char* string_trimLeft(const unsigned char* string)
  */
 void string_trimRight(unsigned char* string)
 {
-    unsigned char* p = string + strlen(string) - 1;
+    unsigned char* p = string + strlen((const char *)string) - 1;
 
     while(*p == ' ' || *p == '\r' || *p == '\n' || *p == '\t') p--;
 

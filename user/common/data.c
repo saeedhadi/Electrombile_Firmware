@@ -48,8 +48,9 @@ eat_bool gps_enqueue(GPS* gps)
     /*memcpy is not useful, dont know why*/
     //memcpy(gps_queue.gps[gps_queue.rear], gps, sizeof(GPS));
 
-    gps_queue.gps[gps_queue.rear].latitude = gps->latitude;
+    gps_queue.gps[gps_queue.rear].timestamp= gps->timestamp;
     gps_queue.gps[gps_queue.rear].longitude = gps->longitude;
+    gps_queue.gps[gps_queue.rear].latitude = gps->latitude;
     gps_queue.gps[gps_queue.rear].speed = gps->speed;
     gps_queue.gps[gps_queue.rear].course = gps->course;
 
@@ -77,8 +78,9 @@ eat_bool gps_dequeue(GPS* gps)
     /*memcpy is not useful, dont know why*/
     //memcpy(gps, gps_queue.gps[gps_queue.front], sizeof(GPS));
 
-    gps->latitude = gps_queue.gps[gps_queue.front].latitude;
+    gps->timestamp = gps_queue.gps[gps_queue.front].timestamp;
     gps->longitude = gps_queue.gps[gps_queue.front].longitude;
+    gps->latitude = gps_queue.gps[gps_queue.front].latitude;
     gps->speed = gps_queue.gps[gps_queue.front].speed;
     gps->course = gps_queue.gps[gps_queue.front].course;
 

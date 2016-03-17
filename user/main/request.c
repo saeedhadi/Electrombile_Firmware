@@ -129,7 +129,7 @@ int cmd_GPSPack(void)
 
         gps_dequeue(&(msg->gps[count]));
         msg->gps[count].timestamp = htonl(msg->gps[count].timestamp);
-        msg->gps[count].course = htons(msg->gps[count].timestamp);
+        msg->gps[count].course = htons(msg->gps[count].course);
     }
 
     socket_sendData(msg, msgLen);
