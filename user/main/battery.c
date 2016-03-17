@@ -25,7 +25,16 @@ static u32 StorageVoltage;
 */
 static char battery_getbattery(void)
 {
-    return (char)exp((ADvalue_2_Realvalue(StorageVoltage) -37.873)/2.7927);
+    char percent = 0;
+
+    percent = (char)exp((ADvalue_2_Realvalue(StorageVoltage) -37.873)/2.7927);
+
+    if(percent > 100)
+    {
+        percent =100;
+    }
+
+    return percent;
 }
 
 /*
@@ -41,7 +50,6 @@ static void battery_save_voltage(u32 voltage[])
         tmp_voltage += voltage[count];
     }
     StorageVoltage = tmp_voltage / MAX_VLOTAGE_NUM;
-    LOG_DEBUG("StorageVoltage = %d",StorageVoltage);
 }
 
 /*
@@ -62,7 +70,6 @@ static void battery_event_adc(EatEvent_st *event)
 
         voltage[count++] = event->data.adc.v;
 
-        LOG_DEBUG("ADC_VOLTAGE = %d",event->data.adc.v);
     }
     else
     {
@@ -105,10 +112,14 @@ void app_battery_thread(void *data)
 {
 	EatEvent_st event;
     MSG_THREAD* msg = 0;
+    int rc;
 
 	LOG_INFO("battery thread start.");
 
-    eat_adc_get(ADC_VOLTAGE, ADC_VOLTAGE_PERIOD, NULL);
+    while(!eat_adc_get(ADC_VOLTAGE, ADC_VOLTAGE_PERIOD, NULL))
+    {
+        eat_sleep(100);//if failed ,try again after 100ms
+    }
 
 	while(EAT_TRUE)
 	{
@@ -124,7 +135,9 @@ void app_battery_thread(void *data)
                 }
 
             case EAT_EVENT_ADC:
+
                 battery_event_adc(&event);
+
                 break;
 
             case EAT_EVENT_USER_MSG:
@@ -148,22 +161,5 @@ void app_battery_thread(void *data)
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

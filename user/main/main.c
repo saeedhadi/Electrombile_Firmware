@@ -140,7 +140,6 @@ void app_main(void *data)
     log_initial();
 
     setting_restore();
-    //mileage_restore();
 
     fs_initial();
 

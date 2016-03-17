@@ -17,6 +17,6 @@
 #define ADC_433_PERIOD (2000)  //unit: ms
 
 #define ADC_VOLTAGE EAT_ADC1
-#define ADC_VOLTAGE_PERIOD  (10) //ms
+#define ADC_VOLTAGE_PERIOD  (20) //ms
 
 #endif /* USER_ELECTROMBILE_ADC_H_ */
