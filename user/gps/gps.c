@@ -25,7 +25,7 @@
 #include "rtc.h"
 #include "utils.h"
 
-#define TIMER_GPS_PERIOD (30 * 1000)
+#define TIMER_GPS_PERIOD (5 * 1000)
 #define EARTH_RADIUS 6378137 //radius of our earth unit :  m
 #define PI 3.141592653
 
@@ -323,7 +323,7 @@ static eat_bool gps_sendGps(u8 cmd)
     }
     else
     {
-        cmp = gps_DuplicateCheck(last_gps, gps);
+        cmp = 0;//gps_DuplicateCheck(last_gps, gps);
     }
 
     if(EAT_TRUE == cmp)
