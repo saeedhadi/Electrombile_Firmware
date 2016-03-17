@@ -74,7 +74,7 @@ static eat_bool diag_433Check(void)
     }
 
     //检查433信号强度是否在[100mv, 300mv]之间
-    if (voltage < 100 || voltage > 300)
+    if (voltage < 100 || voltage > 600)
     {
         LOG_ERROR("433 signal quality not enough: %d", voltage);
         return EAT_FALSE;
