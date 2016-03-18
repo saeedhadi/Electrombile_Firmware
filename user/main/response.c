@@ -523,6 +523,7 @@ int cmd_DeviceInfo_rsp(const void* msg)
 {
     MSG_DEVICE_INFO_GET_REQ* req = (MSG_DEVICE_INFO_GET_REQ*)msg;
     MSG_DEVICE_INFO_GET_RSP* rsp = NULL;
+    LOCAL_GPS* local_gps = gps_get_last();
 
     rsp = alloc_rspMsg(req);
     if (!rsp)
@@ -535,6 +536,19 @@ int cmd_DeviceInfo_rsp(const void* msg)
     rsp->defend = setting.isVibrateFixed;
     rsp->percent = battery_get_percent();
     rsp->miles = battery_get_miles();
+    rsp->isGps = local_gps->isGps;
+
+    if(rsp->isGps)
+    {
+        rsp->gps = local_gps->gps;
+    }
+    else
+    {
+        rsp->mcc = htons(local_gps->cellInfo.mcc);
+        rsp->mnc = htons(local_gps->cellInfo.mnc);
+        rsp->lac = htons(local_gps->cellInfo.cell[0].lac);
+        rsp->cid = htons(local_gps->cellInfo.cell[0].cellid);
+    }
 
     socket_sendData(rsp,sizeof(MSG_DEVICE_INFO_GET_RSP));
     return 0;
