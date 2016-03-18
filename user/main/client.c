@@ -51,13 +51,14 @@ static MC_MSG_PROC msgProcs[] =
     {CMD_SET_SERVER, cmd_Server_rsp},
     {CMD_SET_TIMER, cmd_Timer_rsp},
     {CMD_BATTERY, cmd_Battery_rsp},
-    {CMD_DEFEND_OFF,cmd_DefendOff_rsp},
-    {CMD_DEFEND_ON,cmd_DefendOn_rsp},
-    {CMD_DEFEND_GET,cmd_DefendGet_rsp},
+    {CMD_DEFEND_OFF, cmd_DefendOff_rsp},
+    {CMD_DEFEND_ON, cmd_DefendOn_rsp},
+    {CMD_DEFEND_GET, cmd_DefendGet_rsp},
     {CMD_UPGRADE_START, cmd_UpgradeStart_rsp},
     {CMD_UPGRADE_DATA, cmd_UpgradeData_rsp},
     {CMD_UPGRADE_END, cmd_UpgradeEnd_rsp},
-    {CMD_REBOOT,cmd_Reboot_rsp},
+    {CMD_REBOOT, cmd_Reboot_rsp},
+    {CMD_DEVICE_INFO_GET, cmd_DeviceInfo_rsp},
 };
 
 int client_handleOnePkt(const void* m, int msgLen)

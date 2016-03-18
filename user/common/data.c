@@ -7,6 +7,7 @@
 
 
 #include "data.h"
+#include "math.h"
 
 typedef struct queue
 {
@@ -15,9 +16,10 @@ typedef struct queue
     GPS gps[MAX_GPS_COUNT];
 }QUEUE;
 
-
-QUEUE gps_queue = {0, 0};
-
+static QUEUE gps_queue = {0, 0};
+static u32 BatteryVoltage[MAX_VLOTAGE_NUM] = {0};
+static LOCAL_GPS last_gps_info;
+static LOCAL_GPS* last_gps = &last_gps_info;
 
 /*
  * to judge whether the queue is full
@@ -96,3 +98,66 @@ int gps_size(void)
 {
     return (gps_queue.rear - gps_queue.front + MAX_GPS_COUNT) % MAX_GPS_COUNT;
 }
+
+/*
+*get the last gps info
+*/
+LOCAL_GPS* gps_get_last(void)
+{
+    return last_gps;
+}
+
+/*
+*save the last gps info
+*/
+int gps_save_last(LOCAL_GPS* gps)
+{
+    last_gps_info.isGps = gps->isGps;
+    last_gps_info.gps = gps->gps;
+    last_gps_info.cellInfo = gps->cellInfo;
+
+    return EAT_TRUE;
+}
+
+
+/*
+*set the battery's voltage
+*/
+void battery_store_voltage(u32 voltage)
+{
+    static int count = 0;
+
+    if(count >= MAX_VLOTAGE_NUM)
+    {
+        count = 0;
+    }
+
+    BatteryVoltage[count++] = voltage;
+}
+
+/*
+* get the battery's voltage
+*/
+unsigned char battery_get_percent(void)
+{
+#define ADvalue_2_Realvalue(x) x*103/3/1000.f //unit mV, 3K & 100k divider
+#define Voltage2Percent(x) (unsigned char)exp((x-37.873)/2.7927)
+    u32 voltage = 0;
+    int count;
+    unsigned char percent;
+
+    for(count = 0;count < MAX_VLOTAGE_NUM;count++)
+    {
+        voltage += BatteryVoltage[count];
+    }
+
+    percent = Voltage2Percent(ADvalue_2_Realvalue(voltage/MAX_VLOTAGE_NUM));
+
+    return percent>100?100:percent;
+}
+
+unsigned char battery_get_miles(void)
+{
+    return 0;
+}
+

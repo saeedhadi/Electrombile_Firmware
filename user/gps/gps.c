@@ -23,6 +23,7 @@
 #include "modem.h"
 #include "vibration.h"
 #include "rtc.h"
+#include "data.h"
 #include "utils.h"
 
 #define TIMER_GPS_PERIOD (5 * 1000)
@@ -77,11 +78,8 @@ static short mcc = 0;//mobile country code
 static short mnc = 0;//mobile network code
 static char  cellNo = 0;//cell count
 static CELL  cells[7] = {0};
-static LOCAL_GPS last_gps_info;
 
 static double itinerary = 0.f;  //unit km
-
-static LOCAL_GPS* last_gps = &last_gps_info;//gps sent for the last time
 
 
 static void gps_ResetMileage(void)
@@ -297,6 +295,7 @@ static eat_bool gps_sendGps(u8 cmd)
     LOCAL_GPS* gps = 0;
     eat_bool cmp = EAT_FALSE;
     eat_bool ret = EAT_FALSE;
+    LOCAL_GPS* last_gps = gps_get_last();
 
     if (!msg)
     {
@@ -338,6 +337,9 @@ static eat_bool gps_sendGps(u8 cmd)
         //GPS is different from before, send this msg, update the last_gps
 
         memcpy(last_gps, gps, sizeof(LOCAL_GPS));
+        //save the last gps in data
+        gps_save_last(gps);
+
         LOG_DEBUG("send gps to THREAD_MAIN");
         ret = sendMsg(THREAD_MAIN, msg, msgLen);
     }
@@ -355,6 +357,7 @@ static eat_bool gps_sendCell(u8 cmd)
     int i = 0;
     eat_bool cmp = EAT_FALSE;
     eat_bool ret = EAT_FALSE;
+    LOCAL_GPS* last_gps = gps_get_last();
 
     if (!msg)
     {
@@ -394,6 +397,9 @@ static eat_bool gps_sendCell(u8 cmd)
     else
     {
         memcpy(last_gps, gps, sizeof(LOCAL_GPS));
+
+        //save the last gps in data
+        gps_save_last(gps);
 
         //GPS is different from before, send this msg, update the last_gps
         LOG_DEBUG("send cell to THREAD_MAIN: mcc(%d), mnc(%d), cellNo(%d).", mcc, mnc, cellNo);

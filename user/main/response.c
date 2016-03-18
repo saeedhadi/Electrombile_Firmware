@@ -20,6 +20,7 @@
 #include "version.h"
 #include "upgrade.h"
 #include "adler32.h"
+#include "data.h"
 #include "fs.h"
 #include "setting.h"
 #include "battery.h"
@@ -233,15 +234,20 @@ int cmd_AutodefendPeriodGet_rsp(const void* msg)
 
 int cmd_Battery_rsp(const void* msg)
 {
-    u8 msgLen = sizeof(MSG_THREAD);
-    MSG_THREAD* battery_msg = allocMsg(msgLen);
+    MSG_BATTERY_RSP* req = (MSG_BATTERY_RSP*)msg;
+    MSG_BATTERY_RSP* rsp = NULL;
 
-    battery_msg->cmd = CMD_THREAD_BATTERY;
-    battery_msg->length = 0;
+    rsp = alloc_rspMsg(&req->header);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc baterry rsp message failed!");
+        return -1;
+    }
+    rsp->percent = battery_get_percent();
+    rsp->miles = 0;
 
-    LOG_DEBUG("send CMD_THREAD_BATTERY to THREAD_BATTERY.");
-
-    sendMsg(THREAD_BATTERY, battery_msg, msgLen);
+    LOG_DEBUG("send battery msg to server:%d",rsp->percent);
+    socket_sendData(rsp, sizeof(MSG_BATTERY_RSP));
 
     return 0;
 }
@@ -512,3 +518,40 @@ int cmd_UpgradeEnd_rsp(const void* msg)
 
     return 0;
 }
+
+int cmd_DeviceInfo_rsp(const void* msg)
+{
+    MSG_DEVICE_INFO_GET_REQ* req = (MSG_DEVICE_INFO_GET_REQ*)msg;
+    MSG_DEVICE_INFO_GET_RSP* rsp = NULL;
+    LOCAL_GPS* local_gps = gps_get_last();
+
+    rsp = alloc_rspMsg(req);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc defend rsp message failed!");
+        return -1;
+    }
+    rsp->autolock = setting.isAutodefendFixed;
+    rsp->autoperiod = setting.autodefendPeriod;
+    rsp->defend = setting.isVibrateFixed;
+    rsp->percent = battery_get_percent();
+    rsp->miles = battery_get_miles();
+    rsp->isGps = local_gps->isGps;
+
+    if(rsp->isGps)
+    {
+        rsp->gps = local_gps->gps;
+    }
+    else
+    {
+        rsp->mcc = htons(local_gps->cellInfo.mcc);
+        rsp->mnc = htons(local_gps->cellInfo.mnc);
+        rsp->lac = htons(local_gps->cellInfo.cell[0].lac);
+        rsp->cid = htons(local_gps->cellInfo.cell[0].cellid);
+    }
+
+    socket_sendData(rsp,sizeof(MSG_DEVICE_INFO_GET_RSP));
+    return 0;
+}
+
+

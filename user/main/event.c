@@ -248,30 +248,6 @@ static int threadCmd_Itinerary(const MSG_THREAD* msg)
     return 0;
 }
 
-/*
-*fun: receive msg from Battery_Thread and send battery msg to server
-*/
-static int threadCmd_Battery(const MSG_THREAD* msg)
-{
-    BATTERY_INFO* msg_data = (BATTERY_INFO*) msg->data;
-    MSG_BATTERY_RSP* battery_msg;
-
-    if (msg->length < sizeof(BATTERY_INFO) || !msg_data)
-    {
-         LOG_ERROR("msg from THREAD_GPS error!");
-         return -1;
-    }
-    battery_msg = alloc_msg(CMD_BATTERY, sizeof(MSG_BATTERY_RSP));
-    battery_msg->percent = msg_data->percent;
-    battery_msg->miles = msg_data->miles;
-
-    LOG_DEBUG("send battery msg,percent:%d,miles:%d",battery_msg->percent,battery_msg->miles);
-    socket_sendData((MSG_BATTERY_RSP*)battery_msg, sizeof(MSG_BATTERY_RSP));
-
-    return 0;
-}
-
-
 
 static int threadCmd_SMS(const MSG_THREAD* msg)
 {
@@ -375,7 +351,6 @@ static THREAD_MSG_PROC msgProcs[] =
         {CMD_THREAD_LOCATION, threadCmd_Location},
         {CMD_THREAD_AUTOLOCK, threadCmd_AutolockState},
         {CMD_THREAD_ITINERARY, threadCmd_Itinerary},
-        {CMD_THREAD_BATTERY, threadCmd_Battery},
 };
 
 static int event_threadMsg(const EatEvent_st* event)
