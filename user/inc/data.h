@@ -10,6 +10,7 @@
 
 #include <eat_type.h>
 #include "protocol.h"
+#include "thread_msg.h"
 
 eat_bool gps_isQueueFull(void);
 eat_bool gps_isQueueEmpty(void);
@@ -22,6 +23,12 @@ int gps_size(void);
 
 unsigned char battery_get_percent(void);
 void battery_store_voltage(u32 voltage);
+
+LOCAL_GPS* gps_get_last(void);
+int gps_save_last(LOCAL_GPS* gps);
+
+
+
 
 #define MAX_GPS_COUNT 10
 #define MAX_VLOTAGE_NUM 10

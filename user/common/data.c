@@ -16,10 +16,10 @@ typedef struct queue
     GPS gps[MAX_GPS_COUNT];
 }QUEUE;
 
-
-QUEUE gps_queue = {0, 0};
+static QUEUE gps_queue = {0, 0};
 static u32 BatteryVoltage[MAX_VLOTAGE_NUM] = {0};
-
+static LOCAL_GPS last_gps_info;
+static LOCAL_GPS* last_gps = &last_gps_info;
 
 /*
  * to judge whether the queue is full
@@ -100,6 +100,27 @@ int gps_size(void)
 }
 
 /*
+*get the last gps info
+*/
+LOCAL_GPS* gps_get_last(void)
+{
+    return last_gps;
+}
+
+/*
+*save the last gps info
+*/
+int gps_save_last(LOCAL_GPS* gps)
+{
+    last_gps_info.isGps = gps->isGps;
+    last_gps_info.gps = gps->gps;
+    last_gps_info.cellInfo = gps->cellInfo;
+
+    return EAT_TRUE;
+}
+
+
+/*
 *set the battery's voltage
 */
 void battery_store_voltage(u32 voltage)
@@ -134,3 +155,9 @@ unsigned char battery_get_percent(void)
 
     return percent>100?100:percent;
 }
+
+unsigned char battery_get_miles(void)
+{
+    return 0;
+}
+

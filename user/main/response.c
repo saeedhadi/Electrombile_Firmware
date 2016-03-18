@@ -518,3 +518,26 @@ int cmd_UpgradeEnd_rsp(const void* msg)
 
     return 0;
 }
+
+int cmd_DeviceInfo_rsp(const void* msg)
+{
+    MSG_DEVICE_INFO_GET_REQ* req = (MSG_DEVICE_INFO_GET_REQ*)msg;
+    MSG_DEVICE_INFO_GET_RSP* rsp = NULL;
+
+    rsp = alloc_rspMsg(req);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc defend rsp message failed!");
+        return -1;
+    }
+    rsp->autolock = setting.isAutodefendFixed;
+    rsp->autoperiod = setting.autodefendPeriod;
+    rsp->defend = setting.isVibrateFixed;
+    rsp->percent = battery_get_percent();
+    rsp->miles = battery_get_miles();
+
+    socket_sendData(rsp,sizeof(MSG_DEVICE_INFO_GET_RSP));
+    return 0;
+}
+
+
