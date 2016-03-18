@@ -20,6 +20,7 @@
 #include "version.h"
 #include "upgrade.h"
 #include "adler32.h"
+#include "data.h"
 #include "fs.h"
 #include "setting.h"
 #include "battery.h"
@@ -233,15 +234,20 @@ int cmd_AutodefendPeriodGet_rsp(const void* msg)
 
 int cmd_Battery_rsp(const void* msg)
 {
-    u8 msgLen = sizeof(MSG_THREAD);
-    MSG_THREAD* battery_msg = allocMsg(msgLen);
+    MSG_BATTERY_RSP* req = (MSG_BATTERY_RSP*)msg;
+    MSG_BATTERY_RSP* rsp = NULL;
 
-    battery_msg->cmd = CMD_THREAD_BATTERY;
-    battery_msg->length = 0;
+    rsp = alloc_rspMsg(&req->header);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc baterry rsp message failed!");
+        return -1;
+    }
+    rsp->percent = battery_get_percent();
+    rsp->miles = 0;
 
-    LOG_DEBUG("send CMD_THREAD_BATTERY to THREAD_BATTERY.");
-
-    sendMsg(THREAD_BATTERY, battery_msg, msgLen);
+    LOG_DEBUG("send battery msg to server:%d",rsp->percent);
+    socket_sendData(rsp, sizeof(MSG_BATTERY_RSP));
 
     return 0;
 }

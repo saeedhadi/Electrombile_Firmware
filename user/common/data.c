@@ -7,6 +7,7 @@
 
 
 #include "data.h"
+#include "math.h"
 
 typedef struct queue
 {
@@ -17,6 +18,7 @@ typedef struct queue
 
 
 QUEUE gps_queue = {0, 0};
+static u32 BatteryVoltage[MAX_VLOTAGE_NUM] = {0};
 
 
 /*
@@ -95,4 +97,40 @@ eat_bool gps_dequeue(GPS* gps)
 int gps_size(void)
 {
     return (gps_queue.rear - gps_queue.front + MAX_GPS_COUNT) % MAX_GPS_COUNT;
+}
+
+/*
+*set the battery's voltage
+*/
+void battery_store_voltage(u32 voltage)
+{
+    static int count = 0;
+
+    if(count >= MAX_VLOTAGE_NUM)
+    {
+        count = 0;
+    }
+
+    BatteryVoltage[count++] = voltage;
+}
+
+/*
+* get the battery's voltage
+*/
+unsigned char battery_get_percent(void)
+{
+#define ADvalue_2_Realvalue(x) x*103/3/1000.f //unit mV, 3K & 100k divider
+#define Voltage2Percent(x) (unsigned char)exp((x-37.873)/2.7927)
+    u32 voltage = 0;
+    int count;
+    unsigned char percent;
+
+    for(count = 0;count < MAX_VLOTAGE_NUM;count++)
+    {
+        voltage += BatteryVoltage[count];
+    }
+
+    percent = Voltage2Percent(ADvalue_2_Realvalue(voltage/MAX_VLOTAGE_NUM));
+
+    return percent>100?100:percent;
 }

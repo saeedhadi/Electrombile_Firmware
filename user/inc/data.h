@@ -20,7 +20,11 @@ eat_bool gps_dequeue(GPS* gps);
 
 int gps_size(void);
 
+unsigned char battery_get_percent(void);
+void battery_store_voltage(u32 voltage);
+
 #define MAX_GPS_COUNT 10
+#define MAX_VLOTAGE_NUM 10
 
 
 #endif /* USER_ELECTROMBILE_DATA_H_ */
