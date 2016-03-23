@@ -19,7 +19,6 @@
 */
 static void battery_event_adc(EatEvent_st *event)
 {
-
     if(event->data.adc.pin == ADC_VOLTAGE)
     {
         battery_store_voltage(event->data.adc.v);

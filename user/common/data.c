@@ -161,7 +161,22 @@ unsigned char battery_get_percent(void)
         voltage += BatteryVoltage[count];
     }
 
-    percent = Voltage2Percent(ADvalue_2_Realvalue(voltage/MAX_VLOTAGE_NUM));
+    voltage /= MAX_VLOTAGE_NUM;
+
+    if(ADvalue_2_Realvalue(voltage) > 53)
+    {
+        voltage = voltage*48/60;    //normalizing to 48V
+    }
+    else if(ADvalue_2_Realvalue(voltage) > 40)
+    {
+        voltage = voltage;
+    }
+    else if(ADvalue_2_Realvalue(voltage) > 28)
+    {
+        voltage = voltage*48/36;    //normalizing to 48V
+    }
+
+    percent = Voltage2Percent(ADvalue_2_Realvalue(voltage));
 
     return percent>100?100:percent;
 }
