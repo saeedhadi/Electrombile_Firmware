@@ -19,21 +19,9 @@
 */
 static void battery_event_adc(EatEvent_st *event)
 {
-#define ADvalue2Readvalue(x) x*103/3/1000.f
     if(event->data.adc.pin == ADC_VOLTAGE)
     {
-        if(ADvalue2Readvalue(event->data.adc.v) > 53)
-        {
-            battery_store_voltage(event->data.adc.v*48/60);//归一化至48V
-        }
-        else if(ADvalue2Readvalue(event->data.adc.v) > 40)
-        {
-            battery_store_voltage(event->data.adc.v);
-        }
-        else if(ADvalue2Readvalue(event->data.adc.v) > 28)
-        {
-            battery_store_voltage(event->data.adc.v*48/36);//归一化至48V
-        }
+        battery_store_voltage(event->data.adc.v);
     }
     else
     {
