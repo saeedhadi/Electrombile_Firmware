@@ -523,24 +523,44 @@ int cmd_DeviceInfo_rsp(const void* msg)
 {
     MSG_DEVICE_INFO_GET_REQ* req = (MSG_DEVICE_INFO_GET_REQ*)msg;
     MSG_DEVICE_INFO_GET_RSP* rsp = NULL;
+    int msgLen;
     LOCAL_GPS* local_gps = gps_get_last();
 
-    rsp = alloc_rspMsg(req);
+    if(local_gps->isGps)    //becaus of auto malloc ram,cant use alloc_rspMsg
+    {
+        msgLen = sizeof(MSG_DEVICE_INFO_GET_RSP);
+    }
+    else
+    {
+        msgLen = sizeof(MSG_DEVICE_INFO_GET_RSP)-sizeof(GPS) + 4*sizeof(short);
+    }
+
+    rsp = eat_mem_alloc(msgLen);
     if (!rsp)
     {
         LOG_ERROR("alloc defend rsp message failed!");
         return -1;
     }
+
+    rsp->header.signature = htons(START_FLAG);
+    rsp->header.cmd = req->cmd;
+    rsp->header.length = htons(msgLen - MSG_HEADER_LEN);
+    rsp->header.seq = req->seq;
+
+    rsp->isGps = local_gps->isGps;
     rsp->autolock = setting.isAutodefendFixed;
     rsp->autoperiod = setting.autodefendPeriod;
     rsp->defend = setting.isVibrateFixed;
     rsp->percent = battery_get_percent();
     rsp->miles = battery_get_miles();
-    rsp->isGps = local_gps->isGps;
 
     if(rsp->isGps)
     {
-        rsp->gps = local_gps->gps;
+        rsp->gps.timestamp = htonl(local_gps->gps.timestamp);
+        rsp->gps.latitude = local_gps->gps.latitude;
+        rsp->gps.longitude = local_gps->gps.longitude;
+        rsp->gps.speed = local_gps->gps.speed;
+        rsp->gps.course = htons(local_gps->gps.course);
     }
     else
     {
@@ -550,7 +570,7 @@ int cmd_DeviceInfo_rsp(const void* msg)
         rsp->cid = htons(local_gps->cellInfo.cell[0].cellid);
     }
 
-    socket_sendData(rsp,sizeof(MSG_DEVICE_INFO_GET_RSP));
+    socket_sendData(rsp,msgLen);
     return 0;
 }
 

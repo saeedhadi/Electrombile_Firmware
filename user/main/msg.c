@@ -59,7 +59,6 @@ void* alloc_rspMsg(const MSG_HEADER* pMsg)
             {CMD_UPGRADE_DATA,  sizeof(MSG_UPGRADE_DATA_RSP)},
             {CMD_UPGRADE_END,   sizeof(MSG_UPGRADE_END_RSP)},
             {CMD_BATTERY,   sizeof(MSG_BATTERY_RSP)},
-            {CMD_DEVICE_INFO_GET,   sizeof(MSG_DEVICE_INFO_GET_RSP)},
     };
 
     for (i = 0; i < sizeof(rsp_msg_length_map) / sizeof(rsp_msg_length_map[0]); i++)

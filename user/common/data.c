@@ -113,8 +113,18 @@ LOCAL_GPS* gps_get_last(void)
 int gps_save_last(LOCAL_GPS* gps)
 {
     last_gps_info.isGps = gps->isGps;
-    last_gps_info.gps = gps->gps;
-    last_gps_info.cellInfo = gps->cellInfo;
+    if(gps->isGps)
+    {
+        last_gps_info.gps.timestamp = gps->gps.timestamp;
+        last_gps_info.gps.latitude = gps->gps.latitude;
+        last_gps_info.gps.longitude = gps->gps.longitude;
+        last_gps_info.gps.speed = gps->gps.speed;
+        last_gps_info.gps.course = gps->gps.course;
+    }
+    else
+    {
+        last_gps_info.cellInfo = gps->cellInfo;
+    }
 
     return EAT_TRUE;
 }

@@ -435,18 +435,6 @@ typedef MSG_HEADER MSG_DEVICE_INFO_GET_REQ;
 typedef struct
 {
     MSG_HEADER header;
-    char isGps;
-    union
-    {
-        GPS gps;        //GPS
-        struct          //CELL
-        {
-            short mcc;
-            short mnc;
-            short lac;
-            short cid;
-        }__attribute__((__packed__));
-    }__attribute__((__packed__));
 
     //auto lock related configuration
     struct
@@ -464,6 +452,20 @@ typedef struct
 
     //defend switch status
     char defend;
+
+    char isGps;
+    union
+    {
+        GPS gps;        //GPS
+        struct          //CELL
+        {
+            short mcc;
+            short mnc;
+            short lac;
+            short cid;
+        }__attribute__((__packed__));
+    }__attribute__((__packed__));
+
 }__attribute__((__packed__)) MSG_DEVICE_INFO_GET_RSP;
 
 /*
