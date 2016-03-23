@@ -556,7 +556,11 @@ int cmd_DeviceInfo_rsp(const void* msg)
 
     if(rsp->isGps)
     {
-        rsp->gps = local_gps->gps;
+        rsp->gps.timestamp = htonl(local_gps->gps.timestamp);
+        rsp->gps.latitude = local_gps->gps.latitude;
+        rsp->gps.longitude = local_gps->gps.longitude;
+        rsp->gps.speed = local_gps->gps.speed;
+        rsp->gps.course = htons(local_gps->gps.course);
     }
     else
     {
