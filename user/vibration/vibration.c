@@ -265,7 +265,6 @@ static void vibration_timer_handler(void)
     static eat_bool isFirstTime = EAT_TRUE;
 
     static int timerCount = 0;
-
     uint8_t transient_src = 0;
 
     avoid_fre_send(EAT_TRUE);
@@ -294,44 +293,39 @@ static void vibration_timer_handler(void)
 
     if(EAT_TRUE == vibration_fixed())
     {
-        timerCount = 0;
-
         if(isMoved && avoid_freq_flag == EAT_FALSE)
         {
-
             avoid_fre_send(EAT_FALSE);
             eat_timer_start(TIMER_MOVE_ALARM, MOVE_TIMER_PERIOD);
             //vibration_sendAlarm();  //bec use displacement judgement , there do not alarm
         }
     }
+
+    if(isMoved)
+    {
+        timerCount = 0;
+        LOG_DEBUG("shake!");
+    }
     else
     {
+        timerCount++;
 
-        if(isMoved)
+        if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
         {
-            timerCount = 0;
-            LOG_DEBUG("timerCount = 0 now !");
-        }
-        else
-        {
-            timerCount++;
-
-            if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
+            if(get_autodefend_state())
             {
-                if(get_autodefend_state())
+                if(EAT_FALSE== vibration_fixed())
                 {
-                    LOG_DEBUG("vibration state auto locked.");
-
                     vivration_AutolockStateSend(EAT_TRUE);    //TODO:send autolock_msg to main thread
-
                     set_vibration_state(EAT_TRUE);
                 }
-
-                vivration_SendItinerarayState(ITINERARY_END);
-
             }
-        }
+            if(ITINERARY_START == itinerary_state())
+            {
+                vivration_SendItinerarayState(ITINERARY_END);
+            }
 
+        }
     }
 
     return;
