@@ -542,6 +542,7 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
     //short temp_cellid, temp_lac;
     int i=0, j=0, count=0;
     double distance = 0;
+    static int timerCount =0;
 
     if(pre_gps->isGps != gps->isGps)
     {
@@ -554,16 +555,27 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
         {
 
             distance = getdistance(pre_gps,gps);
-            if(distance <= 10 ||isMoved == EAT_FALSE)//if the distance change 10m ,push the information of GPS
+            //if the distance change 10m but not float,push the information of GPS
+            if(distance <= 10 ||isMoved == EAT_FALSE)
             {//���û���ƶ����ϱ�gps
                 LOG_DEBUG("GPS is the same. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
                 return EAT_TRUE;
             }
             else
             {
-                itinerary += distance;
-                LOG_DEBUG("GPS is different. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
-                return EAT_FALSE;
+                //avoid appearing the situation that distance always beyond 70
+                if(distance >= 70 && timerCount++ < 5)
+                {
+                    LOG_DEBUG("GPS is floating. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
+                    return EAT_TRUE;
+                }
+                else
+                {
+                    timerCount = 0;
+                    itinerary += distance;
+                    LOG_DEBUG("GPS is different. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
+                    return EAT_FALSE;
+                }
             }
 
         }
