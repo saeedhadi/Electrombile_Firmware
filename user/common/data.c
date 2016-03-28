@@ -188,16 +188,4 @@ unsigned char battery_get_miles(void)
     return 0;
 }
 
-eat_bool isLogin(void)
-{
-    return login_state;
-}
-
-void setLogin(eat_bool isLogin)
-{
-    login_state = isLogin;
-    return;
-}
-
-
 

@@ -315,7 +315,7 @@ static void vibration_timer_handler(void)
         {
             if(get_autodefend_state())
             {
-                if(isLogin() && EAT_FALSE== vibration_fixed())
+                if(EAT_FALSE== vibration_fixed())
                 {
                     vivration_AutolockStateSend(EAT_TRUE);    //TODO:send autolock_msg to main thread
                     set_vibration_state(EAT_TRUE);
