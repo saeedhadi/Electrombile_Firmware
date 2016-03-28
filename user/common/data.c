@@ -21,6 +21,8 @@ static u32 BatteryVoltage[MAX_VLOTAGE_NUM] = {0};
 static LOCAL_GPS last_gps_info;
 static LOCAL_GPS* last_gps = &last_gps_info;
 
+static char login_state = EAT_FALSE;
+
 /*
  * to judge whether the queue is full
  */
@@ -185,4 +187,17 @@ unsigned char battery_get_miles(void)
 {
     return 0;
 }
+
+eat_bool isLogin(void)
+{
+    return login_state;
+}
+
+void setLogin(eat_bool isLogin)
+{
+    login_state = isLogin;
+    return;
+}
+
+
 

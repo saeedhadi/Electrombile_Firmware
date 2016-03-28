@@ -27,6 +27,8 @@ void battery_store_voltage(u32 voltage);
 LOCAL_GPS* gps_get_last(void);
 int gps_save_last(LOCAL_GPS* gps);
 
+eat_bool isLogin(void);
+void setLogin(eat_bool isLogin);
 
 
 
