@@ -13,10 +13,11 @@
  * Changelog
  * 1.0.0: initial framework
  * 1.1.1: add diagnosis function
+ * 1.2.0: add battery, for RC1
  */
 
 #define VERSION_MAJOR   1
-#define VERSION_MINOR   1
+#define VERSION_MINOR   2
 #define VERSION_MICRO   0
 
 #define VERSION_INT(a, b, c)    (a << 16 | b << 8 | c)
