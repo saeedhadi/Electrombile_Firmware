@@ -88,7 +88,6 @@ static eat_bool diag_433Check(void)
  */
 eat_bool diag_check(void)
 {
-    LED_on();
 
     if (!diag_batterCheck())
     {
