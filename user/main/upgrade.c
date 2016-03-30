@@ -296,9 +296,6 @@ int upgrade_do(void)
     app_data_uncompress = eat_mem_alloc(app_dataLen_uncompress);
     rc = upgrade_getAppContent(app_data_uncompress,app_dataLen_uncompress);
 
-    //app_dataLen_decompress = app_dataLen + (app_dataLen / 16) + 64 + 3;
-    lzo1x_decompress(app_data_uncompress,app_dataLen_uncompress,app_data,&app_dataLen,NULL);
-
     if(!rc)
     {
         LOG_DEBUG("get app data success.");
@@ -315,9 +312,17 @@ int upgrade_do(void)
     }
     else
     {
-        LOG_ERROR("get app data failed , and return is %d",app_data);
+        LOG_ERROR("get app data failed!",);
         return -1;
     }
+    rc = lzo_init();
+    if(LZO_E_OK <= rc)
+    {
+        LOG_DEBUG("lzo init successful!");
+    }
+
+    //decompress
+    lzo1x_decompress_safe(app_data_uncompress,app_dataLen_uncompress,app_data,&app_dataLen,NULL);//app_dataLen_decompress = app_dataLen + (app_dataLen / 16) + 64 + 3;
 
     APP_DATA_RUN_BASE = eat_get_app_base_addr(); //get app addr
     LOG_DEBUG("APP_DATA_RUN_BASE : %#x",APP_DATA_RUN_BASE);
