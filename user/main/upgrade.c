@@ -17,6 +17,7 @@
 #include "setting.h"
 #include "log.h"
 #include "error.h"
+#include "minilzo.h"
 
 #define UPGRADE_FILE_NAME  L"C:\\app.bin"
 
@@ -284,16 +285,19 @@ int upgrade_do(void)
     u32 APP_DATA_STORAGE_BASE;  //app data storage addr
     u32 app_space_value;
     unsigned char *app_data;
+    unsigned char *app_data_uncompress;
     unsigned char *addr;
     UINT app_dataLen;
+    UINT app_dataLen_uncompress;
     int rc;
 
-    app_dataLen = upgrade_getAppsize();
+    app_dataLen_uncompress = upgrade_getAppsize();
 
-    app_data = eat_mem_alloc(app_dataLen);
+    app_data_uncompress = eat_mem_alloc(app_dataLen_uncompress);
+    rc = upgrade_getAppContent(app_data_uncompress,app_dataLen_uncompress);
 
-    rc = upgrade_getAppContent(app_data,app_dataLen);
-
+    //app_dataLen_decompress = app_dataLen + (app_dataLen / 16) + 64 + 3;
+    lzo1x_decompress(app_data_uncompress,app_dataLen_uncompress,app_data,&app_dataLen,NULL);
 
     if(!rc)
     {
