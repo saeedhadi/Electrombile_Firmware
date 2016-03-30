@@ -33,7 +33,7 @@ static eat_bool diag_batterCheck(void)
 
     //电池电压介于[36v, 66v]之间
     //FIXME: 根据分压计算区间
-    if (voltage < Realvalue_2_ADvalue(36) || voltage > Realvalue_2_ADvalue(66))// while testing, 10 and 66 is OK
+    if (voltage < Realvalue_2_ADvalue(28) || voltage > Realvalue_2_ADvalue(66))// while testing, 10 and 66 is OK
     {
         LOG_ERROR("battery voltage check failed: %d", voltage);
         return EAT_FALSE;
@@ -44,12 +44,12 @@ static eat_bool diag_batterCheck(void)
 
 
 /*
- * 检测GSM的信号强度是否 > 13
+ * 检测GSM的信号强度是否 > 6
  */
 static eat_bool diag_gsmSignalCheck(void)
 {
     int csq = eat_network_get_csq();
-    if (csq < 13)
+    if (csq < 7)
     {
         LOG_ERROR("GSM signal quality not enough: %d", csq);
         return EAT_FALSE;
