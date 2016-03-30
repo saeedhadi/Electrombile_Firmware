@@ -244,7 +244,7 @@ int cmd_Battery_rsp(const void* msg)
         return -1;
     }
     rsp->percent = battery_get_percent();
-    rsp->miles = 0;
+    rsp->miles = battery_get_miles();
 
     LOG_DEBUG("send battery msg to server:%d",rsp->percent);
     socket_sendData(rsp, sizeof(MSG_BATTERY_RSP));

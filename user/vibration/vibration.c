@@ -1,7 +1,7 @@
 /*
  * vibration.c
  *
- *  Created on: 2015��7��1��
+ *  Created on: 2015??7??1??
  *      Author: jk
  */
 
@@ -16,6 +16,7 @@
 #include "thread_msg.h"
 #include "setting.h"
 #include "mma8652.h"
+#include "led.h"
 
 #define MAX_MOVE_DATA_LEN   500
 #define MOVE_TIMER_PERIOD    10
@@ -342,6 +343,7 @@ void app_vibration_thread(void *data)
 	ret = mma8652_init();
 	if (!ret)
 	{
+        LED_off();
         LOG_ERROR("mma8652 init failed");
 	}
 	else
