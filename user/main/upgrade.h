@@ -14,6 +14,6 @@ int upgrade_do(void);
 
 int upgrade_CheckAppfile(int req_size,int req_checksum);
 
-
+void upgrade_DeleteOldApp(void);
 
 #endif /* USER_MAIN_UPGRADE_H_ */

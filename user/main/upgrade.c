@@ -17,8 +17,27 @@
 #include "setting.h"
 #include "log.h"
 #include "error.h"
+#include "utils.h"
+#include "minilzo.h"
+#include "mem.h"
 
 #define UPGRADE_FILE_NAME  L"C:\\app.bin"
+
+void upgrade_DeleteOldApp(void)
+{
+    int rc;
+    rc = eat_fs_Delete(UPGRADE_FILE_NAME);
+    if(EAT_FS_NO_ERROR != rc && EAT_FS_FILE_NOT_FOUND !=rc)
+    {
+        LOG_ERROR("delete app file failed , and return is %d",rc);
+        return ;
+    }
+    else
+    {
+        LOG_DEBUG("delete old app file success");
+    }
+}
+
 
 static UINT upgrade_getAppsize(void)
 {
@@ -42,7 +61,7 @@ static UINT upgrade_getAppsize(void)
     {
         LOG_ERROR("get file size error , and return error is :%d",rc);
         eat_fs_Close(FileHandle);
-        return -1;
+        return 0;
     }
     else
     {
@@ -56,7 +75,7 @@ static UINT upgrade_getAppsize(void)
 
 
 
-static int upgrade_getAppContent(u8 * app_buf,UINT filesize)
+static int upgrade_getAppContent(char * app_buf,UINT filesize)
 {
     FS_HANDLE FileHandle;
     int rc = 0;
@@ -97,7 +116,7 @@ int upgrade_CheckAppfile(int req_size,int req_checksum)
 {
     int filesize = 0;
     int checksum = 0;
-    unsigned char* app_buf = NULL;
+    char* app_buf = NULL;
     int rc = 0;
 
     LOG_DEBUG("req->size: %d , req->checksum: %u",req_size,req_checksum);
@@ -122,7 +141,7 @@ int upgrade_CheckAppfile(int req_size,int req_checksum)
     }
     else
     {
-        app_buf = eat_mem_alloc(filesize);
+        app_buf = malloc(filesize);
         if (!app_buf)
         {
             LOG_ERROR("alloc app_buf error!");
@@ -139,7 +158,7 @@ int upgrade_CheckAppfile(int req_size,int req_checksum)
         {
             LOG_DEBUG("get app data success.");
 
-            checksum = adler32(app_buf,filesize);
+            checksum = adler32(app_buf, filesize);
             LOG_DEBUG("appLen:%d,checksum:%u",filesize,checksum);
 
             if(req_checksum != checksum)
@@ -267,6 +286,44 @@ int upgrade_appendFile(int offset, char* data,  unsigned int length)
 
 }
 
+static int upgrade_execute(const void *data, unsigned int len)
+{
+    u32 APP_DATA_RUN_BASE;  //app run addr
+    u32 APP_DATA_STORAGE_BASE;  //app data storage addr
+    u32 app_space_value;
+
+    eat_bool rc;
+
+
+    APP_DATA_RUN_BASE = eat_get_app_base_addr(); //get app addr
+    LOG_DEBUG("APP_DATA_RUN_BASE : %#x",APP_DATA_RUN_BASE);
+
+    app_space_value = eat_get_app_space();  //get app space size
+    LOG_DEBUG("app_space_value : %#x", app_space_value);
+
+    APP_DATA_STORAGE_BASE = APP_DATA_RUN_BASE + (app_space_value>>1);//second half is space use to storage app_upgrade_data
+
+
+    rc = eat_flash_erase((void*)APP_DATA_STORAGE_BASE , len);//erase the flash to write new app_data_storage
+    if(EAT_FALSE == rc)
+    {
+        LOG_ERROR("Erase flash failed [0x%08x, %dKByte]", APP_DATA_STORAGE_BASE,  len / 1024);
+        return rc;
+    }
+
+    rc = eat_flash_write((void*)APP_DATA_STORAGE_BASE , data , len);//write the new app_data_storage
+    if(EAT_FALSE == rc)
+    {
+        LOG_ERROR("Write Flash Failed.");
+        return rc;
+    }
+
+    //upgrade app
+    eat_update_app((void*)(APP_DATA_RUN_BASE),(void*)(APP_DATA_STORAGE_BASE), len, EAT_PIN_NUM, EAT_PIN_NUM,EAT_FALSE);
+
+    return EAT_TRUE;
+}
+
 /*
  * Function :upgrade_do
  * Description:Perform the upgrade process.
@@ -280,77 +337,65 @@ int upgrade_appendFile(int offset, char* data,  unsigned int length)
  */
 int upgrade_do(void)
 {
-    u32 APP_DATA_RUN_BASE;  //app run addr
-    u32 APP_DATA_STORAGE_BASE;  //app data storage addr
-    u32 app_space_value;
-    unsigned char *app_data;
-    unsigned char *addr;
-    UINT app_dataLen;
+    char *app_data = 0;
+    char *app_data_uncompress = 0;
+    UINT app_dataLen = 0;
+    UINT app_dataLen_uncompress = 0;
+
     int rc;
 
-    app_dataLen = upgrade_getAppsize();
+    app_dataLen_uncompress = upgrade_getAppsize();
+    if (app_dataLen_uncompress == 0)
+    {
+        LOG_ERROR("get app file size error");
+        return -1;
+    }
 
-    app_data = eat_mem_alloc(app_dataLen);
+    app_data_uncompress = malloc(app_dataLen_uncompress);
+    if (!app_dataLen_uncompress)
+    {
+        LOG_DEBUG("alloc failed");
+        return -1;
+    }
 
-    rc = upgrade_getAppContent(app_data,app_dataLen);
+    rc = upgrade_getAppContent(app_data_uncompress, app_dataLen_uncompress);
 
-
-    if(!rc)
+    if(rc == SUCCESS)
     {
         LOG_DEBUG("get app data success.");
-        rc = eat_fs_Delete(UPGRADE_FILE_NAME);
-        if(EAT_FS_NO_ERROR != rc && EAT_FS_FILE_NOT_FOUND !=rc)
-        {
-            LOG_ERROR("delete app file failed , and return is %d",rc);
-            return -1;
-        }
-        else
-        {
-            LOG_DEBUG("delete old app file success");
-        }
     }
     else
     {
-        LOG_ERROR("get app data failed , and return is %d",app_data);
+        LOG_ERROR("get app data failed!",);
         return -1;
     }
 
-    APP_DATA_RUN_BASE = eat_get_app_base_addr(); //get app addr
-    LOG_DEBUG("APP_DATA_RUN_BASE : %#x",APP_DATA_RUN_BASE);
 
-    app_space_value = eat_get_app_space();  //get app space size
-    LOG_DEBUG("app_space_value : %#x",app_space_value);
-
-    APP_DATA_STORAGE_BASE = APP_DATA_RUN_BASE + (app_space_value>>1);//second half is space use to storage app_upgrade_data
-
-    addr = (unsigned char *)(APP_DATA_STORAGE_BASE);
-
-    rc = eat_flash_erase(addr , app_dataLen);//erase the flash to write new app_data_storage
-    if(EAT_FALSE == rc)
+    app_dataLen = app_dataLen_uncompress * 2;
+    app_data = malloc(app_dataLen);
+    if (!app_data)
     {
-        LOG_ERROR("Erase flash failed [0x%08x, %dKByte],error is %d", APP_DATA_STORAGE_BASE,  app_dataLen/1024,rc);
+        LOG_DEBUG("alloc failed");
+        free(app_data_uncompress);
         return -1;
     }
-    else
+    //decompress
+    rc = miniLZO_decompress(app_data_uncompress, app_dataLen_uncompress, app_data, &app_dataLen);
+    if(rc < LZO_E_OK)
     {
-        LOG_DEBUG("Erase flash success [0x%08x, %dKByte].return is %d", APP_DATA_STORAGE_BASE,  app_dataLen/1024,rc);
-    }
-
-    rc = eat_flash_write(addr , app_data , app_dataLen);//write the new app_data_storage
-    if(EAT_FALSE == rc)
-    {
-        LOG_ERROR("Write Flash Failed.");
+        LOG_ERROR("decompress error %d",rc);
+        free(app_data_uncompress);
+        free(app_data);
         return -1;
     }
-    else
+
+    if (upgrade_execute(app_data, app_dataLen) != EAT_TRUE)
     {
-        LOG_DEBUG("Write Flash success,ready to upgrade app...");
+        LOG_ERROR("execute update failed");
     }
 
-    eat_mem_free(app_data);
-
-    //upgrade app
-    eat_update_app((void*)(APP_DATA_RUN_BASE),(void*)(APP_DATA_STORAGE_BASE), app_dataLen, EAT_PIN_NUM, EAT_PIN_NUM,EAT_FALSE);
+    free(app_data_uncompress);
+    free(app_data);
 
     return 0;
 }

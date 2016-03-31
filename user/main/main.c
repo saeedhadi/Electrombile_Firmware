@@ -27,11 +27,13 @@
 #include "log.h"
 #include "fs.h"
 #include "version.h"
+#include "minilzo.h"
+
 /********************************************************************
  * Macros
  ********************************************************************/
 #define EAT_UART_RX_BUF_LEN_MAX 2048
-#define EAT_MEM_MAX_SIZE 100*1024
+#define EAT_MEM_MAX_SIZE 300*1024
 
 /********************************************************************
  * Types
@@ -134,6 +136,11 @@ void app_main(void *data)
     if (!rc)
     {
     	LOG_ERROR("eat memory initial error:%d!", rc);
+        return;
+    }
+
+    if (lzo_init() != LZO_E_OK)
+    {
         return;
     }
 
