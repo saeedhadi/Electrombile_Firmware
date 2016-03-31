@@ -315,11 +315,6 @@ int upgrade_do(void)
         LOG_ERROR("get app data failed!",);
         return -1;
     }
-    rc = lzo_init();
-    if(LZO_E_OK <= rc)
-    {
-        LOG_DEBUG("lzo init successful!");
-    }
 
     //decompress
     lzo1x_decompress_safe(app_data_uncompress,app_dataLen_uncompress,app_data,&app_dataLen,NULL);//app_dataLen_decompress = app_dataLen + (app_dataLen / 16) + 64 + 3;
