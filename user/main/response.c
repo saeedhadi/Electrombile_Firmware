@@ -9,6 +9,7 @@
 
 
 #include <eat_interface.h>
+#include <eat_mem.h>
 
 #include "response.h"
 #include "msg.h"
@@ -134,6 +135,7 @@ int cmd_Location_rsp(const void* msgLocation)
 
     LOG_DEBUG("send CMD_THREAD_LOCATION to THREAD_GPS.");
     sendMsg(THREAD_GPS, msg, msgLen);
+    eat_mem_free((void*)msgLocation);
 
     return 0;
 }
