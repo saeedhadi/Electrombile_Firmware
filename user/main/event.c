@@ -234,7 +234,6 @@ static int threadCmd_Itinerary(const MSG_THREAD* msg)
 
     if(msg_data->itinerary <= 0)
     {
-        free_msg((void *)msg);
         LOG_DEBUG("miles is 0,do not send msg!");
         return 0;
     }
