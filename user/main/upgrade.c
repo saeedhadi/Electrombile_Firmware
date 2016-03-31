@@ -322,15 +322,22 @@ int upgrade_do(void)
         LOG_ERROR("get app data failed!",);
         return -1;
     }
+
+
     app_dataLen = app_dataLen_uncompress*2;
     app_data = eat_mem_alloc(app_dataLen);
     if (!app_data)
     {
         LOG_DEBUG("alloc failed");
+        free(app_data_uncompress);
         return -1;
     }
     //decompress
-    miniLZO_decompress(app_data_uncompress,app_dataLen_uncompress,app_data,&app_dataLen);
+    rc = miniLZO_decompress(app_data_uncompress,app_dataLen_uncompress,app_data,&app_dataLen);
+    if(rc < LZO_E_OK)
+    {
+        LOG_ERROR("decompress error %d",rc);
+    }
     //lzo1x_decompress_safe(app_data_uncompress,app_dataLen_uncompress,app_data,&app_dataLen,NULL);//app_dataLen_decompress = app_dataLen + (app_dataLen / 16) + 64 + 3;
 
     APP_DATA_RUN_BASE = eat_get_app_base_addr(); //get app addr
@@ -347,6 +354,8 @@ int upgrade_do(void)
     if(EAT_FALSE == rc)
     {
         LOG_ERROR("Erase flash failed [0x%08x, %dKByte],error is %d", APP_DATA_STORAGE_BASE,  app_dataLen/1024,rc);
+        eat_mem_free(app_data_uncompress);
+        eat_mem_free(app_data);
         return -1;
     }
     else
@@ -358,12 +367,15 @@ int upgrade_do(void)
     if(EAT_FALSE == rc)
     {
         LOG_ERROR("Write Flash Failed.");
+        eat_mem_free(app_data_uncompress);
+        eat_mem_free(app_data);
         return -1;
     }
     else
     {
         LOG_DEBUG("Write Flash success,ready to upgrade app...");
     }
+
     eat_mem_free(app_data_uncompress);
     eat_mem_free(app_data);
 

@@ -114,6 +114,6 @@ int miniLZO_compress(const char* src, int src_len, char* dst, int dst_len)
  */
 int miniLZO_decompress(const char* src, int src_len, char* dst, int* dst_len)
 {
-    return lzo1x_decompress(src, src_len, dst, dst_len, NULL);
+    return lzo1x_decompress_safe(src, src_len, dst, dst_len, NULL);
 }
 
