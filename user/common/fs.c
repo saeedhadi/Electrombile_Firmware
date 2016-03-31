@@ -79,7 +79,7 @@ static int fs_ls(const unsigned char* cmdString, unsigned short length)
     rc = eat_fs_GetDiskFreeSize(EAT_FS, &size);
     if (rc == EAT_FS_NO_ERROR)
     {
-        print("\t free disk size:%ld\r\n", size);
+        print("\t free disk size:%lld\r\n", size);
     }
     else
     {
