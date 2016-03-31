@@ -17,6 +17,7 @@
 #include "setting.h"
 #include "log.h"
 #include "error.h"
+#include "utils.h"
 #include "minilzo.h"
 
 #define UPGRADE_FILE_NAME  L"C:\\app.bin"
@@ -294,6 +295,12 @@ int upgrade_do(void)
     app_dataLen_uncompress = upgrade_getAppsize();
 
     app_data_uncompress = eat_mem_alloc(app_dataLen_uncompress);
+    if (!app_dataLen_uncompress)
+    {
+        LOG_DEBUG("alloc failed");
+        return -1;
+    }
+
     rc = upgrade_getAppContent(app_data_uncompress,app_dataLen_uncompress);
 
     if(!rc)
@@ -315,9 +322,16 @@ int upgrade_do(void)
         LOG_ERROR("get app data failed!",);
         return -1;
     }
-
+    app_dataLen = app_dataLen_uncompress*2;
+    app_data = eat_mem_alloc(app_dataLen);
+    if (!app_data)
+    {
+        LOG_DEBUG("alloc failed");
+        return -1;
+    }
     //decompress
-    lzo1x_decompress_safe(app_data_uncompress,app_dataLen_uncompress,app_data,&app_dataLen,NULL);//app_dataLen_decompress = app_dataLen + (app_dataLen / 16) + 64 + 3;
+    miniLZO_decompress(app_data_uncompress,app_dataLen_uncompress,app_data,&app_dataLen);
+    //lzo1x_decompress_safe(app_data_uncompress,app_dataLen_uncompress,app_data,&app_dataLen,NULL);//app_dataLen_decompress = app_dataLen + (app_dataLen / 16) + 64 + 3;
 
     APP_DATA_RUN_BASE = eat_get_app_base_addr(); //get app addr
     LOG_DEBUG("APP_DATA_RUN_BASE : %#x",APP_DATA_RUN_BASE);
@@ -350,7 +364,7 @@ int upgrade_do(void)
     {
         LOG_DEBUG("Write Flash success,ready to upgrade app...");
     }
-
+    eat_mem_free(app_data_uncompress);
     eat_mem_free(app_data);
 
     //upgrade app
