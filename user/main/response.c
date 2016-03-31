@@ -426,6 +426,7 @@ int cmd_UpgradeStart_rsp(const void* msg)
     }
     else
     {
+        upgrade_DeleteOldApp();
         freeDiskSize = fs_getDiskFreeSize();
         if (ntohl(req->size) >= freeDiskSize)      //TODO: equal is not enough, maybe should reserve some disk space
         {

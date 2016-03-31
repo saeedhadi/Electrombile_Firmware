@@ -23,6 +23,22 @@
 
 #define UPGRADE_FILE_NAME  L"C:\\app.bin"
 
+void upgrade_DeleteOldApp(void)
+{
+    int rc;
+    rc = eat_fs_Delete(UPGRADE_FILE_NAME);
+    if(EAT_FS_NO_ERROR != rc && EAT_FS_FILE_NOT_FOUND !=rc)
+    {
+        LOG_ERROR("delete app file failed , and return is %d",rc);
+        return ;
+    }
+    else
+    {
+        LOG_DEBUG("delete old app file success");
+    }
+}
+
+
 static UINT upgrade_getAppsize(void)
 {
     FS_HANDLE FileHandle;
@@ -347,16 +363,6 @@ int upgrade_do(void)
     if(rc == SUCCESS)
     {
         LOG_DEBUG("get app data success.");
-        rc = eat_fs_Delete(UPGRADE_FILE_NAME);
-        if(EAT_FS_NO_ERROR != rc && EAT_FS_FILE_NOT_FOUND !=rc)
-        {
-            LOG_ERROR("delete app file failed , and return is %d",rc);
-            return -1;
-        }
-        else
-        {
-            LOG_DEBUG("delete old app file success");
-        }
     }
     else
     {
