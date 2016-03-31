@@ -514,5 +514,5 @@ int cmd_UpgradeEnd_rsp(const void* msg)
         rc = upgrade_do();
     }
 
-    return 0;
+    return rc;
 }
