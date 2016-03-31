@@ -112,7 +112,7 @@ int miniLZO_compress(const char* src, int src_len, char* dst, int dst_len)
  *  0: success
  *  other: fail(refer to lzoconf.h)
  */
-int miniLZO_decompress(const char* src, int src_len, char* dst, int* dst_len)
+int miniLZO_decompress(const char* src, unsigned int src_len, char* dst, unsigned int* dst_len)
 {
     return lzo1x_decompress_safe(src, src_len, dst, dst_len, NULL);
 }

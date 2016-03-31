@@ -16,6 +16,6 @@ void ascii2unicode(unsigned short* out, const unsigned char* in);
 void unicode2ascii(unsigned char* out, const unsigned short* in);
 
 int miniLZO_compress(const char* src, int src_len, char* dst, int dst_len);
-int miniLZO_decompress(const char* src, int src_len, char* dst, int* dst_len);
+int miniLZO_decompress(const char* src, unsigned int src_len, char* dst, unsigned int* dst_len);
 
 #endif /* USER_INC_UTILS_H_ */
