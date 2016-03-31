@@ -31,9 +31,9 @@ static eat_bool diag_batterCheck(void)
         return EAT_FALSE;
     }
 
-    //电池电压介于[36v, 66v]之间
+    //电池电压介于[28v, 66v]之间
     //FIXME: 根据分压计算区间
-    if (voltage < Realvalue_2_ADvalue(36) || voltage > Realvalue_2_ADvalue(66))// while testing, 10 and 66 is OK
+    if (voltage < Realvalue_2_ADvalue(28) || voltage > Realvalue_2_ADvalue(66))// while testing, 10 and 66 is OK
     {
         LOG_ERROR("battery voltage check failed: %d", voltage);
         return EAT_FALSE;
@@ -44,12 +44,12 @@ static eat_bool diag_batterCheck(void)
 
 
 /*
- * 检测GSM的信号强度是否 > 13
+ * 检测GSM的信号强度是否 > 6
  */
 static eat_bool diag_gsmSignalCheck(void)
 {
     int csq = eat_network_get_csq();
-    if (csq < 13)
+    if (csq < 7)
     {
         LOG_ERROR("GSM signal quality not enough: %d", csq);
         return EAT_FALSE;
@@ -73,8 +73,8 @@ static eat_bool diag_433Check(void)
         return EAT_FALSE;
     }
 
-    //检查433信号强度是否在[100mv, 300mv]之间
-    if (voltage < 100 || voltage > 600)
+    //检查433信号强度是否在[100mv, 1000mv]之间
+    if (voltage < 100 || voltage > 1000)
     {
         LOG_ERROR("433 signal quality not enough: %d", voltage);
         return EAT_FALSE;
@@ -88,7 +88,6 @@ static eat_bool diag_433Check(void)
  */
 eat_bool diag_check(void)
 {
-    LED_on();
 
     if (!diag_batterCheck())
     {

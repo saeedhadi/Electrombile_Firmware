@@ -1,7 +1,7 @@
 /*
  * msg.c
  *
- *  Created on: 2015��7��8��
+ *  Created on: 2015??7??8??
  *      Author: jk
  */
 #include <eat_interface.h>
@@ -50,7 +50,6 @@ void* alloc_rspMsg(const MSG_HEADER* pMsg)
             {CMD_GET_PERIOD,    sizeof(MSG_AUTODEFEND_PERIOD_GET_RSP)},
 
             {CMD_SET_TIMER,   sizeof(MSG_SET_TIMER_RSP)},
-            {CMD_ITINERARY,   sizeof(MSG_ITINERARY_REQ)},
             {CMD_DEFEND_ON,   sizeof(MSG_DEFEND_RSP)},
             {CMD_DEFEND_OFF,   sizeof(MSG_DEFEND_RSP)},
             {CMD_DEFEND_GET,   sizeof(MSG_DEFEND_RSP)},
