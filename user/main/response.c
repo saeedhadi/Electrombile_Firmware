@@ -244,7 +244,7 @@ int cmd_Battery_rsp(const void* msg)
         return -1;
     }
     rsp->percent = battery_get_percent();
-    rsp->miles = 0;
+    rsp->miles = battery_get_miles();
 
     LOG_DEBUG("send battery msg to server:%d",rsp->percent);
     socket_sendData(rsp, sizeof(MSG_BATTERY_RSP));
@@ -428,6 +428,7 @@ int cmd_UpgradeStart_rsp(const void* msg)
     }
     else
     {
+        upgrade_DeleteOldApp();
         freeDiskSize = fs_getDiskFreeSize();
         if (ntohl(req->size) >= freeDiskSize)      //TODO: equal is not enough, maybe should reserve some disk space
         {
@@ -516,7 +517,7 @@ int cmd_UpgradeEnd_rsp(const void* msg)
         rc = upgrade_do();
     }
 
-    return 0;
+    return rc;
 }
 
 int cmd_DeviceInfo_rsp(const void* msg)
