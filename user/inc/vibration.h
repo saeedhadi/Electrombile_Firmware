@@ -6,11 +6,7 @@
  */
 #ifndef ELECTROMBILE_FIRMWARE_VIBRATION_H
 #define ELECTROMBILE_FIRMWARE_VIBRATION_H
-typedef enum
-{
-	ITINERARY_START,
-	ITINERARY_END
-}ITINERARY_STATE;
+
 
 void app_vibration_thread(void *data);
 

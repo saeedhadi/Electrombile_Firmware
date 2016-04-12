@@ -12,6 +12,12 @@
 #include "protocol.h"
 #include "thread_msg.h"
 
+typedef enum
+{
+	ITINERARY_START,
+	ITINERARY_END
+}ITINERARY_STATE;
+
 eat_bool gps_isQueueFull(void);
 eat_bool gps_isQueueEmpty(void);
 
@@ -26,6 +32,10 @@ void battery_store_voltage(u32 voltage);
 
 LOCAL_GPS* gps_get_last(void);
 int gps_save_last(LOCAL_GPS* gps);
+
+char itinerary_state(void);
+void set_itinerary_state(char state);
+
 
 
 #define MAX_GPS_COUNT 10
