@@ -25,6 +25,7 @@
 #define MOVE_THRESHOLD 5
 
 static eat_bool avoid_freq_flag = EAT_FALSE;
+static int AlarmCount = 0;
 
 eat_bool isMoved = EAT_FALSE;
 
@@ -69,16 +70,22 @@ static eat_bool vivration_AutolockStateSend(eat_bool state)
 static eat_bool vibration_sendAlarm(void)
 {
     u8 msgLen = sizeof(MSG_THREAD) + 1;
-    MSG_THREAD* msg = allocMsg(msgLen);
-    unsigned char* alarmType = (unsigned char*)msg->data;
+    MSG_THREAD* msg = NULL;
+    unsigned char* alarmType = NULL;
 
-    msg->cmd = CMD_THREAD_VIBRATE;
-    msg->length = 1;
-    *alarmType = ALARM_VIBRATE;
+    if(AlarmCount++ <= 3)
+    {
+        msg = allocMsg(msgLen);
+        alarmType = (unsigned char*)msg->data;
 
-    LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
-    avoid_freq_flag = EAT_TRUE;
-    return sendMsg(THREAD_MAIN, msg, msgLen);
+        msg->cmd = CMD_THREAD_VIBRATE;
+        msg->length = 1;
+        *alarmType = ALARM_VIBRATE;
+
+        LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
+        avoid_freq_flag = EAT_TRUE;
+        return sendMsg(THREAD_MAIN, msg, msgLen);
+    }
 }
 
 /*
@@ -311,9 +318,15 @@ static void vibration_timer_handler(void)
                     set_vibration_state(EAT_TRUE);
                 }
             }
+
             if(ITINERARY_START == get_itinerary_state())
             {
                 vivration_SendItinerarayState(ITINERARY_END);
+            }
+
+            if(AlarmCount > 0)
+            {
+                AlarmCount = 0;
             }
 
         }
