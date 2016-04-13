@@ -35,7 +35,9 @@ int gps_save_last(LOCAL_GPS* gps);
 
 char itinerary_state(void);
 void set_itinerary_state(char state);
-
+int getVibrationTime(void);
+int VibrationTimeAdd(void);
+int ResetVibrationTime(void);
 
 
 #define MAX_GPS_COUNT 10

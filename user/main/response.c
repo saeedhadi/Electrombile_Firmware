@@ -290,6 +290,7 @@ int cmd_DefendOff_rsp(const void* msg)
 
     LOG_DEBUG("set defend switch off.");
 
+    ResetVibrationTime();
     set_vibration_state(EAT_FALSE);
     if(EAT_FALSE != vibration_fixed())
     {
