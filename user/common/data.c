@@ -21,7 +21,7 @@ static u32 BatteryVoltage[MAX_VLOTAGE_NUM] = {0};
 static LOCAL_GPS last_gps_info;
 static LOCAL_GPS* last_gps = &last_gps_info;
 static char isItineraryStart = ITINERARY_END;
-
+int VibrationTime = 0;
 
 /*
  * to judge whether the queue is full
@@ -186,6 +186,28 @@ unsigned char battery_get_percent(void)
 unsigned char battery_get_miles(void)
 {
     return 0;
+}
+
+/*
+*vibration time ,for autolock & initerary
+*/
+int getVibrationTime(void)
+{
+    return VibrationTime;
+}
+/*
+*Add once a sec
+*/
+int VibrationTimeAdd(void)
+{
+    VibrationTime++;
+}
+/*
+*if move or set defendoff ,reset the time
+*/
+int ResetVibrationTime(void)
+{
+    VibrationTime = 0;
 }
 
 char get_itinerary_state(void)

@@ -294,18 +294,18 @@ static void vibration_timer_handler(void)
 
     if(isMoved)
     {
-        timerCount = 0;
+        ResetVibrationTime();
         LOG_DEBUG("shake!");
     }
     else
     {
-        timerCount++;
+        VibrationTimeAdd();
 
-        if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
+        if(getVibrationTime() * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
         {
             if(get_autodefend_state())
             {
-                if(EAT_FALSE== vibration_fixed())
+                if(EAT_FALSE == vibration_fixed())
                 {
                     vivration_AutolockStateSend(EAT_TRUE);    //TODO:send autolock_msg to main thread
                     set_vibration_state(EAT_TRUE);
