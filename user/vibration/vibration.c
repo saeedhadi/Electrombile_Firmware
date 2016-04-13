@@ -17,6 +17,7 @@
 #include "setting.h"
 #include "mma8652.h"
 #include "led.h"
+#include "data.h"
 
 #define MAX_MOVE_DATA_LEN   500
 #define MOVE_TIMER_PERIOD    10
@@ -24,19 +25,8 @@
 #define MOVE_THRESHOLD 5
 
 static eat_bool avoid_freq_flag = EAT_FALSE;
-static int isItineraryStart = ITINERARY_END;
 
 eat_bool isMoved = EAT_FALSE;
-
-static char itinerary_state(void)
-{
-    return isItineraryStart;
-}
-
-static void set_itinerary_state(char state)
-{
-    isItineraryStart = state;
-}
 
 void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
 {
@@ -175,7 +165,7 @@ static void move_alarm_timer_handler()
                     LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, x_data[i]);
                 }
 
-                if(ITINERARY_END == itinerary_state())
+                if(ITINERARY_END == get_itinerary_state())
                 {
                     vivration_SendItinerarayState(ITINERARY_START);
                 }
@@ -198,7 +188,7 @@ static void move_alarm_timer_handler()
                     LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, y_data[i]);
                 }
 
-                if(ITINERARY_END == itinerary_state())
+                if(ITINERARY_END == get_itinerary_state())
                 {
                     vivration_SendItinerarayState(ITINERARY_START);
                 }
@@ -224,7 +214,7 @@ static void move_alarm_timer_handler()
                     LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, z_data[i]);
                 }
 
-                if(ITINERARY_END == itinerary_state())
+                if(ITINERARY_END == get_itinerary_state())
                 {
                     vivration_SendItinerarayState(ITINERARY_START);
                 }
@@ -321,7 +311,7 @@ static void vibration_timer_handler(void)
                     set_vibration_state(EAT_TRUE);
                 }
             }
-            if(ITINERARY_START == itinerary_state())
+            if(ITINERARY_START == get_itinerary_state())
             {
                 vivration_SendItinerarayState(ITINERARY_END);
             }

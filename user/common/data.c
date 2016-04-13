@@ -20,6 +20,8 @@ static QUEUE gps_queue = {0, 0};
 static u32 BatteryVoltage[MAX_VLOTAGE_NUM] = {0};
 static LOCAL_GPS last_gps_info;
 static LOCAL_GPS* last_gps = &last_gps_info;
+static char isItineraryStart = ITINERARY_END;
+
 
 /*
  * to judge whether the queue is full
@@ -185,4 +187,15 @@ unsigned char battery_get_miles(void)
 {
     return 0;
 }
+
+char get_itinerary_state(void)
+{
+    return isItineraryStart;
+}
+
+void set_itinerary_state(char state)
+{
+    isItineraryStart = state;
+}
+
 

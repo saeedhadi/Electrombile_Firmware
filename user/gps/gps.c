@@ -25,6 +25,7 @@
 #include "rtc.h"
 #include "data.h"
 #include "utils.h"
+#include "mem.h"
 
 #define TIMER_GPS_PERIOD (5 * 1000)
 #define EARTH_RADIUS 6378137 //radius of our earth unit :  m
@@ -141,7 +142,7 @@ static void gps_ItinerarayHandler(const MSG_THREAD* msg)
         gps_ResetMileage();
         starttime = rtc_getTimestamp();
     }
-    else if(ITINERARY_END == msg_state->state && starttime)
+    else if(ITINERARY_END == msg_state->state && 0 != starttime)
     {
         LOG_DEBUG("itinerary end");
         gps_MileageSend(starttime,rtc_getTimestamp(),(int)itinerary);
@@ -149,7 +150,8 @@ static void gps_ItinerarayHandler(const MSG_THREAD* msg)
     }
     else
     {
-        LOG_DEBUG("Itinerary error , set state to default");
+        LOG_ERROR("Itinerary error , set state to default");
+        set_itinerary_state(ITINERARY_END);
         starttime = 0;
     }
 
@@ -210,6 +212,7 @@ void app_gps_thread(void *data)
                     case CMD_THREAD_LOCATION:
                         LOG_DEBUG("gps get CMD_THREAD_LOCATION.");
                         location_handler(CMD_THREAD_LOCATION);
+                        free((void*)msg);
                         break;
 
                     case CMD_THREAD_ITINERARY:
@@ -241,7 +244,7 @@ static void gps_timer_handler(u8 cmd)
     {
         LOG_INFO("GPS is not fixed.");
     }
-     //��ʱ�������ͻ�վ��Ϣ
+     //????????????????
     /*else if(gps_isCellGet())
     {
         LOG_DEBUG("send cells.");
@@ -415,7 +418,7 @@ static void gps_at_read_handler(void)
 {
     unsigned char *buf_p1 = NULL;
     unsigned char *buf_p2 = NULL;
-    unsigned char  buf[READ_BUFF_SIZE] = {0};  //���ڶ�ȡATָ�����Ӧ
+    unsigned char  buf[READ_BUFF_SIZE] = {0};  //??????AT???????
     unsigned int len = 0;
     unsigned int count = 0, cellCount = 0;
     double gpstimes = 0.0;
@@ -557,7 +560,7 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
             distance = getdistance(pre_gps,gps);
             //if the distance change 10m but not float,push the information of GPS
             if(distance <= 10 ||isMoved == EAT_FALSE)
-            {//���û���ƶ����ϱ�gps
+            {//??????????????gps
                 LOG_DEBUG("GPS is the same. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
                 return EAT_TRUE;
             }
