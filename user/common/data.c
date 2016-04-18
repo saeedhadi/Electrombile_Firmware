@@ -1,7 +1,7 @@
 /*
  * data.c
  *
- *  Created on: 2015��7��9��
+ *  Created on: 2015??7??9??
  *      Author: jk
  */
 
@@ -20,6 +20,7 @@ static QUEUE gps_queue = {0, 0};
 static u32 BatteryVoltage[MAX_VLOTAGE_NUM] = {0};
 static LOCAL_GPS last_gps_info;
 static LOCAL_GPS* last_gps = &last_gps_info;
+
 static char isItineraryStart = ITINERARY_END;
 int VibrationTime = 0;
 

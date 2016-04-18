@@ -112,9 +112,9 @@ static eat_bool vivration_SendItinerarayState(char state)
     msg_state->state = state;
 
     LOG_DEBUG("send itinerary state msg to GPS_thread:%d",state);
+    set_itinerary_state(state);
     ret = sendMsg(THREAD_GPS, msg, msgLen);
 
-    set_itinerary_state(state);
 
     return ret;
 }
@@ -289,14 +289,12 @@ static void vibration_timer_handler(void)
         isMoved = EAT_FALSE;
     }
 
-    if(EAT_TRUE == vibration_fixed())
+    //always to judge if need to alarm , just judge the defend state before send alarm
+    if(isMoved && avoid_freq_flag == EAT_FALSE)
     {
-        if(isMoved && avoid_freq_flag == EAT_FALSE)
-        {
-            avoid_fre_send(EAT_FALSE);
-            eat_timer_start(TIMER_MOVE_ALARM, MOVE_TIMER_PERIOD);
-            //vibration_sendAlarm();  //bec use displacement judgement , there do not alarm
-        }
+        avoid_fre_send(EAT_FALSE);
+        eat_timer_start(TIMER_MOVE_ALARM, MOVE_TIMER_PERIOD);
+        //vibration_sendAlarm();  //bec use displacement judgement , there do not alarm
     }
 
     if(isMoved)
