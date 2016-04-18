@@ -49,7 +49,7 @@ void log_file(const char* fmt, ...)__attribute__((format(printf, 1, 2)));
 #define LOG_FILE_NAME L"log.txt"
 #define LOG_FILE_BAK L"log.old"
 
-#define MAX_LOGFILE_SIZE (10 * 4096)
+#define MAX_LOGFILE_SIZE (4 * 1024)
 
 
 

@@ -1,7 +1,7 @@
 /*
  * data.h
  *
- *  Created on: 2015��7��9��
+ *  Created on: 2015??7??9??
  *      Author: jk
  */
 
@@ -33,9 +33,12 @@ void battery_store_voltage(u32 voltage);
 LOCAL_GPS* gps_get_last(void);
 int gps_save_last(LOCAL_GPS* gps);
 
-char itinerary_state(void);
+char get_itinerary_state(void);
 void set_itinerary_state(char state);
 
+int getVibrationTime(void);
+int VibrationTimeAdd(void);
+int ResetVibrationTime(void);
 
 
 #define MAX_GPS_COUNT 10

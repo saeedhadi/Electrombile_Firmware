@@ -323,8 +323,8 @@ eat_bool setting_restore(void)
         cJSON_Delete(conf);
         return EAT_FALSE;
     }
-    setting.isAutodefendFixed = cJSON_GetObjectItem(addr, TAG_LOCK)->valueint ? EAT_TRUE : EAT_FALSE;
-    setting.autodefendPeriod = cJSON_GetObjectItem(addr, TAG_PERIOD)->valueint;
+    setting.isAutodefendFixed = cJSON_GetObjectItem(autolock, TAG_LOCK)->valueint ? EAT_TRUE : EAT_FALSE;
+    setting.autodefendPeriod = cJSON_GetObjectItem(autolock, TAG_PERIOD)->valueint;
 
     free(buf);
     eat_fs_Close(fh);
