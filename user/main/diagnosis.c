@@ -48,7 +48,21 @@ static eat_bool diag_batterCheck(void)
  */
 static eat_bool diag_gsmSignalCheck(void)
 {
-    int csq = eat_network_get_csq();
+    int csq;
+    int count;
+
+    for(count = 0; count < 100; count++)
+    {
+        if((csq = eat_network_get_csq()) <= 0)// Most wait 10s for GSM
+        {
+            eat_sleep(100);
+        }
+        else
+        {
+            break;
+        }
+    }
+
     if (csq < 7)
     {
         LOG_ERROR("GSM signal quality not enough: %d", csq);
@@ -88,12 +102,13 @@ static eat_bool diag_433Check(void)
  */
 eat_bool diag_check(void)
 {
+    eat_bool ret = EAT_TRUE;
 
     if (!diag_batterCheck())
     {
         LOG_ERROR("battery check failed!");
         LED_off();
-        return EAT_FALSE;
+        ret =  EAT_FALSE;
     }
 
     if (!diag_gsmSignalCheck())
@@ -101,7 +116,7 @@ eat_bool diag_check(void)
         LOG_ERROR("GSM check failed!");
         LED_off();
 
-        return EAT_FALSE;
+        ret = EAT_FALSE;
     }
 
     if (!diag_433Check())
@@ -109,9 +124,13 @@ eat_bool diag_check(void)
         LOG_ERROR("433 check failed!");
         LED_off();
 
-        return EAT_FALSE;
+        ret = EAT_FALSE;
     }
 
-    LOG_DEBUG("System check OK");
-    return EAT_TRUE;
+    if(ret == EAT_TRUE)
+    {
+        LOG_DEBUG("System check OK");
+    }
+
+    return ret;
 }
