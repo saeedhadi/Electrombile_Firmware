@@ -77,8 +77,8 @@ int nmea_context_get_buffer_size(void) {
  * @param str a formatted string
  */
 void nmea_trace(const char *str, ...) {
-	nmeaTraceFunc func = property.trace_func;
 #if 0
+	nmeaTraceFunc func = property.trace_func;
 	if (func) {
 		int size;
 		va_list arg_list;
@@ -112,8 +112,8 @@ void nmea_trace_buff(const char *buff, int buff_size) {
  * @param str a formatted error string
  */
 void nmea_error(const char *str, ...) {
-	nmeaErrorFunc func = property.error_func;
 #if 0
+	nmeaErrorFunc func = property.error_func;
 	if (func) {
 		int size;
 		va_list arg_list;
