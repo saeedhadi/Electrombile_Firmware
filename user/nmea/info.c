@@ -24,6 +24,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+//#include <sys/time.h>
 #include <assert.h>
 
 /**
@@ -34,13 +35,15 @@
  * and UTCTIME flags are set in it.
  */
 void nmea_time_now(nmeaTIME *utc, uint32_t * present) {
-//	struct timeval tp;  //FIXME: use eat_get_rtc
+    //FIXME: use eat_get_rtc
+#if 0
+    struct timeval tp;
 	struct tm tt;
 
 	assert(utc);
 
-//	gettimeofday(&tp, NULL );
-//	gmtime_r(&tp.tv_sec, &tt);
+	gettimeofday(&tp, NULL );
+	gmtime_r(&tp.tv_sec, &tt);
 
 	utc->year = tt.tm_year;
 	utc->mon = tt.tm_mon;
@@ -48,10 +51,11 @@ void nmea_time_now(nmeaTIME *utc, uint32_t * present) {
 	utc->hour = tt.tm_hour;
 	utc->min = tt.tm_min;
 	utc->sec = tt.tm_sec;
-//	utc->hsec = (tp.tv_usec / 10000);
+	utc->hsec = (tp.tv_usec / 10000);
 	if (present) {
 	  nmea_INFO_set_present(present, UTCDATE | UTCTIME);
 	}
+#endif
 }
 
 /**
