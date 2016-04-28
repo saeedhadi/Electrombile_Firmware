@@ -46,12 +46,10 @@ static eat_bool gps_sendCell(u8 cmd);
 static eat_bool gps_isGpsFixed(void);
 static eat_bool gps_isCellGet(void);
 static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps);
+static eat_bool gps_GetGps(void);
 
 static long double getdistance(LOCAL_GPS *pre_gps, LOCAL_GPS *gps);
 void set_rtctime(double time);
-
-
-
 
 typedef struct
 {
@@ -72,7 +70,6 @@ static float altitude = 0.0;
 static float speed = 0.0;
 static float course = 0.0;
 
-
 static eat_bool isCellGet = EAT_FALSE;
 extern eat_bool isMoved;
 static short mcc = 0;//mobile country code
@@ -83,16 +80,17 @@ static CELL  cells[7] = {0};
 static double itinerary = 0.f;  //unit km
 
 
-static void gps_ResetMileage(void)
+static void gps_ResetIniterary(void)
 {
     itinerary = 0.f;
 }
+
 
 /*
 *fun: send itinerary information to main thread
 *para: starttime    endtime     itinerary
 */
-static void gps_MileageSend(int starttime, int endtime ,int itinerary)
+static void gps_IniterarySend(int starttime, int endtime ,int itinerary)
 {
     u8 msgLen = sizeof(MSG_THREAD)+sizeof(GPS_ITINERARY_INFO);
     MSG_THREAD* msg = allocMsg(msgLen);
@@ -118,6 +116,7 @@ static void gps_MileageSend(int starttime, int endtime ,int itinerary)
     return;
 }
 
+
 /*
 *fun: receive msg from vibration thread and caculate the itinerary
 *note:
@@ -139,7 +138,7 @@ static void gps_ItinerarayHandler(const MSG_THREAD* msg)
     if(ITINERARY_START == msg_state->state && 0 == starttime)
     {
         LOG_DEBUG("itinerary start");
-        gps_ResetMileage();
+        gps_ResetIniterary();
         starttime = rtc_getTimestamp();
         if(starttime <= 0)
         {
@@ -151,7 +150,7 @@ static void gps_ItinerarayHandler(const MSG_THREAD* msg)
     else if(ITINERARY_END == msg_state->state && 0 < starttime)
     {
         LOG_DEBUG("itinerary end");
-        gps_MileageSend(starttime,rtc_getTimestamp(),(int)itinerary);
+        gps_IniterarySend(starttime,rtc_getTimestamp(),(int)itinerary);
         starttime = 0;
     }
     else
@@ -164,6 +163,7 @@ static void gps_ItinerarayHandler(const MSG_THREAD* msg)
     freeMsg((void*)msg);
 }
 
+
 void app_gps_thread(void *data)
 {
     EatEvent_st event;
@@ -171,6 +171,7 @@ void app_gps_thread(void *data)
 	u8 msgLen = 0;
 
     LOG_INFO("gps thread start.");
+
     eat_gps_power_req(EAT_TRUE);    //turn on GNSS power supply, equal to AT+CGNSPWR=1
     LOG_INFO("gps sleep mode %d", eat_gps_sleep_read());
 
@@ -241,7 +242,7 @@ void app_gps_thread(void *data)
 
 static void gps_timer_handler(u8 cmd)
 {
-    if(gps_isGpsFixed())
+    if(gps_GetGps())
     {
         LOG_DEBUG("send gps.");
         gps_sendGps(cmd);
@@ -250,27 +251,20 @@ static void gps_timer_handler(u8 cmd)
     {
         LOG_INFO("GPS is not fixed.");
     }
-     //????????????????
-    /*else if(gps_isCellGet())
-    {
-        LOG_DEBUG("send cells.");
-        gps_sendCell(cmd);
-    }
-    */
 
     return;
 }
 
 static void location_handler(u8 cmd)
 {
-    if(gps_isGpsFixed())
+    if(gps_GetGps())
     {
-        LOG_DEBUG("send location gps.");
+        LOG_DEBUG("gps isFix, send location gps.");
         gps_sendGps(cmd);
     }
     else
     {
-        LOG_DEBUG("send location cell.");
+        LOG_DEBUG("gps isUnfix, send location cell.");
         gps_sendCell(cmd);
     }
 }
@@ -323,9 +317,9 @@ static eat_bool gps_sendGps(u8 cmd)
     gps->gps.speed = speed;
     gps->gps.course = course;
 
-    if(last_gps == 0 || msg->cmd == CMD_THREAD_LOCATION)
+    if(msg->cmd == CMD_THREAD_LOCATION)
     {
-        LOG_DEBUG("the first gps or active acquisition.");
+        LOG_DEBUG("active acquisition:location!");
 
         cmp = EAT_FALSE;        // 0 express send , 1 express do not send
     }
@@ -334,26 +328,24 @@ static eat_bool gps_sendGps(u8 cmd)
         cmp = gps_DuplicateCheck(last_gps, gps);
     }
 
-    if(EAT_TRUE == cmp)
+    if(EAT_TRUE == cmp)//GPS is the same as before, do not send this msg
     {
-        //GPS is the same as before, do not send this msg
+
         ret = EAT_TRUE;
         freeMsg(msg);
     }
 
-    else
+    else//GPS is different from before, send this msg, update the last_gps
     {
-        //GPS is different from before, send this msg, update the last_gps
+
 
         memcpy(last_gps, gps, sizeof(LOCAL_GPS));
-        //save the last gps in data
-        gps_save_last(gps);
+
+        gps_save_last(gps);//save the last gps in data
 
         LOG_DEBUG("send gps to THREAD_MAIN");
         ret = sendMsg(THREAD_MAIN, msg, msgLen);
     }
-
-    /* can not freeMsg(msg) here, if do, it will be crashed. */
 
     return ret;
 }
@@ -397,9 +389,8 @@ static eat_bool gps_sendCell(u8 cmd)
         cmp = EAT_FALSE; // 0 express send , 1 express do not send
     }
 
-    if(EAT_TRUE == cmp)
+    if(EAT_TRUE == cmp)//GPS is the same as before, do not send this msg
     {
-        //GPS is the same as before, do not send this msg
         ret = EAT_TRUE;
         freeMsg(msg);
     }
@@ -407,24 +398,73 @@ static eat_bool gps_sendCell(u8 cmd)
     {
         memcpy(last_gps, gps, sizeof(LOCAL_GPS));
 
-        //save the last gps in data
-        gps_save_last(gps);
+
+        gps_save_last(gps);//save the last gps in data
 
         //GPS is different from before, send this msg, update the last_gps
         LOG_DEBUG("send cell to THREAD_MAIN: mcc(%d), mnc(%d), cellNo(%d).", mcc, mnc, cellNo);
         ret = sendMsg(THREAD_MAIN, msg, msgLen);
     }
 
-    /* can not freeMsg(msg) here, if do, it will be crashed. */
+    // can not freeMsg(msg) here, if do, it will be crashed.
 
     return ret;
 }
+
+static eat_bool gps_GetGps(void)
+{
+    unsigned char buf[1024] = {0};
+    unsigned char* buf_p1 = NULL;
+    int rc;
+
+    eat_bool iGpsFixed = EAT_FALSE;
+    double iGpstime = 0.0;
+    int satellite = 0;
+
+    /*
+     * the output format of eat_gps_nmea_info_output
+     * $GPSIM,<latitude>,<longitude>,<altitude>,<UTCtime>,<TTFF>,<num>,<speed>,<course>
+     * note:
+            <TTFF>:time to first fix(in seconds)
+            <num> :satellites in view for fix
+     * example:$GPSIM,114.5,30.15,28.5,1461235600.123,3355,7,2.16,179.36
+     */
+
+    rc = eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_SIMCOM,buf,1024);
+    if(rc == EAT_FALSE)
+    {
+        LOG_ERROR("get gps error ,and erturn is %d",rc);
+    }
+
+    LOG_DEBUG("%s",buf);
+
+    buf_p1 = string_bypass(buf, "$GPSIM,");
+
+    rc = sscanf(buf_p1,"%f,%f,%f,%lf,%*d,%d,%f,%f",\
+        &latitude,&longitude,&altitude,&iGpstime,&satellite,&speed,&course);
+
+    if(longitude > 0 && latitude > 0)//get GPS
+    {
+        if(!rtc_synced())
+        {
+            rtc_update((long long)iGpstime);
+        }
+        iGpsFixed = EAT_TRUE;
+    }
+    else
+    {
+        iGpsFixed = EAT_FALSE;
+    }
+
+    return isGpsFixed = iGpsFixed;
+}
+
 
 static void gps_at_read_handler(void)
 {
     unsigned char *buf_p1 = NULL;
     unsigned char *buf_p2 = NULL;
-    unsigned char  buf[READ_BUFF_SIZE] = {0};  //??????AT???????
+    unsigned char  buf[READ_BUFF_SIZE] = {0};
     unsigned int len = 0;
     unsigned int count = 0, cellCount = 0;
     double gpstimes = 0.0;
@@ -458,33 +498,6 @@ static void gps_at_read_handler(void)
     }
 
     /*
-     * NMEA output format:
-     * +CGNSINF: 1,1,20150327014838.000,31.221783,121.354528,114.600,0.28,0.0,1,,1.9,2.2,1.0,,8,4,,,42,,
-     * +CGNSINF: 1,0,20151016130202.000,,,,0.11,40.7,0,,,,,,11,1,,,37,,
-     * <GNSS run status>,<Fix status>,<UTC date & Time>,<Latitude>,<Longitude>,<MSL Altitude>,<Speed Over Ground>,<Course Over Ground>,
-     * <Fix Mode>,<Reserved1>,<HDOP>,<PDOP>,<VDOP>,<Reserved2>,<Satellites in View>,<Satellites Used>,<Reserved3>,<C/N0 max>,<HPA>,<VPA>
-     */
-    buf_p1 = string_bypass(buf, "+CGNSINF: ");
-    if(NULL != buf_p1)
-    {
-        count = sscanf(buf_p1, "%*d,%d,%lf,%f,%f,%f,%f,%f,%*s",&isGpsFixed,&gpstimes, &latitude, &longitude,&altitude,&speed,&course);
-        //TODO: update the RTC once a day
-        if(!rtc_synced())
-        {
-            rtc_update((long long)gpstimes);
-        }
-        if(7 != count)
-        {
-            LOG_DEBUG("gps not fixed : %d",count);
-            isGpsFixed = EAT_FALSE;
-        }
-        else
-        {
-            LOG_DEBUG("gps fixed:latitude=%f,longitude=%f,altitude=%f,speed=%f,course=%f", latitude, longitude,altitude,speed,course);
-        }
-    }
-
-    /*
      * the output format of AT+CENG?
      * +CENG:<mode>,<Ncell>
      * +CENG:<cell>,"<mcc>,<mnc>,<lac>,<cellid>,<bsic>,<rxl>"
@@ -502,42 +515,37 @@ static void gps_at_read_handler(void)
      * +CENG: 6,",,0000,0000,00,00"
      *
      */
-    if(EAT_FALSE == isGpsFixed)
+    buf_p1 = string_bypass(buf, "+CENG: 3,1\r\n\r\n");
+    if(NULL != buf_p1)
     {
-        buf_p1 = string_bypass(buf, "+CENG: 3,1\r\n\r\n");
-        if(NULL != buf_p1)
+        while(buf_p1)
         {
-            while(buf_p1)
+            buf_p1 = string_bypass(buf_p1, "+CENG: ");
+
+            count = sscanf(buf_p1, "%d,\"%d,%d,%x,%x,%*d,%d\"", &cellCount, &_mcc, &_mnc, &lac, &cellid, &rxl);
+            if(6 != count)
             {
-                buf_p1 = string_bypass(buf_p1, "+CENG: ");
-
-                count = sscanf(buf_p1, "%d,\"%d,%d,%x,%x,%*d,%d\"", &cellCount, &_mcc, &_mnc, &lac, &cellid, &rxl);
-                if(6 != count)
-                {
-                    continue;
-                }
-
-                if(0 == mcc)
-                {
-                    mcc = _mcc;
-                    mnc = _mnc;
-                }
-                cells[cellCount].lac = lac;
-                cells[cellCount].cellid = cellid & 0xffff;
-                cells[cellCount].rxl = rxl;
-
-                //LOG_DEBUG("gcy's cell:%d,%d,%d,%d,%x,%d", cellCount, _mcc, _mnc, lac, cellid, rxl);
+                continue;
             }
 
-            if(0 != mcc)
+            if(0 == mcc)
             {
-                isCellGet = EAT_TRUE;
-                cellNo = cellCount + 1;//7
+                mcc = _mcc;
+                mnc = _mnc;
             }
-            else
-            {
-                isCellGet = EAT_FALSE;
-            }
+            cells[cellCount].lac = lac;
+            cells[cellCount].cellid = cellid & 0xffff;
+            cells[cellCount].rxl = rxl;
+        }
+
+        if(0 != mcc)
+        {
+            isCellGet = EAT_TRUE;
+            cellNo = cellCount + 1;//7
+        }
+        else
+        {
+            isCellGet = EAT_FALSE;
         }
     }
 
@@ -566,7 +574,7 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
             distance = getdistance(pre_gps,gps);
             //if the distance change 10m but not float,push the information of GPS
             if(distance <= 10 ||isMoved == EAT_FALSE)
-            {//??????????????gps
+            {
                 LOG_DEBUG("GPS is the same. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
                 return EAT_TRUE;
             }
@@ -589,9 +597,9 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
             }
 
         }
-        else
+        else//CELL
         {
-            //CELL
+
             if((pre_gps->cellInfo.mcc != gps->cellInfo.mcc) || \
                (pre_gps->cellInfo.mnc != gps->cellInfo.mnc) || \
                (pre_gps->cellInfo.cellNo != gps->cellInfo.cellNo) || \

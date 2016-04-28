@@ -1,7 +1,7 @@
 /*
  * uart.c
  *
- *  Created on: 2015��7��8��
+ *  Created on: 2015??7??8??
  *      Author: jk
  */
 
