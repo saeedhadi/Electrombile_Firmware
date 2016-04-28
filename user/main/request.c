@@ -25,7 +25,7 @@
 int cmd_Login(void)
 {
     MSG_LOGIN_REQ* msg = alloc_msg(CMD_LOGIN, sizeof(MSG_LOGIN_REQ));
-    u8 imei[IMEI_LENGTH] = {0};
+    u8 imei[MAX_IMEI_LENGTH] = {0};
 
     if (!msg)
     {
@@ -35,9 +35,9 @@ int cmd_Login(void)
 
     msg->version = htonl(VERSION_NUM);
 
-    eat_get_imei(imei, IMEI_LENGTH);
+    eat_get_imei(imei, MAX_IMEI_LENGTH);
 
-    memcpy(msg->IMEI, imei, IMEI_LENGTH);
+    memcpy(msg->IMEI, imei, MAX_IMEI_LENGTH);
 
     LOG_DEBUG("send login message.");
 
@@ -52,14 +52,14 @@ int cmd_Login(void)
 int cmd_SimInfo(char* buf)
 {
     MSG_SIM_INFO* msg = alloc_msg(CMD_SIM_INFO, sizeof(MSG_SIM_INFO));
-    u8 imsi[IMSI_LENGTH + 2] = {'\0'};
+    u8 imsi[MAX_IMSI_LENGTH + 1] = {'\0'};
     if (!msg)
     {
         LOG_ERROR("alloc login message failed!");
         return -1;
     }
 
-    eat_get_imsi(imsi,IMSI_LENGTH + 2);//need space to save \0, if not, maybe Crossing
+    eat_get_imsi(imsi,MAX_IMSI_LENGTH + 1);//need space to save \0, if not, maybe Crossing
 
     sscanf(buf,"%20s",msg->CCID);
     LOG_DEBUG("CCID: %20s",msg->CCID);
@@ -70,7 +70,7 @@ int cmd_SimInfo(char* buf)
     LOG_DEBUG("send SIM_info message.");
 
 
-    socket_sendData(msg, sizeof(MSG_SIM_INFO));
+    socket_sendDataWaitAck(msg, sizeof(MSG_SIM_INFO),NULL,NULL);
     return 0;
 }
 

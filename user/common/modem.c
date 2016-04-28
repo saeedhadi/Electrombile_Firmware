@@ -6,6 +6,7 @@
  */
 
 #include <string.h>
+#include <stdio.h>
 
 #include <eat_interface.h>
 #include <eat_modem.h>

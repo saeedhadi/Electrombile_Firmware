@@ -16,6 +16,7 @@
 #include "timer.h"
 #include "fsm.h"
 #include "error.h"
+#include "msg_queue.h"
 
 
 static s8 socket_id = 0;

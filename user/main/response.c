@@ -41,6 +41,16 @@ int cmd_Login_rsp(const void* msg)
     return 0;
 }
 
+int cmd_SimInfo_rsp(const void* msg)
+{
+    LOG_DEBUG("get siminfo respond.");
+
+    msg_ack(msg);
+
+    return 0;
+}
+
+
 int cmd_Ping_rsp(const void* msg)
 {
     LOG_DEBUG("get ping respond.");
@@ -91,7 +101,7 @@ int cmd_Reboot_rsp(const void* msg)
         return -1;
     }
 
-    socket_sendDataDirectly(rsp, sizeof(MSG_DEFEND_REQ));
+    socket_sendDataDirectly(rsp, sizeof(MSG_HEADER));
 
     eat_reset_module();
     return 0;
@@ -261,8 +271,8 @@ int cmd_Battery_rsp(const void* msg)
 
 int cmd_DefendOn_rsp(const void* msg)
 {
-    MSG_DEFEND_REQ* req = (MSG_DEFEND_REQ*)msg;
-    MSG_DEFEND_RSP* rsp = NULL;
+    MSG_HEADER* req = (MSG_HEADER*)msg;
+    MSG_DEFEND_ON_RSP* rsp = NULL;
     int result = MSG_SUCCESS;
 
     LOG_DEBUG("set defend switch on.");
@@ -273,25 +283,24 @@ int cmd_DefendOn_rsp(const void* msg)
         result = -1;
     }
 
-    rsp = alloc_rspMsg(&req->header);
+    rsp = alloc_rspMsg(req);
     if (!rsp)
     {
         LOG_ERROR("alloc defend rsp message failed!");
         return -1;
     }
 
-    rsp->token = req->token;
     rsp->result = result;
 
-    socket_sendDataDirectly(rsp, sizeof(MSG_DEFEND_RSP));
+    socket_sendDataDirectly(rsp, sizeof(MSG_DEFEND_ON_RSP));
 
     return 0;
 }
 
 int cmd_DefendOff_rsp(const void* msg)
 {
-    MSG_DEFEND_REQ* req = (MSG_DEFEND_REQ*)msg;
-    MSG_DEFEND_RSP* rsp = NULL;
+    MSG_HEADER* req = (MSG_HEADER*)msg;
+    MSG_DEFEND_OFF_RSP* rsp = NULL;
     int result = MSG_SUCCESS;
 
     LOG_DEBUG("set defend switch off.");
@@ -303,40 +312,37 @@ int cmd_DefendOff_rsp(const void* msg)
         result = -1;
     }
 
-    rsp = alloc_rspMsg(&req->header);
+    rsp = alloc_rspMsg(req);
     if (!rsp)
     {
         LOG_ERROR("alloc defend rsp message failed!");
         return -1;
     }
 
-    rsp->token = req->token;
     rsp->result = result;
 
-    socket_sendDataDirectly(rsp, sizeof(MSG_DEFEND_REQ));
+    socket_sendDataDirectly(rsp, sizeof(MSG_DEFEND_OFF_RSP));
 
     return 0;
 }
 int cmd_DefendGet_rsp(const void* msg)
 {
-    MSG_DEFEND_REQ* req = (MSG_DEFEND_REQ*)msg;
-    MSG_DEFEND_RSP* rsp = NULL;
+    MSG_HEADER* req = (MSG_HEADER*)msg;
+    MSG_DEFEND_GET_RSP* rsp = NULL;
     unsigned char result = MSG_SUCCESS;
 
     result = vibration_fixed() ? DEFEND_ON : DEFEND_OFF;
     LOG_DEBUG("get defend switch state(%d).", result);
 
-    rsp = alloc_rspMsg(&req->header);
+    rsp = alloc_rspMsg(req);
     if (!rsp)
     {
         LOG_ERROR("alloc defend rsp message failed!");
         return -1;
     }
+    rsp->status= result;
 
-    rsp->token = req->token;
-    rsp->result = result;
-
-    socket_sendDataDirectly(rsp, sizeof(MSG_DEFEND_RSP));
+    socket_sendDataDirectly(rsp, sizeof(MSG_DEFEND_GET_RSP));
 
     return 0;
 }

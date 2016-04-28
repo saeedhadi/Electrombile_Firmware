@@ -60,6 +60,7 @@ static MC_MSG_PROC msgProcs[] =
     {CMD_REBOOT, cmd_Reboot_rsp},
     {CMD_DEVICE_INFO_GET, cmd_DeviceInfo_rsp},
     {CMD_ITINERARY, cmd_Itinerary_rsp},
+    {CMD_SIM_INFO, cmd_SimInfo_rsp},
 };
 
 int client_handleOnePkt(const void* m, int msgLen)

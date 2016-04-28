@@ -11,6 +11,7 @@
 int cmd_Login_rsp(const void* msg);
 int cmd_Ping_rsp(const void* msg);
 int cmd_Itinerary_rsp(const void * msg);
+int cmd_SimInfo_rsp(const void* msg);
 int cmd_Alarm_rsp(const void* msg);
 int cmd_Sms_rsp(const void* msg);
 
