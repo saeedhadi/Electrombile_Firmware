@@ -22,5 +22,6 @@ int cmd_alarm(char alarm_type);
 
 
 
+int cmd_SimInfo(char* buf);
 
 #endif /* USER_MAIN_REQUEST_H_ */

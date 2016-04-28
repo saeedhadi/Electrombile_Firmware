@@ -24,6 +24,7 @@
 #include "seek.h"
 #include "data.h"
 #include "adc.h"
+#include "modem.h"
 #include "itinerary.h"
 #include "response.h"
 #include "msg_queue.h"
@@ -94,6 +95,11 @@ static int event_mod_ready_rd(const EatEvent_st* event)
         diag_check();
 
         fsm_run(EVT_CALL_READY);
+    }
+
+    if(modem_IsCCIDOK(buf))
+    {
+        cmd_SimInfo(buf + 9);//str(AT+CCID\r\n) = 9
     }
 
 

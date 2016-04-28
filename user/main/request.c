@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include <eat_interface.h>
+#include <eat_other.h>
 #include <eat_fs.h>
 
 #include "request.h"
@@ -17,6 +18,7 @@
 #include "socket.h"
 #include "version.h"
 #include "data.h"
+#include "modem.h"
 #include "response.h"
 #include "itinerary.h"
 
@@ -38,10 +40,40 @@ int cmd_Login(void)
     memcpy(msg->IMEI, imei, IMEI_LENGTH);
 
     LOG_DEBUG("send login message.");
+
+    modem_readCCIDInfo();
+
     socket_sendDataDirectly(msg, sizeof(MSG_LOGIN_REQ));
+
 
     return 0;
 }
+
+int cmd_SimInfo(char* buf)
+{
+    MSG_SIM_INFO* msg = alloc_msg(CMD_SIM_INFO, sizeof(MSG_SIM_INFO));
+    u8 imsi[IMSI_LENGTH + 2] = {'\0'};
+    if (!msg)
+    {
+        LOG_ERROR("alloc login message failed!");
+        return -1;
+    }
+
+    eat_get_imsi(imsi,IMSI_LENGTH + 2);//need space to save \0, if not, maybe Crossing
+
+    sscanf(buf,"%20s",msg->CCID);
+    LOG_DEBUG("CCID: %20s",msg->CCID);
+
+    sscanf(imsi,"%15s",msg->IMSI);
+    LOG_DEBUG("IMSI: %15s",msg->IMSI);
+
+    LOG_DEBUG("send SIM_info message.");
+
+
+    socket_sendData(msg, sizeof(MSG_SIM_INFO));
+    return 0;
+}
+
 
 void cmd_Heartbeat(void)
 {
