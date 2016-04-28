@@ -25,14 +25,31 @@
 #include "setting.h"
 #include "battery.h"
 #include "seek.h"
+#include "itinerary.h"
+#include "request.h"
+#include "timer.h"
+#include "msg_queue.h"
 
 int cmd_Login_rsp(const void* msg)
 {
     LOG_DEBUG("get login respond.");
+
+    cmd_Itinerary_check();//if logined , check if there is a itinerary exist, if Y send it
+
     fsm_run(EVT_LOGINED);
 
     return 0;
 }
+
+int cmd_SimInfo_rsp(const void* msg)
+{
+    LOG_DEBUG("get siminfo respond.");
+
+    msg_ack(msg);
+
+    return 0;
+}
+
 
 int cmd_Ping_rsp(const void* msg)
 {
@@ -41,28 +58,26 @@ int cmd_Ping_rsp(const void* msg)
     return 0;
 }
 
+int cmd_Itinerary_rsp(const void* msg)
+{
+    MSG_HEADER* req = (MSG_HEADER*)msg;
+    MSG_HEADER* rsp = NULL;
+
+    LOG_DEBUG("get ititerary respond.");
+
+    msg_ack(msg);
+
+    itinerary_delete();
+
+    return 0;
+}
+
+
 int cmd_Alarm_rsp(const void* msg)
 {
-    MSG_ALARM_REQ* req = (MSG_ALARM_REQ*)msg;
-    //MSG_ALARM_RSP* rsp = NULL;
+    LOG_DEBUG("get alarm respond");
 
-    switch(req->alarmType)
-    {
-        case ALARM_VIBRATE:
-            LOG_DEBUG("get alarm(ALARM_VIBRATE) respond.");
-            break;
-
-        case ALARM_FENCE_OUT:
-            LOG_DEBUG("get alarm(ALARM_FENCE_OUT) respond.");
-            break;
-
-        case ALARM_FENCE_IN:
-            LOG_DEBUG("get alarm(ALARM_FENCE_IN) respond.");
-            break;
-
-        default:
-            break;
-    }
+    msg_ack(msg);
 
     return 0;
 }
@@ -71,6 +86,7 @@ int cmd_Sms_rsp(const void* msg)
 {
     return 0;
 }
+
 
 int cmd_Reboot_rsp(const void* msg)
 {
@@ -85,7 +101,7 @@ int cmd_Reboot_rsp(const void* msg)
         return -1;
     }
 
-    socket_sendData(rsp, sizeof(MSG_DEFEND_REQ));
+    socket_sendDataDirectly(rsp, sizeof(MSG_HEADER));
 
     eat_reset_module();
     return 0;
@@ -119,7 +135,7 @@ int cmd_Seek_rsp(const void* msg)
     rsp->token = req->token;
     rsp->result = MSG_SUCCESS;
 
-    socket_sendData(rsp, sizeof(MSG_SEEK_RSP));
+    socket_sendDataDirectly(rsp, sizeof(MSG_SEEK_RSP));
 
     return 0;
 }
@@ -164,7 +180,7 @@ int cmd_AutodefendSwitchSet_rsp(const void* msg)
     rsp->token = req->token;
     rsp->result = MSG_SUCCESS;
 
-    socket_sendData(rsp, sizeof(MSG_AUTODEFEND_SWITCH_SET_RSP));
+    socket_sendDataDirectly(rsp, sizeof(MSG_AUTODEFEND_SWITCH_SET_RSP));
 
     return 0;
 }
@@ -184,7 +200,7 @@ int cmd_AutodefendSwitchGet_rsp(const void* msg)
     rsp->token = req->token;
     rsp->result = get_autodefend_state() ? AUTO_DEFEND_ON : AUTO_DEFEND_OFF;
 
-    socket_sendData(rsp, sizeof(MSG_AUTODEFEND_SWITCH_GET_RSP));
+    socket_sendDataDirectly(rsp, sizeof(MSG_AUTODEFEND_SWITCH_GET_RSP));
 
     return 0;
 }
@@ -207,7 +223,7 @@ int cmd_AutodefendPeriodSet_rsp(const void* msg)
     rsp->token = req->token;
     rsp->result = MSG_SUCCESS;
 
-    socket_sendData(rsp, sizeof(MSG_AUTODEFEND_PERIOD_SET_RSP));
+    socket_sendDataDirectly(rsp, sizeof(MSG_AUTODEFEND_PERIOD_SET_RSP));
 
     return 0;
 }
@@ -227,7 +243,7 @@ int cmd_AutodefendPeriodGet_rsp(const void* msg)
     rsp->token = req->token;
     rsp->period = get_autodefend_period();
     LOG_DEBUG("send autodefend period: %d minutes",rsp->period);
-    socket_sendData(rsp, sizeof(MSG_AUTODEFEND_PERIOD_GET_RSP));
+    socket_sendDataDirectly(rsp, sizeof(MSG_AUTODEFEND_PERIOD_GET_RSP));
 
     return 0;
 }
@@ -247,7 +263,7 @@ int cmd_Battery_rsp(const void* msg)
     rsp->miles = battery_get_miles();
 
     LOG_DEBUG("send battery msg to server:%d",rsp->percent);
-    socket_sendData(rsp, sizeof(MSG_BATTERY_RSP));
+    socket_sendDataDirectly(rsp, sizeof(MSG_BATTERY_RSP));
 
     return 0;
 }
@@ -255,8 +271,8 @@ int cmd_Battery_rsp(const void* msg)
 
 int cmd_DefendOn_rsp(const void* msg)
 {
-    MSG_DEFEND_REQ* req = (MSG_DEFEND_REQ*)msg;
-    MSG_DEFEND_RSP* rsp = NULL;
+    MSG_HEADER* req = (MSG_HEADER*)msg;
+    MSG_DEFEND_ON_RSP* rsp = NULL;
     int result = MSG_SUCCESS;
 
     LOG_DEBUG("set defend switch on.");
@@ -267,69 +283,66 @@ int cmd_DefendOn_rsp(const void* msg)
         result = -1;
     }
 
-    rsp = alloc_rspMsg(&req->header);
+    rsp = alloc_rspMsg(req);
     if (!rsp)
     {
         LOG_ERROR("alloc defend rsp message failed!");
         return -1;
     }
 
-    rsp->token = req->token;
     rsp->result = result;
 
-    socket_sendData(rsp, sizeof(MSG_DEFEND_RSP));
+    socket_sendDataDirectly(rsp, sizeof(MSG_DEFEND_ON_RSP));
 
     return 0;
 }
 
 int cmd_DefendOff_rsp(const void* msg)
 {
-    MSG_DEFEND_REQ* req = (MSG_DEFEND_REQ*)msg;
-    MSG_DEFEND_RSP* rsp = NULL;
+    MSG_HEADER* req = (MSG_HEADER*)msg;
+    MSG_DEFEND_OFF_RSP* rsp = NULL;
     int result = MSG_SUCCESS;
 
     LOG_DEBUG("set defend switch off.");
 
+    ResetVibrationTime();
     set_vibration_state(EAT_FALSE);
     if(EAT_FALSE != vibration_fixed())
     {
         result = -1;
     }
 
-    rsp = alloc_rspMsg(&req->header);
+    rsp = alloc_rspMsg(req);
     if (!rsp)
     {
         LOG_ERROR("alloc defend rsp message failed!");
         return -1;
     }
 
-    rsp->token = req->token;
     rsp->result = result;
 
-    socket_sendData(rsp, sizeof(MSG_DEFEND_REQ));
+    socket_sendDataDirectly(rsp, sizeof(MSG_DEFEND_OFF_RSP));
 
     return 0;
 }
 int cmd_DefendGet_rsp(const void* msg)
 {
-    MSG_DEFEND_REQ* req = (MSG_DEFEND_REQ*)msg;
-    MSG_DEFEND_RSP* rsp = NULL;
+    MSG_HEADER* req = (MSG_HEADER*)msg;
+    MSG_DEFEND_GET_RSP* rsp = NULL;
     unsigned char result = MSG_SUCCESS;
 
     result = vibration_fixed() ? DEFEND_ON : DEFEND_OFF;
     LOG_DEBUG("get defend switch state(%d).", result);
 
-    rsp = alloc_rspMsg(&req->header);
+    rsp = alloc_rspMsg(req);
     if (!rsp)
     {
         LOG_ERROR("alloc defend rsp message failed!");
         return -1;
     }
+    rsp->status= result;
 
-    rsp->token = req->token;
-    rsp->result = result;
-
-    socket_sendData(rsp, sizeof(MSG_DEFEND_RSP));
+    socket_sendDataDirectly(rsp, sizeof(MSG_DEFEND_GET_RSP));
 
     return 0;
 }
@@ -362,7 +375,7 @@ int cmd_Timer_rsp(const void* msg)
 
     //TODO: fix the gps upload time
     rsp->result = htonl(30);
-    socket_sendData(rsp,sizeof(MSG_SET_TIMER_RSP));
+    socket_sendDataDirectly(rsp,sizeof(MSG_SET_TIMER_RSP));
 
     return 0;
 }
@@ -451,7 +464,7 @@ int cmd_UpgradeStart_rsp(const void* msg)
         return -1;
     }
     rsp->code = rc;
-    socket_sendData(rsp,sizeof(MSG_UPGRADE_START_RSP));
+    socket_sendDataDirectly(rsp,sizeof(MSG_UPGRADE_START_RSP));
 
     return 0;
 }
@@ -490,7 +503,7 @@ int cmd_UpgradeData_rsp(const void* msg)
     }
 
     rsp->offset = htonl(expectLength);
-    socket_sendData(rsp,sizeof(MSG_UPGRADE_DATA_RSP));
+    socket_sendDataDirectly(rsp,sizeof(MSG_UPGRADE_DATA_RSP));
 
     return rc;
 }
@@ -509,7 +522,7 @@ int cmd_UpgradeEnd_rsp(const void* msg)
         return -1;
     }
     rsp->code = rc;
-    socket_sendData(rsp,sizeof(MSG_UPGRADE_END_RSP));
+    socket_sendDataDirectly(rsp,sizeof(MSG_UPGRADE_END_RSP));
 
     //启动升级
     if(0 <= rc)
@@ -571,7 +584,7 @@ int cmd_DeviceInfo_rsp(const void* msg)
         rsp->cid = htons(local_gps->cellInfo.cell[0].cellid);
     }
 
-    socket_sendData(rsp,msgLen);
+    socket_sendDataDirectly(rsp,msgLen);
     return 0;
 }
 

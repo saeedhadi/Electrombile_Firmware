@@ -168,7 +168,7 @@ int upgrade_CheckAppfile(int req_size,int req_checksum)
             }
         }
 
-        eat_mem_free(app_buf);
+        free(app_buf);
     }
 
     return rc;

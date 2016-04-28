@@ -6,6 +6,7 @@
  */
 
 #include <string.h>
+#include <stdio.h>
 
 #include <eat_interface.h>
 #include <eat_modem.h>
@@ -26,6 +27,8 @@
 #define AT_CGATT    "AT+CGATT"
 #define AT_CENG     "AT+CENG"
 #define AT_CGNSINF  "AT+CGNSINF"
+#define AT_CCID     "AT+CCID"
+
 
 static eat_bool modem_cmd(const unsigned char *cmd)
 {
@@ -55,6 +58,19 @@ eat_bool modem_IsCallReady(char* modem_rsp)
 
     return EAT_FALSE;
 }
+
+eat_bool modem_IsCCIDOK(char* modem_rsp)
+{
+    char* ptr = strstr((const char *) modem_rsp, "AT+CCID");
+
+    if (ptr)
+    {
+        return EAT_TRUE;
+    }
+
+    return EAT_FALSE;
+}
+
 
 #if 0
 eat_bool modem_ReadGPRSStatus(void)
@@ -132,6 +148,15 @@ eat_bool modem_readCellInfo(void)
 
     return modem_cmd(cmd);
 }
+
+eat_bool modem_readCCIDInfo(void)
+{
+    unsigned char* cmd = AT_CCID CR;
+
+
+    return modem_cmd(cmd);
+}
+
 
 eat_bool modem_GNSS(void)
 {

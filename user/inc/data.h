@@ -1,7 +1,7 @@
 /*
  * data.h
  *
- *  Created on: 2015��7��9��
+ *  Created on: 2015??7??9??
  *      Author: jk
  */
 
@@ -11,6 +11,12 @@
 #include <eat_type.h>
 #include "protocol.h"
 #include "thread_msg.h"
+
+typedef enum
+{
+	ITINERARY_START,
+	ITINERARY_END
+}ITINERARY_STATE;
 
 eat_bool gps_isQueueFull(void);
 eat_bool gps_isQueueEmpty(void);
@@ -22,10 +28,18 @@ eat_bool gps_dequeue(GPS* gps);
 int gps_size(void);
 
 unsigned char battery_get_percent(void);
+unsigned char battery_get_miles(void);
 void battery_store_voltage(u32 voltage);
 
 LOCAL_GPS* gps_get_last(void);
 int gps_save_last(LOCAL_GPS* gps);
+
+char get_itinerary_state(void);
+void set_itinerary_state(char state);
+
+int getVibrationTime(void);
+int VibrationTimeAdd(void);
+int ResetVibrationTime(void);
 
 
 #define MAX_GPS_COUNT 10

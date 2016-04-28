@@ -19,7 +19,11 @@ eat_bool modem_GPRSAttach(void);
 #endif
 
 eat_bool modem_switchEngineeringMode(int mode, int Ncell);
+
 eat_bool modem_readCellInfo(void);
+
+eat_bool modem_readCCIDInfo(void);
+eat_bool modem_IsCCIDOK(char* modem_rsp);
 
 eat_bool modem_GNSS(void);
 

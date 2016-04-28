@@ -16,6 +16,7 @@
 #include "timer.h"
 #include "fsm.h"
 #include "error.h"
+#include "msg_queue.h"
 
 
 static s8 socket_id = 0;
@@ -338,7 +339,7 @@ int socket_setup(void)
     }
 }
 
-s32 socket_sendData(void* data, s32 len)
+int socket_sendData(void* data, s32 len)
 {
     s32 rc;
 
@@ -358,7 +359,24 @@ s32 socket_sendData(void* data, s32 len)
         LOG_ERROR("sokcet send data failed:%d!", rc);
     }
 
-    free_msg(data);  //TODO: is it ok to free the msg here???
+
+    return rc;
+}
+
+s32 socket_sendDataDirectly(void* data, s32 len)
+{
+    s32 rc = socket_sendData(data, len);
+
+    free_msg(data);
+
+    return rc;
+}
+
+s32 socket_sendDataWaitAck(void* data, s32 len, MSG_RESEND_FAILED_HANDLER pfn, void* userdata)
+{
+    s32 rc = socket_sendData(data, len);
+
+    msg_push(data, len, pfn, userdata);
 
     return rc;
 }

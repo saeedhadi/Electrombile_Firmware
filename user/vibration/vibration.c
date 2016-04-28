@@ -17,6 +17,7 @@
 #include "setting.h"
 #include "mma8652.h"
 #include "led.h"
+#include "data.h"
 
 #define MAX_MOVE_DATA_LEN   500
 #define MOVE_TIMER_PERIOD    10
@@ -24,19 +25,9 @@
 #define MOVE_THRESHOLD 5
 
 static eat_bool avoid_freq_flag = EAT_FALSE;
-static int isItineraryStart = ITINERARY_END;
+static int AlarmCount = 0;
 
 eat_bool isMoved = EAT_FALSE;
-
-static char itinerary_state(void)
-{
-    return isItineraryStart;
-}
-
-static void set_itinerary_state(char state)
-{
-    isItineraryStart = state;
-}
 
 void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
 {
@@ -79,16 +70,22 @@ static eat_bool vivration_AutolockStateSend(eat_bool state)
 static eat_bool vibration_sendAlarm(void)
 {
     u8 msgLen = sizeof(MSG_THREAD) + 1;
-    MSG_THREAD* msg = allocMsg(msgLen);
-    unsigned char* alarmType = (unsigned char*)msg->data;
+    MSG_THREAD* msg = NULL;
+    unsigned char* alarmType = NULL;
 
-    msg->cmd = CMD_THREAD_VIBRATE;
-    msg->length = 1;
-    *alarmType = ALARM_VIBRATE;
+    if(AlarmCount++ <= 3)
+    {
+        msg = allocMsg(msgLen);
+        alarmType = (unsigned char*)msg->data;
 
-    LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
-    avoid_freq_flag = EAT_TRUE;
-    return sendMsg(THREAD_MAIN, msg, msgLen);
+        msg->cmd = CMD_THREAD_VIBRATE;
+        msg->length = 1;
+        *alarmType = ALARM_VIBRATE;
+
+        LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
+        avoid_freq_flag = EAT_TRUE;
+        return sendMsg(THREAD_MAIN, msg, msgLen);
+    }
 }
 
 /*
@@ -115,9 +112,9 @@ static eat_bool vivration_SendItinerarayState(char state)
     msg_state->state = state;
 
     LOG_DEBUG("send itinerary state msg to GPS_thread:%d",state);
+    set_itinerary_state(state);
     ret = sendMsg(THREAD_GPS, msg, msgLen);
 
-    set_itinerary_state(state);
 
     return ret;
 }
@@ -175,7 +172,7 @@ static void move_alarm_timer_handler()
                     LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, x_data[i]);
                 }
 
-                if(ITINERARY_END == itinerary_state())
+                if(ITINERARY_END == get_itinerary_state())
                 {
                     vivration_SendItinerarayState(ITINERARY_START);
                 }
@@ -198,7 +195,7 @@ static void move_alarm_timer_handler()
                     LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, y_data[i]);
                 }
 
-                if(ITINERARY_END == itinerary_state())
+                if(ITINERARY_END == get_itinerary_state())
                 {
                     vivration_SendItinerarayState(ITINERARY_START);
                 }
@@ -224,7 +221,7 @@ static void move_alarm_timer_handler()
                     LOG_DEBUG("MOVE_TRESHOLD_Z[%d]   = %f",i, z_data[i]);
                 }
 
-                if(ITINERARY_END == itinerary_state())
+                if(ITINERARY_END == get_itinerary_state())
                 {
                     vivration_SendItinerarayState(ITINERARY_START);
                 }
@@ -265,7 +262,6 @@ static void vibration_timer_handler(void)
 {
     static eat_bool isFirstTime = EAT_TRUE;
 
-    static int timerCount = 0;
     uint8_t transient_src = 0;
 
     avoid_fre_send(EAT_TRUE);
@@ -292,40 +288,48 @@ static void vibration_timer_handler(void)
         isMoved = EAT_FALSE;
     }
 
-    if(EAT_TRUE == vibration_fixed())
+    //always to judge if need to alarm , just judge the defend state before send alarm
+    if(isMoved && avoid_freq_flag == EAT_FALSE)
     {
-        if(isMoved && avoid_freq_flag == EAT_FALSE)
-        {
-            avoid_fre_send(EAT_FALSE);
-            eat_timer_start(TIMER_MOVE_ALARM, MOVE_TIMER_PERIOD);
-            //vibration_sendAlarm();  //bec use displacement judgement , there do not alarm
-        }
+        avoid_fre_send(EAT_FALSE);
+        eat_timer_start(TIMER_MOVE_ALARM, MOVE_TIMER_PERIOD);
+        //vibration_sendAlarm();  //bec use displacement judgement , there do not alarm
     }
 
     if(isMoved)
     {
-        timerCount = 0;
+        ResetVibrationTime();
         LOG_DEBUG("shake!");
     }
     else
     {
-        timerCount++;
+        VibrationTimeAdd();
 
-        if(timerCount * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
+        if(getVibrationTime() * setting.vibration_timer_period >= (get_autodefend_period() * 60000))
         {
             if(get_autodefend_state())
             {
-                if(EAT_FALSE== vibration_fixed())
+                if(EAT_FALSE == vibration_fixed())
                 {
                     vivration_AutolockStateSend(EAT_TRUE);    //TODO:send autolock_msg to main thread
                     set_vibration_state(EAT_TRUE);
                 }
             }
-            if(ITINERARY_START == itinerary_state())
+
+
+            if(AlarmCount > 0)
+            {
+                AlarmCount = 0;
+            }
+
+        }
+
+        if(getVibrationTime() * setting.vibration_timer_period >= (2 * 60000))// 2min dont move ,judge one itinerary
+        {
+            if(ITINERARY_START == get_itinerary_state())
             {
                 vivration_SendItinerarayState(ITINERARY_END);
             }
-
         }
     }
 

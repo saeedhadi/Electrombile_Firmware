@@ -14,6 +14,7 @@
  * 1.0.0: initial framework
  * 1.1.1: add diagnosis function
  * 1.2.0: add battery, for RC1
+ * 1.2.1: add message re-send mechanism
  */
 
 #define VERSION_MAJOR   1
