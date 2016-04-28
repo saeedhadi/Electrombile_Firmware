@@ -37,6 +37,9 @@ int itinerary_store(int starttime, int miles, int endtime)
 
 }
 
+/*
+*every time receive the itinerary ack ,check if itinerary file exist, not found is OK
+*/
 int itinerary_delete(void)
 {
 
@@ -44,7 +47,7 @@ int itinerary_delete(void)
 
     rc = eat_fs_Delete(ITINERARYFILE_NAME);
 
-    if(EAT_FS_NO_ERROR > rc)
+    if(EAT_FS_NO_ERROR > rc && EAT_FS_FILE_NOT_FOUND != rc)
     {
         LOG_ERROR("delete file failed, and Return Error is %d", rc);
         return -1;
