@@ -38,7 +38,7 @@ static char* getEventDescription(soc_event_enum event)
 {
 	switch (event)
 	{
-#ifdef LOG_DEBUG_FLAG
+#ifdef APP_DEBUG
 		DESC_DEF(SOC_READ);
 		DESC_DEF(SOC_WRITE);
 		DESC_DEF(SOC_ACCEPT);
@@ -69,7 +69,7 @@ static char* getStateDescription(cbm_bearer_state_enum state)
 {
 	switch (state)
 	{
-#ifdef LOG_DEBUG_FLAG
+#ifdef APP_DEBUG
 		DESC_DEF(CBM_DEACTIVATED);
 		DESC_DEF(CBM_ACTIVATING);
 		DESC_DEF(CBM_ACTIVATED);

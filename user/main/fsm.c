@@ -77,7 +77,7 @@ static char* fsm_getStateName(STATE state)
 {
     switch (state)
     {
-#ifdef LOG_DEBUG_FLAG
+#ifdef APP_DEBUG
         DESC_DEF(STATE_INITIAL);
         DESC_DEF(STATE_WAIT_GPRS);
         DESC_DEF(STATE_WAIT_BEARER);
@@ -99,7 +99,7 @@ static char* fsm_getEventName(EVENT event)
 {
     switch (event)
     {
-#ifdef LOG_DEBUG_FLAG
+#ifdef APP_DEBUG
         DESC_DEF(EVT_LOOP);
         DESC_DEF(EVT_CALL_READY);
         DESC_DEF(EVT_GPRS_ATTACHED);
