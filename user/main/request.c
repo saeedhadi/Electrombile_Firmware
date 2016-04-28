@@ -41,10 +41,7 @@ int cmd_Login(void)
 
     LOG_DEBUG("send login message.");
 
-    modem_readCCIDInfo();
-
     socket_sendDataDirectly(msg, sizeof(MSG_LOGIN_REQ));
-
 
     return 0;
 }
