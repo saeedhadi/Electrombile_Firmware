@@ -262,7 +262,6 @@ static void vibration_timer_handler(void)
 {
     static eat_bool isFirstTime = EAT_TRUE;
 
-    static int timerCount = 0;
     uint8_t transient_src = 0;
 
     avoid_fre_send(EAT_TRUE);
@@ -317,16 +316,20 @@ static void vibration_timer_handler(void)
                 }
             }
 
-            if(ITINERARY_START == get_itinerary_state())
-            {
-                vivration_SendItinerarayState(ITINERARY_END);
-            }
 
             if(AlarmCount > 0)
             {
                 AlarmCount = 0;
             }
 
+        }
+
+        if(getVibrationTime() * setting.vibration_timer_period >= (2 * 60000))// 2min dont move ,judge one itinerary
+        {
+            if(ITINERARY_START == get_itinerary_state())
+            {
+                vivration_SendItinerarayState(ITINERARY_END);
+            }
         }
     }
 

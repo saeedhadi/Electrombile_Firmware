@@ -24,6 +24,9 @@
 #include "seek.h"
 #include "data.h"
 #include "adc.h"
+#include "itinerary.h"
+#include "response.h"
+#include "msg_queue.h"
 
 typedef int (*EVENT_FUNC)(const EatEvent_st* event);
 typedef struct
@@ -117,6 +120,11 @@ static int event_timer(const EatEvent_st* event)
             eat_timer_start(event->data.timer.timer_id, setting.gps_send_period);
             break;
 
+        case TIMER_MSG_RESEND:
+            msg_resend();
+            eat_timer_start(event->data.timer.timer_id, 60*1000);
+            break;
+
         default:
             LOG_ERROR ("timer(%d) not processed!", event->data.timer.timer_id);
             break;
@@ -174,7 +182,7 @@ static void sendGPS2Server(LOCAL_GPS* gps)
         }
 
         LOG_DEBUG("send CELL message.");
-        socket_sendData(msg, msgLen);
+        socket_sendDataDirectly(msg, msgLen);
 
         data.isCellGet = EAT_FALSE;
     }
@@ -219,11 +227,23 @@ static int threadCmd_AutolockState(const MSG_THREAD* msg)
     autolock_msg->state = msg_state->state;
 
     LOG_DEBUG("send auto lock state change message: %d", msg_state->state);
-    socket_sendData(autolock_msg, sizeof(MSG_AUTODEFEND_STATE_REQ));
+    socket_sendDataDirectly(autolock_msg, sizeof(MSG_AUTODEFEND_STATE_REQ));
 
     return 0;
 }
 
+/*
+*fun: store the itinerary as call-back
+*/
+static int Itinerary_Store_cb(void* msg, int length, void* userdata)
+{
+
+    MSG_ITINERARY_REQ* itinerary_msg = (MSG_ITINERARY_REQ*)msg;
+
+    itinerary_store(itinerary_msg->starttime, itinerary_msg->mileage, itinerary_msg->endtime);
+
+    return 0;
+}
 /*
 *fun: receive msg from GPS_Thread and send itinerary msg to server
 */
@@ -243,13 +263,16 @@ static int threadCmd_Itinerary(const MSG_THREAD* msg)
          LOG_ERROR("msg from THREAD_GPS error!");
          return -1;
     }
+
+
     itinerary_msg = alloc_msg(CMD_ITINERARY, sizeof(MSG_ITINERARY_REQ));
     itinerary_msg->starttime = htonl(msg_data->starttime);
     itinerary_msg->endtime = htonl(msg_data->endtime);
     itinerary_msg->mileage = htonl(msg_data->itinerary);
 
     LOG_DEBUG("send itinerary msg,start:%d end:%d itinerary:%d",msg_data->starttime,msg_data->endtime,msg_data->itinerary);
-    socket_sendData((MSG_ITINERARY_REQ*)itinerary_msg, sizeof(MSG_ITINERARY_REQ));
+
+    socket_sendDataWaitAck((MSG_ITINERARY_REQ*)itinerary_msg, sizeof(MSG_ITINERARY_REQ),Itinerary_Store_cb, NULL);
 
     return 0;
 }
@@ -265,7 +288,6 @@ static int threadCmd_SMS(const MSG_THREAD* msg)
 static int threadCmd_Vibrate(const MSG_THREAD* msg)
 {
     unsigned char* alarm_type = (unsigned char*)msg->data;
-    MSG_ALARM_REQ* socket_msg = 0;
 
     if (msg->length != sizeof(*alarm_type))
     {
@@ -274,18 +296,7 @@ static int threadCmd_Vibrate(const MSG_THREAD* msg)
     }
     LOG_DEBUG("receive thread command CMD_VIBRATE: alarmType(%d).", *alarm_type);
 
-    socket_msg = alloc_msg(CMD_ALARM, sizeof(MSG_ALARM_REQ));
-    if (!socket_msg)
-    {
-        LOG_ERROR("alloc message failed!");
-        return -1;
-    }
-
-    LOG_DEBUG("send alarm vibrate message.");
-    socket_msg->alarmType = *alarm_type;
-    socket_sendData(socket_msg, sizeof(MSG_ALARM_REQ));
-
-    return 0;
+    return cmd_alarm(*alarm_type);
 }
 
 
@@ -314,7 +325,7 @@ static int threadCmd_Location(const MSG_THREAD* msg)
         msg->gps.course = htons(gps->gps.course);
 
         LOG_DEBUG("send GPS_LOCATION message.");
-        socket_sendData(msg, sizeof(MSG_GPSLOCATION_RSP));
+        socket_sendDataDirectly(msg, sizeof(MSG_GPSLOCATION_RSP));
     }
     else                //update local cell info
     {
@@ -342,7 +353,7 @@ static int threadCmd_Location(const MSG_THREAD* msg)
         }
 
         LOG_DEBUG("send CELL_LOCATION message.");
-        socket_sendData(msg, msgLen);
+        socket_sendDataDirectly(msg, msgLen);
     }
 
     return 0;

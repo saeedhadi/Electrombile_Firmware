@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include <eat_interface.h>
+#include <eat_fs.h>
 
 #include "request.h"
 #include "setting.h"
@@ -16,6 +17,8 @@
 #include "socket.h"
 #include "version.h"
 #include "data.h"
+#include "response.h"
+#include "itinerary.h"
 
 int cmd_Login(void)
 {
@@ -35,7 +38,7 @@ int cmd_Login(void)
     memcpy(msg->IMEI, imei, IMEI_LENGTH);
 
     LOG_DEBUG("send login message.");
-    socket_sendData(msg, sizeof(MSG_LOGIN_REQ));
+    socket_sendDataDirectly(msg, sizeof(MSG_LOGIN_REQ));
 
     return 0;
 }
@@ -46,7 +49,57 @@ void cmd_Heartbeat(void)
     MSG_PING_REQ* msg = alloc_msg(CMD_PING, msgLen);
     msg->status = htons(EAT_TRUE);   //TODO: to define the status bits
 
-    socket_sendData(msg, msgLen);
+    socket_sendDataDirectly(msg, msgLen);
+}
+
+int cmd_alarm(char alarm_type)
+{
+    MSG_ALARM_REQ* socket_msg = alloc_msg(CMD_ALARM, sizeof(MSG_ALARM_REQ));
+    if (!socket_msg)
+    {
+        LOG_ERROR("alloc message failed!");
+        return -1;
+    }
+
+    LOG_DEBUG("send alarm vibrate message.");
+    socket_msg->alarmType = alarm_type;
+
+    //TODO: should provide the message send failed handler
+    socket_sendDataWaitAck(socket_msg, sizeof(MSG_ALARM_REQ), NULL, NULL);
+
+    return 0;
+}
+
+int cmd_Itinerary_check(void)
+{
+    MSG_ITINERARY_REQ* itinerary_msg;
+    ITINERARY itinerary;
+    int rc = -1;
+
+    rc = itinerary_get(&itinerary.starttime, &itinerary.miles, &itinerary.endtime);
+
+    if(rc == EAT_FS_FILE_NOT_FOUND)//no file ,no itinerary storage
+    {
+        return 0;
+    }
+
+    if(rc < 0)
+    {
+        LOG_ERROR("read itinerary file error!");
+        return -1;
+    }
+
+    itinerary_msg = alloc_msg(CMD_ITINERARY, sizeof(MSG_ITINERARY_REQ));
+
+    itinerary_msg->starttime = htonl(itinerary.starttime);
+    itinerary_msg->mileage= htonl(itinerary.miles);
+    itinerary_msg->endtime= htonl(itinerary.endtime);
+
+    LOG_DEBUG("send itinerary msg,start:%d end:%d itinerary:%d",ntohl(itinerary_msg->starttime),ntohl(itinerary_msg->endtime),ntohl(itinerary_msg->mileage));
+
+    socket_sendDataWaitAck((MSG_ITINERARY_REQ*)itinerary_msg, sizeof(MSG_ITINERARY_REQ),NULL, NULL);//no need to call call-back to store itinerary
+
+    return 0;
 }
 
 int cmd_SMS(const void* msg)
@@ -62,7 +115,7 @@ void cmd_Wild(const void* m, int len)
 
     memcpy(msg + 1, m, len);
 
-    socket_sendData(msg, msgLen);
+    socket_sendDataDirectly(msg, msgLen);
 }
 
 int cmd_Seek(unsigned int value)
@@ -76,7 +129,7 @@ int cmd_Seek(unsigned int value)
 
     LOG_DEBUG("send seek value message:%d", value);
     seek_msg->intensity = htonl(value);
-    socket_sendData(seek_msg, sizeof(MSG_433));
+    socket_sendDataDirectly(seek_msg, sizeof(MSG_433));
 
     return 0;
 }
@@ -96,7 +149,7 @@ int cmd_GPS(GPS* gps)
 
     LOG_DEBUG("send GPS message.");
 
-    socket_sendData(msg, sizeof(MSG_GPS));
+    socket_sendDataDirectly(msg, sizeof(MSG_GPS));
 
     return 0;
 }
@@ -132,7 +185,7 @@ int cmd_GPSPack(void)
         msg->gps[count].course = htons(msg->gps[count].course);
     }
 
-    socket_sendData(msg, msgLen);
+    socket_sendDataDirectly(msg, msgLen);
 
     return 0;
 

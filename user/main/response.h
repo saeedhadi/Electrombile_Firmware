@@ -10,6 +10,7 @@
 
 int cmd_Login_rsp(const void* msg);
 int cmd_Ping_rsp(const void* msg);
+int cmd_Itinerary_rsp(const void * msg);
 int cmd_Alarm_rsp(const void* msg);
 int cmd_Sms_rsp(const void* msg);
 
@@ -31,6 +32,5 @@ int cmd_UpgradeStart_rsp(const void* msg);
 int cmd_UpgradeData_rsp(const void* msg);
 int cmd_UpgradeEnd_rsp(const void* msg);
 int cmd_DeviceInfo_rsp(const void* msg);
-
 
 #endif /* USER_MAIN_RESPONSE_H_ */

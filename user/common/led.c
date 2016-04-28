@@ -24,7 +24,7 @@ void LED_off(void)
 {
     eat_bool rc;
 
-    eat_gpio_setup(EAT_PIN55_ROW3, EAT_GPIO_DIR_OUTPUT, EAT_GPIO_LEVEL_LOW);
+    rc = eat_gpio_setup(EAT_PIN55_ROW3, EAT_GPIO_DIR_OUTPUT, EAT_GPIO_LEVEL_LOW);
 
     if(EAT_FALSE == rc)
     {

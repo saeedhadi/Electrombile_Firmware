@@ -21,8 +21,8 @@
 #include "thread_msg.h"
 #include "timer.h"
 #include "seek.h"
-
 #include "response.h"
+#include "msg_queue.h"
 
 
 
@@ -59,6 +59,7 @@ static MC_MSG_PROC msgProcs[] =
     {CMD_UPGRADE_END, cmd_UpgradeEnd_rsp},
     {CMD_REBOOT, cmd_Reboot_rsp},
     {CMD_DEVICE_INFO_GET, cmd_DeviceInfo_rsp},
+    {CMD_ITINERARY, cmd_Itinerary_rsp},
 };
 
 int client_handleOnePkt(const void* m, int msgLen)

@@ -201,14 +201,14 @@ int getVibrationTime(void)
 */
 int VibrationTimeAdd(void)
 {
-    VibrationTime++;
+    return VibrationTime++;
 }
 /*
 *if move or set defendoff ,reset the time
 */
 int ResetVibrationTime(void)
 {
-    VibrationTime = 0;
+    return VibrationTime = 0;
 }
 
 char get_itinerary_state(void)

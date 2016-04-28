@@ -53,6 +53,7 @@ void app_battery_thread(void *data)
                         LOG_ERROR("timer(%d) expire!", event.data.timer.timer_id);
                         break;
                 }
+                break;
 
             case EAT_EVENT_ADC:
 
