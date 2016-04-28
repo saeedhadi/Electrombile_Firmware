@@ -36,6 +36,7 @@ typedef void (*STATE_TRIGGER)(void);
 static void fsm_intoRunning(void)
 {
     msg_startResend();
+    modem_readCCIDInfo();
 }
 
 static void fsm_exitRunning(void)
@@ -43,10 +44,6 @@ static void fsm_exitRunning(void)
     msg_stopResend();
 }
 
-static void fsm_intoLogin(void)
-{
-    modem_readCCIDInfo();
-}
 
 //TODO: 如果后期状态触发处理较多的话，以下数组可以改为链表，并采用注册回掉函数的机制
 static STATE_TRIGGER state_in_trigger[STATE_MAX] =
@@ -56,7 +53,7 @@ static STATE_TRIGGER state_in_trigger[STATE_MAX] =
         NULL,               //    STATE_WAIT_BEARER
         NULL,               //    STATE_WAIT_SOCKET
         NULL,               //    STATE_WAIT_IPADDR
-        fsm_intoLogin,      //    STATE_WAIT_LOGIN
+        NULL,               //    STATE_WAIT_LOGIN
         fsm_intoRunning,    //    STATE_RUNNING
 };
 
