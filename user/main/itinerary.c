@@ -22,7 +22,7 @@ int itinerary_store(int starttime, int miles, int endtime)
     fh = eat_fs_Open(ITINERARYFILE_NAME,FS_CREATE);
     if (fh < EAT_FS_NO_ERROR)
     {
-        LOG_ERROR("read initerary file fail, rc: %d", fh);
+        LOG_ERROR("create initerary file fail, rc: %d", fh);
         return -1;
     }
 
@@ -30,8 +30,11 @@ int itinerary_store(int starttime, int miles, int endtime)
     if(EAT_FS_NO_ERROR > rc)
     {
         LOG_ERROR("write file failed, and Return Error is %d", rc);
+        eat_fs_Close(fh);
+
         return -1;
     }
+
     eat_fs_Close(fh);
     return 0;
 
@@ -81,6 +84,7 @@ int itinerary_get(int* starttime, int* miles, int* endtime)
     if(EAT_FS_NO_ERROR > rc)
     {
         LOG_ERROR("read file failed, and Return Error is %d", rc);
+        eat_fs_Close(fh);
         return -1;
     }
 

@@ -30,7 +30,7 @@ LIST_HEAD(head);
 #define MAX_RETRY_TIME  (3)
 
 //每分钟启动一次重传
-#define TIMER_RESEND_PERIOD (60 * 1000)
+#define TIMER_RESEND_PERIOD (120 * 1000)
 
 /*
 *push the msg into queue to wait for ack
