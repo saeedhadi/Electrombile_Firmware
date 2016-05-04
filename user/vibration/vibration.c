@@ -343,21 +343,18 @@ void BT_at_read_handler()
 #define READ_BUFF_SIZE 2048
     unsigned char *buf_p1 = NULL;
     unsigned char *buf_p2 = NULL;
-    unsigned char  buf[READ_BUFF_SIZE] = {0};  //���ڶ�ȡATָ�����Ӧ
+    unsigned char  buf[READ_BUFF_SIZE] = {0};
     unsigned int len = 0;
 
     len = eat_modem_read(buf, READ_BUFF_SIZE);
     LOG_DEBUG("modem read, len=%d, buf=\r\n%s", len, buf);
 
-    buf_p1 = string_bypass(buf, "AT+BTPOWER=1\r\r\n");
-    if(NULL != buf_p1)
+    buf_p1 = string_bypass(buf, "AT+BTPOWER=1");
+    if(NULL != buf_p1)//the judgement is not in use,the ack of AT+BTPOWER is just 'OK'
     {
-        buf_p2 = (unsigned char*)strstr(buf_p1, "OK");
-        if(buf_p1 == buf_p2)
-        {
-            LOG_DEBUG("turn on BT power OK.");
-        }
+        LOG_DEBUG("turn on BT power OK.");
     }
+
     /*
     +BTSCAN: 0,1,"hongmi",9c:99:a0:3b:67:b8,-58
     +BTSCAN: 1
@@ -365,13 +362,30 @@ void BT_at_read_handler()
     buf_p1 = string_bypass(buf, "+BTSCAN: ");
     if(NULL != buf_p1)
     {
-       buf_p2 = string_bypass(buf, "hongmi");//�ĳ�app�޸ĵ��ֻ�����
+       /*buf_p2 = string_bypass(buf, "hongmi");//�ĳ�app�޸ĵ��ֻ�����
        if(NULL != buf_p2)
         {
-            set_vibration_state(EAT_FALSE);
-            LOG_DEBUG("set defend switch off.");
+            if(vibration_fixed())
+            {
+                ResetVibrationTime();
+                set_vibration_state(EAT_FALSE);
+                LOG_DEBUG("set defend switch off.");
+            }
+       }*/
+
+       buf_p2 = string_bypass(buf, "10:2a:b3:73:2b:b8");//�ĳ�app�޸ĵ��ֻ�����
+       if(NULL != buf_p2)
+        {
+            if(vibration_fixed())
+            {
+                ResetVibrationTime();
+                set_vibration_state(EAT_FALSE);
+                LOG_DEBUG("set defend switch off.");
+            }
        }
+
     }
+
 }
 
 
@@ -427,8 +441,6 @@ void app_vibration_thread(void *data)
                 }
                 break;
             case EAT_EVENT_MDM_READY_RD:
-
-                LOG_DEBUG("BT AT read.");
                 BT_at_read_handler();
                 break;
 
