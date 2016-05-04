@@ -28,6 +28,9 @@
 #define AT_CENG     "AT+CENG"
 #define AT_CGNSINF  "AT+CGNSINF"
 #define AT_CCID     "AT+CCID"
+#define AT_BTPOWER  "AT+BTPOWER=1"
+#define AT_BTSCAN   "AT+BTSCAN=1,10"
+
 
 
 static eat_bool modem_cmd(const unsigned char *cmd)
@@ -164,3 +167,21 @@ eat_bool modem_GNSS(void)
 
     return modem_cmd(cmd);
 }
+
+eat_bool modem_BTPOWER(void)
+{
+    unsigned char* cmd = AT_BTPOWER CR;
+
+
+    return modem_cmd(cmd);
+}
+
+eat_bool modem_BTSCAN(void)
+{
+    unsigned char* cmd = AT_BTSCAN CR;
+
+
+    return modem_cmd(cmd);
+}
+
+

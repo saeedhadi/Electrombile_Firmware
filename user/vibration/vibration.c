@@ -18,6 +18,8 @@
 #include "mma8652.h"
 #include "led.h"
 #include "data.h"
+#include "utils.h"
+#include "modem.h"
 
 #define MAX_MOVE_DATA_LEN   500
 #define MOVE_TIMER_PERIOD    10
@@ -336,11 +338,48 @@ static void vibration_timer_handler(void)
     return;
 }
 
+void BT_at_read_handler()
+{
+#define READ_BUFF_SIZE 2048
+    unsigned char *buf_p1 = NULL;
+    unsigned char *buf_p2 = NULL;
+    unsigned char  buf[READ_BUFF_SIZE] = {0};  //���ڶ�ȡATָ�����Ӧ
+    unsigned int len = 0;
+
+    len = eat_modem_read(buf, READ_BUFF_SIZE);
+    LOG_DEBUG("modem read, len=%d, buf=\r\n%s", len, buf);
+
+    buf_p1 = string_bypass(buf, "AT+BTPOWER=1\r\r\n");
+    if(NULL != buf_p1)
+    {
+        buf_p2 = (unsigned char*)strstr(buf_p1, "OK");
+        if(buf_p1 == buf_p2)
+        {
+            LOG_DEBUG("turn on BT power OK.");
+        }
+    }
+    /*
+    +BTSCAN: 0,1,"hongmi",9c:99:a0:3b:67:b8,-58
+    +BTSCAN: 1
+    */
+    buf_p1 = string_bypass(buf, "+BTSCAN: ");
+    if(NULL != buf_p1)
+    {
+       buf_p2 = string_bypass(buf, "hongmi");//�ĳ�app�޸ĵ��ֻ�����
+       if(NULL != buf_p2)
+        {
+            set_vibration_state(EAT_FALSE);
+            LOG_DEBUG("set defend switch off.");
+       }
+    }
+}
+
 
 void app_vibration_thread(void *data)
 {
 	EatEvent_st event;
 	bool ret;
+    static int number = 0;
 
 	LOG_INFO("vibration thread start.");
 
@@ -355,6 +394,8 @@ void app_vibration_thread(void *data)
 	    mma8652_config();
 	}
 
+    modem_BTPOWER();
+
 	eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
 
 	while(EAT_TRUE)
@@ -366,6 +407,13 @@ void app_vibration_thread(void *data)
                 switch (event.data.timer.timer_id)
                 {
                     case TIMER_VIBRATION:
+                        // if(get_ScanCompletion_state())
+                        if(number++>30)
+                        {
+                             LOG_DEBUG("BTSCAN.");
+                             number = 0 ;
+                             modem_BTSCAN();
+                        }
                         vibration_timer_handler();
                         eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
                         break;
@@ -377,6 +425,11 @@ void app_vibration_thread(void *data)
                         LOG_ERROR("timer(%d) expire!", event.data.timer.timer_id);
                         break;
                 }
+                break;
+            case EAT_EVENT_MDM_READY_RD:
+
+                LOG_DEBUG("BT AT read.");
+                BT_at_read_handler();
                 break;
 
             default:

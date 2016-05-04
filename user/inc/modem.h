@@ -26,5 +26,7 @@ eat_bool modem_readCCIDInfo(void);
 eat_bool modem_IsCCIDOK(char* modem_rsp);
 
 eat_bool modem_GNSS(void);
+eat_bool modem_BTPOWER(void);
+
 
 #endif /* USER_INC_MODEM_H_ */
