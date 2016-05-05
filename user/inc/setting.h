@@ -11,6 +11,8 @@
 #include <eat_type.h>
 
 #define MAX_DOMAIN_NAME_LEN 32
+#define BT_ADRESS_LEN 17
+
 typedef enum
 {
 	ADDR_TYPE_IP,
@@ -51,6 +53,13 @@ typedef struct
         unsigned char autodefendPeriod;
     };
 
+    //BT configuration
+    struct
+    {
+        eat_bool isBTFixed;
+        char BTadress[BT_ADRESS_LEN];
+    };
+
 
 }SETTING;
 
@@ -66,6 +75,14 @@ unsigned char get_autodefend_period(void);
 
 void set_autodefend_period(unsigned char period);
 eat_bool get_autodefend_state(void);
+
+void set_BT_adress(char* adress);
+char* get_BT_adress(void);
+
+void set_BT_state(eat_bool fixed);
+eat_bool get_BT_state(void);
+
+
 
 eat_bool setting_restore(void);
 eat_bool setting_save(void);

@@ -41,6 +41,9 @@ int getVibrationTime(void);
 int VibrationTimeAdd(void);
 int ResetVibrationTime(void);
 
+eat_bool get_BTpower_state(void);
+void set_BTpower_state(eat_bool state);
+
 
 #define MAX_GPS_COUNT 10
 #define MAX_VLOTAGE_NUM 10

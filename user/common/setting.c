@@ -55,6 +55,13 @@ SETTING setting;
 #define TAG_LOCK    "lock"
 #define TAG_PERIOD  "period"
 
+#define TAG_BT  "bt"
+#define TAG_BTADRESS  "btadress"
+#define TAG_ISBTFIXED  "isBTFixed"
+
+
+
+
 //the setting file format is as follow
 //{
 //    "SERVER":   {
@@ -157,9 +164,13 @@ static void setting_initial(void)
     /* Switch configuration */
     setting.isVibrateFixed = EAT_FALSE;
 
-    //autolock configuration
+    /* autolock configuration */
     setting.isAutodefendFixed = EAT_TRUE;
     setting.autodefendPeriod = 5;
+
+    /* BT configuration */
+    setting.isBTFixed = EAT_FALSE;
+    strcpy(setting.BTadress, "00:00:00:00:00:00");
 
     return;
 }
@@ -193,9 +204,30 @@ unsigned char get_autodefend_period(void)
 void set_autodefend_period(unsigned char period)
 {
     setting.autodefendPeriod = period;
+}
+
+eat_bool get_BT_state(void)
+{
+    return setting.isBTFixed;
+}
+
+void set_BT_state(eat_bool fixed)
+{
+    setting.isBTFixed= fixed;
     setting_save();
 }
 
+char* get_BT_adress(void)
+{
+    return setting.BTadress;
+}
+
+void set_BT_adress(char* adress)
+{
+    strncpy(setting.BTadress, adress,BT_ADRESS_LEN);
+    setting_save();
+    return;
+}
 
 
 eat_bool setting_restore(void)
@@ -207,6 +239,7 @@ eat_bool setting_restore(void)
     cJSON *conf = 0;
     cJSON *addr = 0;
     cJSON *autolock = 0;
+    cJSON *bt = 0;
 
     setting_initial();
 
@@ -326,6 +359,23 @@ eat_bool setting_restore(void)
     setting.isAutodefendFixed = cJSON_GetObjectItem(autolock, TAG_LOCK)->valueint ? EAT_TRUE : EAT_FALSE;
     setting.autodefendPeriod = cJSON_GetObjectItem(autolock, TAG_PERIOD)->valueint;
 
+    bt = cJSON_GetObjectItem(conf, TAG_BT);
+    if (!bt)
+    {
+        LOG_ERROR("no bt config in setting file!");
+        eat_fs_Close(fh);
+        free(buf);
+        cJSON_Delete(conf);
+        return EAT_FALSE;
+    }
+    else
+    {
+        char *BTadress = cJSON_GetObjectItem(bt, TAG_BTADRESS)->valuestring;
+        LOG_DEBUG("restore BTadress name");
+        strncpy(setting.BTadress, BTadress, BT_ADRESS_LEN);
+        setting.isBTFixed = cJSON_GetObjectItem(bt, TAG_ISBTFIXED)->valueint ? EAT_TRUE : EAT_FALSE;
+    }
+
     free(buf);
     eat_fs_Close(fh);
     cJSON_Delete(conf);
@@ -342,6 +392,7 @@ eat_bool setting_save(void)
     cJSON *root = cJSON_CreateObject();
     cJSON *address = cJSON_CreateObject();
     cJSON *autolock = cJSON_CreateObject();
+    cJSON *bt = cJSON_CreateObject();
 
     char *content = 0;
 
@@ -365,6 +416,12 @@ eat_bool setting_save(void)
     cJSON_AddNumberToObject(autolock, TAG_PERIOD, setting.autodefendPeriod);
 
     cJSON_AddItemToObject(root, TAG_AUTOLOCK, autolock);
+
+
+    cJSON_AddBoolToObject(bt, TAG_ISBTFIXED, setting.isBTFixed);
+    cJSON_AddStringToObject(bt, TAG_BTADRESS, setting.BTadress);
+
+    cJSON_AddItemToObject(root, TAG_BT, bt);
 
 
     content = cJSON_Print(root);

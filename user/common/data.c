@@ -17,12 +17,17 @@ typedef struct queue
 }QUEUE;
 
 static QUEUE gps_queue = {0, 0};
-static u32 BatteryVoltage[MAX_VLOTAGE_NUM] = {0};
 static LOCAL_GPS last_gps_info;
 static LOCAL_GPS* last_gps = &last_gps_info;
 
 static char isItineraryStart = ITINERARY_END;
-int VibrationTime = 0;
+
+static eat_bool isBTpower = EAT_FALSE;
+
+static int VibrationTime = 0;
+
+static u32 BatteryVoltage[MAX_VLOTAGE_NUM] = {0};
+
 
 /*
  * to judge whether the queue is full
@@ -220,5 +225,16 @@ void set_itinerary_state(char state)
 {
     isItineraryStart = state;
 }
+
+eat_bool get_BTpower_state(void)
+{
+    return isBTpower;
+}
+
+void set_BTpower_state(eat_bool state)
+{
+    isBTpower = state;
+}
+
 
 

@@ -20,6 +20,7 @@
 #include "data.h"
 #include "utils.h"
 #include "modem.h"
+#include "setting.h"
 
 #define MAX_MOVE_DATA_LEN   500
 #define MOVE_TIMER_PERIOD    10
@@ -264,6 +265,8 @@ static void vibration_timer_handler(void)
 {
     static eat_bool isFirstTime = EAT_TRUE;
 
+    static int number = 0;
+
     uint8_t transient_src = 0;
 
     avoid_fre_send(EAT_TRUE);
@@ -333,6 +336,17 @@ static void vibration_timer_handler(void)
                 vivration_SendItinerarayState(ITINERARY_END);
             }
         }
+
+    }
+
+    if(number++>30)//30s scan once
+    {
+         number = 0 ;
+         if(EAT_TRUE == vibration_fixed() && get_BTpower_state())
+         {
+            LOG_DEBUG("BTSCANing");
+            modem_BTSCAN();
+         }
     }
 
     return;
@@ -362,7 +376,8 @@ void BT_at_read_handler()
     buf_p1 = string_bypass(buf, "+BTSCAN: ");
     if(NULL != buf_p1)
     {
-       /*buf_p2 = string_bypass(buf, "hongmi");//�ĳ�app�޸ĵ��ֻ�����
+       //BT adress is  9c:99:a0:3b:67:b8     PAIR the BT adress ,if Y, deffend off
+       buf_p2 = string_bypass(buf, setting.BTadress);
        if(NULL != buf_p2)
         {
             if(vibration_fixed())
@@ -370,17 +385,8 @@ void BT_at_read_handler()
                 ResetVibrationTime();
                 set_vibration_state(EAT_FALSE);
                 LOG_DEBUG("set defend switch off.");
-            }
-       }*/
 
-       buf_p2 = string_bypass(buf, "10:2a:b3:73:2b:b8");//�ĳ�app�޸ĵ��ֻ�����
-       if(NULL != buf_p2)
-        {
-            if(vibration_fixed())
-            {
-                ResetVibrationTime();
-                set_vibration_state(EAT_FALSE);
-                LOG_DEBUG("set defend switch off.");
+                //TODO:send the unlock state to server
             }
        }
 
@@ -393,7 +399,6 @@ void app_vibration_thread(void *data)
 {
 	EatEvent_st event;
 	bool ret;
-    static int number = 0;
 
 	LOG_INFO("vibration thread start.");
 
@@ -407,8 +412,19 @@ void app_vibration_thread(void *data)
 	{
 	    mma8652_config();
 	}
-
-    modem_BTPOWER();
+    set_BT_state(EAT_TRUE);
+    set_BT_adress("10:2a:b3:73:2b:b8");
+    if(get_BT_state())
+    {
+        LOG_DEBUG("BT power on");
+        set_BTpower_state(EAT_TRUE);
+        modem_BTPOWER();
+    }
+    else
+    {
+        LOG_DEBUG("BT power off");
+        set_BTpower_state(EAT_FALSE);
+    }
 
 	eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
 
@@ -421,13 +437,6 @@ void app_vibration_thread(void *data)
                 switch (event.data.timer.timer_id)
                 {
                     case TIMER_VIBRATION:
-                        // if(get_ScanCompletion_state())
-                        if(number++>30)
-                        {
-                             LOG_DEBUG("BTSCAN.");
-                             number = 0 ;
-                             modem_BTSCAN();
-                        }
                         vibration_timer_handler();
                         eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
                         break;
