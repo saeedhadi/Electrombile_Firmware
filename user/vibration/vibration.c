@@ -344,7 +344,7 @@ static void vibration_timer_handler(void)
          number = 0 ;
          if(EAT_TRUE == vibration_fixed() && get_BTpower_state())
          {
-            LOG_DEBUG("BTSCANing");
+            LOG_DEBUG("BT SCANing");
             modem_BTSCAN();
          }
     }
@@ -375,23 +375,16 @@ void BT_at_read_handler()
     */
     buf_p1 = string_bypass(buf, "+BTSCAN: ");
     if(NULL != buf_p1)
-    {
-       //BT adress is  9c:99:a0:3b:67:b8     PAIR the BT adress ,if Y, deffend off
-       buf_p2 = string_bypass(buf, setting.BTadress);
-       if(NULL != buf_p2)
+    {//BT adress is  9c:99:a0:3b:67:b8     PAIR the BT adress ,if Y, deffend off
+        buf_p2 = string_bypass(buf, setting.BTadress);
+        if(NULL != buf_p2 && vibration_fixed())
         {
-            if(vibration_fixed())
-            {
-                ResetVibrationTime();
-                set_vibration_state(EAT_FALSE);
-                LOG_DEBUG("set defend switch off.");
-
-                //TODO:send the unlock state to server
-            }
-       }
-
+            ResetVibrationTime();
+            set_vibration_state(EAT_FALSE);
+            LOG_DEBUG("set defend switch off.");
+            //TODO:send the unlock state to server
+        }
     }
-
 }
 
 
@@ -412,8 +405,14 @@ void app_vibration_thread(void *data)
 	{
 	    mma8652_config();
 	}
+
+
+#if 0
     set_BT_state(EAT_TRUE);
-    set_BT_adress("10:2a:b3:73:2b:b8");
+    set_BT_adress("10:2a:b3:73:2b:b8");//lichao's phone
+#endif
+
+
     if(get_BT_state())
     {
         LOG_DEBUG("BT power on");
