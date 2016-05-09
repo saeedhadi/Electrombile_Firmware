@@ -166,7 +166,7 @@ unsigned char battery_get_percent(void)
 
     voltage /= MAX_VLOTAGE_NUM;
 
-    if(ADvalue_2_Realvalue(voltage) > 53)
+    if(ADvalue_2_Realvalue(voltage) > 55)
     {
         voltage = voltage*48/60;    //normalizing to 48V
     }

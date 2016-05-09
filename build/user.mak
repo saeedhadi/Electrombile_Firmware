@@ -33,7 +33,7 @@ SRC_OPEN_MODE_NAME = main gps vibration sms common
 # do something...;
 # #endif
 
-#FEA_APP_DEBUG = -DAPP_DEBUG
+FEA_APP_DEBUG = -DAPP_DEBUG
 ####################### WMMP begin ###########################
 #FEA_APP_WMMP_OPT = -D__SIMCOM_WMMP__
 #eat wmmp interface
