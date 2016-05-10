@@ -29,6 +29,7 @@
 #include "request.h"
 #include "timer.h"
 #include "msg_queue.h"
+#include "diagnosis.h"
 
 int cmd_Login_rsp(const void* msg)
 {
@@ -267,11 +268,13 @@ int cmd_Battery_rsp(const void* msg)
 
 int cmd_LogInfo_rsp(const void * msg)
 {
+    char *buf = log_GetLog();
     return 0;
 }
 
 int cmd_GSMSignal_rsp(const void * msg)
 {
+    int csq = diag_gsm_get();
     return 0;
 }
 
@@ -282,6 +285,8 @@ int cmd_GPSSignal_rsp(const void * msg)
 
 int cmd_433Signal_rsp(const void * msg)
 {
+
+    u32 voltage = diag_433_get();
     return 0;
 }
 

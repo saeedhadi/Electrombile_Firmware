@@ -100,6 +100,11 @@ int log_catlog(void)
     return 0;
 }
 
+char* log_GetLog(void)
+{
+    //TODO:GET THE LASTED FIVE LOGS
+}
+
 int cmd_catlog(const unsigned char* cmdString, unsigned short length)
 {
     print("cat log file begin:");
