@@ -66,24 +66,15 @@ static int fs_ls(const unsigned char* cmdString, unsigned short length)
 
     eat_fs_FindClose(fh);
 
-    rc = eat_fs_GetDiskSize(EAT_FS, &size);
-    if (rc == EAT_FS_NO_ERROR)
-    {
-        print("\r\n\t total disk size: %ld", size);
-    }
-    else
-    {
-        print("\r\n\t total disk size:---(error:%d)", rc);
-    }
 
     rc = eat_fs_GetDiskFreeSize(EAT_FS, &size);
     if (rc == EAT_FS_NO_ERROR)
     {
-        print("\t free disk size:%lld\r\n", size);
+        print("\r\n\t free disk size:%lld\r\n", size);
     }
     else
     {
-        print("\t free disk size:---(error:%d)\r\n", rc);
+        print("\r\n\t free disk size:---(error:%d)\r\n", rc);
     }
 
     return 0;

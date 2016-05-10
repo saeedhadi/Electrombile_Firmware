@@ -33,9 +33,7 @@ SRC_OPEN_MODE_NAME = main gps vibration sms common
 # do something...;
 # #endif
 
-FEA_APP_LOG_ERROR = -DLOG_ERROR_FLAG
-FEA_APP_LOG_INFO = -DLOG_INFO_FLAG
-FEA_APP_LOG_DEBUG = -DLOG_DEBUG_FLAG
+FEA_APP_DEBUG = -DAPP_DEBUG
 ####################### WMMP begin ###########################
 #FEA_APP_WMMP_OPT = -D__SIMCOM_WMMP__
 #eat wmmp interface
@@ -48,9 +46,7 @@ FEA_APP_LOG_DEBUG = -DLOG_DEBUG_FLAG
  #First app or second app
 #FEA_APP_MULTI_APP_INDEX_APP_OPT = -D__EAT_SECOND_APP__ #__EAT_FIRST_APP__
 
-FEA_APP_CFLAGS = $(FEA_APP_LOG_ERROR) \
-				 $(FEA_APP_LOG_INFO) \
-				 $(FEA_APP_LOG_DEBUG) \
+FEA_APP_CFLAGS = $(FEA_APP_DEBUG) \
 				 $(FEA_APP_WMMP_OPT) \
 				 $(FEA_APP_WMMP_INTERFACE_OPT) \
 				 $(FEA_APP_WMMP30_OPT) \

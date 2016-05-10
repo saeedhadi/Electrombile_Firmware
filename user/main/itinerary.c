@@ -22,7 +22,7 @@ int itinerary_store(int starttime, int miles, int endtime)
     fh = eat_fs_Open(ITINERARYFILE_NAME,FS_CREATE);
     if (fh < EAT_FS_NO_ERROR)
     {
-        LOG_ERROR("read initerary file fail, rc: %d", fh);
+        LOG_ERROR("create initerary file fail, rc: %d", fh);
         return -1;
     }
 
@@ -30,13 +30,19 @@ int itinerary_store(int starttime, int miles, int endtime)
     if(EAT_FS_NO_ERROR > rc)
     {
         LOG_ERROR("write file failed, and Return Error is %d", rc);
+        eat_fs_Close(fh);
+
         return -1;
     }
+
     eat_fs_Close(fh);
     return 0;
 
 }
 
+/*
+*every time receive the itinerary ack ,check if itinerary file exist, not found is OK
+*/
 int itinerary_delete(void)
 {
 
@@ -44,7 +50,7 @@ int itinerary_delete(void)
 
     rc = eat_fs_Delete(ITINERARYFILE_NAME);
 
-    if(EAT_FS_NO_ERROR > rc)
+    if(EAT_FS_NO_ERROR > rc && EAT_FS_FILE_NOT_FOUND != rc)
     {
         LOG_ERROR("delete file failed, and Return Error is %d", rc);
         return -1;
@@ -78,6 +84,7 @@ int itinerary_get(int* starttime, int* miles, int* endtime)
     if(EAT_FS_NO_ERROR > rc)
     {
         LOG_ERROR("read file failed, and Return Error is %d", rc);
+        eat_fs_Close(fh);
         return -1;
     }
 

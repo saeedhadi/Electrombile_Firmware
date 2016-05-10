@@ -60,9 +60,6 @@ int cmd_Ping_rsp(const void* msg)
 
 int cmd_Itinerary_rsp(const void* msg)
 {
-    MSG_HEADER* req = (MSG_HEADER*)msg;
-    MSG_HEADER* rsp = NULL;
-
     LOG_DEBUG("get ititerary respond.");
 
     msg_ack(msg);
@@ -432,7 +429,7 @@ int cmd_UpgradeStart_rsp(const void* msg)
     int rc = 0;
     SINT64 freeDiskSize = 0;
 
-    LOG_DEBUG("new app size : %d;new version : now version = %d:%d",ntohl(req->size),ntohl(req->version),VERSION_NUM);
+    LOG_DEBUG("version: %#x -> %#x, file size: %d(%dkb)", VERSION_NUM, ntohl(req->version), ntohl(req->size), ntohl(req->size) / 1024);
 
     if (ntohl(req->version) <= VERSION_NUM)    //No need to upgrade, normally not happened
     {

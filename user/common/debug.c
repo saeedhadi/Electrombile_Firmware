@@ -31,10 +31,13 @@ static int cmd_version(const unsigned char* cmdString, unsigned short length);
 static int cmd_imei(const unsigned char* cmdString, unsigned short length);
 static int cmd_imsi(const unsigned char* cmdString, unsigned short length);
 static int cmd_chipid(const unsigned char* cmdString, unsigned short length);
+
+#ifdef APP_DEBUG
 static int cmd_reboot(const unsigned char* cmdString, unsigned short length);
 static int cmd_halt(const unsigned char* cmdString, unsigned short length);
 static int cmd_rtc(const unsigned char* cmdString, unsigned short length);
 static int cmd_AT(const unsigned char* cmdString, unsigned short length);
+#endif
 
 static CMD_MAP cmd_map[MAX_CMD_NUMBER] =
 {
@@ -43,7 +46,7 @@ static CMD_MAP cmd_map[MAX_CMD_NUMBER] =
         {"imei",        cmd_imei},
         {"imsi",        cmd_imsi},
         {"chipid",      cmd_chipid},
-#ifdef LOG_DEBUG_FLAG
+#ifdef APP_DEBUG
         {"reboot",      cmd_reboot},
         {"halt",        cmd_halt},
         {"rtc",         cmd_rtc},
@@ -103,6 +106,7 @@ static int cmd_chipid(const unsigned char* cmdString, unsigned short length)
     return 0;
 }
 
+#ifdef APP_DEBUG
 static int cmd_reboot(const unsigned char* cmdString, unsigned short length)
 {
     eat_reset_module();
@@ -139,6 +143,7 @@ static int cmd_AT(const unsigned char* cmdString, unsigned short length)
     eat_modem_write("\n", 1);
     return 0;
 }
+#endif
 
 int debug_proc(const unsigned char* cmdString, unsigned short length)
 {

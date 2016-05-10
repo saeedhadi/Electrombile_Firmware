@@ -49,14 +49,14 @@ int cmd_Login(void)
 int cmd_SimInfo(char* buf)
 {
     MSG_SIM_INFO* msg = alloc_msg(CMD_SIM_INFO, sizeof(MSG_SIM_INFO));
-    u8 imsi[MAX_IMSI_LENGTH + 1] = {'\0'};
+    u8 imsi[MAX_IMSI_LENGTH + 2] = {'\0'};//len: len >=17[length of imsi(15 or 16)+ 1('\0')]
     if (!msg)
     {
         LOG_ERROR("alloc login message failed!");
         return -1;
     }
 
-    eat_get_imsi(imsi,MAX_IMSI_LENGTH + 1);//need space to save \0, if not, maybe Crossing
+    eat_get_imsi(imsi,MAX_IMSI_LENGTH + 2);
 
     sscanf(buf,"%20s",msg->CCID);
     LOG_DEBUG("CCID: %20s",msg->CCID);

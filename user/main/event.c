@@ -53,7 +53,7 @@ static char* getEventDescription(EatEvent_enum event)
 {
     switch (event)
     {
-        #ifdef LOG_DEBUG_FLAG
+        #ifdef APP_DEBUG
                 DESC_DEF(EAT_EVENT_TIMER);
                 DESC_DEF(EAT_EVENT_KEY);
                 DESC_DEF(EAT_EVENT_INT);
