@@ -63,6 +63,10 @@ enum
     CMD_REBOOT          = 27,
     CMD_DEVICE_INFO_GET = 28,
     CMD_GPS_PACK        = 29,
+    CMD_LOGINFO_GET     = 30,
+    CMD_GPS_STRENTH     = 31,
+    CMD_433_STRENTH     = 32,
+    CMD_GSM_STRENTH     = 33,
 };
 
 enum

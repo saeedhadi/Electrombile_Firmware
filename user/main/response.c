@@ -265,6 +265,25 @@ int cmd_Battery_rsp(const void* msg)
     return 0;
 }
 
+int cmd_LogInfo_rsp(const void * msg)
+{
+    return 0;
+}
+
+int cmd_GSMSignal_rsp(const void * msg)
+{
+    return 0;
+}
+
+int cmd_GPSSignal_rsp(const void * msg)
+{
+    return 0;
+}
+
+int cmd_433Signal_rsp(const void * msg)
+{
+    return 0;
+}
 
 int cmd_DefendOn_rsp(const void* msg)
 {
