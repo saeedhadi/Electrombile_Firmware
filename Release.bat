@@ -5,6 +5,6 @@ set path=%CD%\build\winmake;%SystemRoot%\system32
 
 echo. > output/log/output.log
 
-make -f build\Makefile --debug=b PROJ=%~n0 CFG=user DEBUG=true %1
+make -f build\Makefile PROJ=SIM808M32 CFG=user %1
 find "warnings," output/log/output.log
 @pause

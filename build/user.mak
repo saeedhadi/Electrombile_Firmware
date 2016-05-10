@@ -33,7 +33,10 @@ SRC_OPEN_MODE_NAME = main gps vibration sms common
 # do something...;
 # #endif
 
+ifneq ("$(findstring true,$(DEBUG))","")
 FEA_APP_DEBUG = -DAPP_DEBUG
+endif
+
 ####################### WMMP begin ###########################
 #FEA_APP_WMMP_OPT = -D__SIMCOM_WMMP__
 #eat wmmp interface
