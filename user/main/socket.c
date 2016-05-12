@@ -257,6 +257,7 @@ static void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
             break;
 
         case CBM_GPRS_AUTO_DISC_TIMEOUT:
+            LOG_ERROR("CBM_GPRS_AUTO_DISC_TIMEOUT happened!");
             eat_reset_module();
             break;
 
