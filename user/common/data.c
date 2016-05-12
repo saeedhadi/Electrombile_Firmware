@@ -151,10 +151,8 @@ void battery_store_voltage(u32 voltage)
 /*
 * get the battery's voltage
 */
-unsigned char battery_get_percent(void)
+u32 battery_get_Voltage(void)
 {
-#define ADvalue_2_Realvalue(x) x*103/3/1000.f //unit mV, 3K & 100k divider
-#define Voltage2Percent(x) (unsigned char)exp((x-37.873)/2.7927)
     u32 voltage = 0;
     int count;
     unsigned char percent;
@@ -166,22 +164,8 @@ unsigned char battery_get_percent(void)
 
     voltage /= MAX_VLOTAGE_NUM;
 
-    if(ADvalue_2_Realvalue(voltage) > 55)
-    {
-        voltage = voltage*48/60;    //normalizing to 48V
-    }
-    else if(ADvalue_2_Realvalue(voltage) > 40)
-    {
-        voltage = voltage;
-    }
-    else if(ADvalue_2_Realvalue(voltage) > 28)
-    {
-        voltage = voltage*48/36;    //normalizing to 48V
-    }
+    return voltage;
 
-    percent = Voltage2Percent(ADvalue_2_Realvalue(voltage));
-
-    return percent>100?100:percent;
 }
 
 unsigned char battery_get_miles(void)
