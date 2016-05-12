@@ -23,7 +23,7 @@ enum
     BATTERY_TYPE72 = 72,
 };
 #define ADvalue_2_Realvalue(x) x*103/3/1000.f //unit mV, 3K & 100k divider
-#define Voltage2Percent(x) (unsigned char)exp((x-37.873)/2.7927)
+#define Voltage2Percent(x) exp((x-37.873)/2.7927)
 
 
 /*
@@ -48,7 +48,7 @@ static u8 battery_Judge_type(u32 voltage)
 {
     float realVoltage = ADvalue_2_Realvalue(voltage);
     u8 battery_type = BATTERY_TYPENULL;
-    u8 percent = 0;
+    int percent = 0;//the result of the fumula may be larger than 256
 
     if(realVoltage > 64 )
     {
@@ -71,13 +71,15 @@ static u8 battery_Judge_type(u32 voltage)
         battery_type = BATTERY_TYPE36;
     }
 
-    percent = Voltage2Percent(ADvalue_2_Realvalue(voltage));
-    if(percent > 40 && percent < 60)
+    percent = (int)Voltage2Percent(ADvalue_2_Realvalue(voltage));
+    percent = percent>100?100:percent;
+
+    if(percent > 30 && percent < 70)
     {
         set_battery_type(battery_type);
     }
 
-    return percent;
+    return (u8)percent;
 }
 
 /*
@@ -85,7 +87,7 @@ static u8 battery_Judge_type(u32 voltage)
 */
 static u8 battery_getType_percent(u32 voltage)
 {
-    u8 percent = 0;
+    int percent = 0;
     u8 battery_type = get_battery_type();
 
     if(battery_type == BATTERY_TYPE72)
@@ -109,9 +111,15 @@ static u8 battery_getType_percent(u32 voltage)
         return 101;         //BATTERY_TYPENULL as 101 > 100
     }
 
-    percent = Voltage2Percent(ADvalue_2_Realvalue(voltage));
+    percent = (int)Voltage2Percent(ADvalue_2_Realvalue(voltage));
+    percent = percent>100?100:percent;
 
-    return percent>100?100:percent;
+    if(percent == 0)//if percent == 0,mostly judge error,set type to default
+    {
+        set_battery_type(BATTERY_TYPENULL);
+    }
+
+    return (u8)percent;
 }
 
 
@@ -125,7 +133,7 @@ u8 battery_get_percent(void)
 
     percent_tmp = battery_Judge_type(voltage);//judge new battery type
 
-    if((percent = battery_getType_percent(voltage)) > 100)//if battery type is judged , get battery
+    if((percent = battery_getType_percent(voltage)) > 100)//if battery type is not judged , get battery as no type
     {
         percent = percent_tmp;
     }
