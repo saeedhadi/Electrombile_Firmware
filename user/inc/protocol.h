@@ -487,6 +487,40 @@ typedef struct
 }__attribute__((__packed__)) MSG_GPS_PACK;
 
 
+typedef MSG_HEADER MSG_GSMSIGNAL_REQ;
+typedef struct
+{
+    MSG_HEADER header;
+    char csq;
+}__attribute__((__packed__)) MSG_GSMSIGNAL_RSP;
+
+
+typedef MSG_HEADER MSG_GPSSIGNAL_REQ;
+typedef struct
+{
+    MSG_HEADER header;
+    char satellite;
+}__attribute__((__packed__)) MSG_GPSSIGNAL_RSP;
+
+
+typedef MSG_HEADER MSG_433SIGNAL_REQ;
+typedef struct
+{
+    MSG_HEADER header;
+    short signal_433;
+}__attribute__((__packed__)) MSG_433SIGNAL_RSP;
+
+
+typedef MSG_HEADER MSG_LOGINFO_REQ;
+typedef struct
+{
+    MSG_HEADER header;
+    char log[];
+}__attribute__((__packed__)) MSG_LOGINFO_RSP;
+
+
+
+
 #pragma pack(pop)
 
 #endif /* _PROTOCOL_H_ */

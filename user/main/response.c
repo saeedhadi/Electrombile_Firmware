@@ -30,6 +30,7 @@
 #include "timer.h"
 #include "msg_queue.h"
 #include "diagnosis.h"
+#include "mem.h"
 
 int cmd_Login_rsp(const void* msg)
 {
@@ -268,25 +269,95 @@ int cmd_Battery_rsp(const void* msg)
 
 int cmd_LogInfo_rsp(const void * msg)
 {
-    char *buf = log_GetLog();
+#define MAX_BUF_LEN 512
+    MSG_LOGINFO_REQ *req = (MSG_LOGINFO_REQ*)msg;
+    MSG_LOGINFO_RSP *rsp = NULL;
+    int msgLen;
+    char *buf = (char*)malloc(MAX_BUF_LEN);
+    if(!buf)
+    {
+        LOG_ERROR("alloc buf space failed!");
+        return -1;
+    }
+
+    log_GetLog(buf);
+
+    msgLen = sizeof(MSG_HEADER) + strlen(buf) + 1;
+    rsp = malloc(msgLen);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc LogInfo rsp message failed!");
+        return -1;
+    }
+
+    rsp->header.signature = htons(START_FLAG);
+    rsp->header.cmd = req->cmd;
+    rsp->header.length = htons(msgLen - MSG_HEADER_LEN);
+    rsp->header.seq = req->seq;
+
+    strncpy(rsp->log,buf,strlen(buf));
+    socket_sendDataDirectly(rsp, msgLen);
+
+    free(buf);
     return 0;
 }
 
 int cmd_GSMSignal_rsp(const void * msg)
 {
-    int csq = diag_gsm_get();
+    MSG_GSMSIGNAL_REQ *req = (MSG_GSMSIGNAL_REQ*)msg;
+    MSG_GSMSIGNAL_RSP *rsp = NULL;
+    char csq = diag_gsm_get();
+
+    rsp = alloc_rspMsg(req);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc GSMSignal rsp message failed!");
+        return -1;
+    }
+    rsp->csq = csq;
+
+    socket_sendDataDirectly(rsp, sizeof(MSG_GSMSIGNAL_RSP));
     return 0;
 }
 
 int cmd_GPSSignal_rsp(const void * msg)
 {
+    MSG_GPSSIGNAL_REQ *req = (MSG_GPSSIGNAL_REQ*)msg;
+    MSG_GPSSIGNAL_RSP *rsp = NULL;
+    char satellite = diag_gsm_get();
+
+    rsp = alloc_rspMsg(req);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc GPSSiganl rsp message failed!");
+        return -1;
+    }
+    rsp->satellite = satellite;
+
+    socket_sendDataDirectly(rsp, sizeof(MSG_GPSSIGNAL_RSP));
     return 0;
 }
 
 int cmd_433Signal_rsp(const void * msg)
 {
+    MSG_433SIGNAL_REQ *req = (MSG_433SIGNAL_REQ*)msg;
+    MSG_433SIGNAL_RSP *rsp = NULL;
+    short signal_433 = diag_433_get();
+    if(!signal_433)
+    {
+        LOG_ERROR("get 433 signal failed!");
+        return -1;
+    }
 
-    u32 voltage = diag_433_get();
+    rsp = alloc_rspMsg(req);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc defend rsp message failed!");
+        return -1;
+    }
+    rsp->signal_433 = htons(signal_433);
+
+    socket_sendDataDirectly(rsp, sizeof(MSG_433SIGNAL_RSP));
     return 0;
 }
 
@@ -570,7 +641,7 @@ int cmd_DeviceInfo_rsp(const void* msg)
         msgLen = sizeof(MSG_DEVICE_INFO_GET_RSP)-sizeof(GPS) + 4*sizeof(short);
     }
 
-    rsp = eat_mem_alloc(msgLen);
+    rsp = malloc(msgLen);
     if (!rsp)
     {
         LOG_ERROR("alloc defend rsp message failed!");

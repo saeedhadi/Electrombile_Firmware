@@ -59,6 +59,9 @@ void* alloc_rspMsg(const MSG_HEADER* pMsg)
             {CMD_UPGRADE_END,   sizeof(MSG_UPGRADE_END_RSP)},
             {CMD_REBOOT,        sizeof(MSG_HEADER)},
             {CMD_BATTERY,   sizeof(MSG_BATTERY_RSP)},
+            {CMD_433_STRENTH,   sizeof(MSG_433SIGNAL_RSP)},
+            {CMD_GSM_STRENTH,   sizeof(MSG_GSMSIGNAL_RSP)},
+            {CMD_GPS_STRENTH,   sizeof(MSG_GPSSIGNAL_RSP)},
     };
 
     for (i = 0; i < sizeof(rsp_msg_length_map) / sizeof(rsp_msg_length_map[0]); i++)

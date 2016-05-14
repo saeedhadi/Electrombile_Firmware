@@ -100,9 +100,10 @@ int log_catlog(void)
     return 0;
 }
 
-char* log_GetLog(void)
+int log_GetLog(char buf[])
 {
     //TODO:GET THE LASTED FIVE LOGS
+    return 0;
 }
 
 int cmd_catlog(const unsigned char* cmdString, unsigned short length)
