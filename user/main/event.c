@@ -106,15 +106,6 @@ static int event_mod_ready_rd(const EatEvent_st* event)
 
 	return 0;
 }
-void msg_send(void)
-{
-    static int count = 0;
-    if(++count%8 == 0)
-    {
-        cmd_LogInfo_rsp(NULL);
-    }
-}
-
 
 static int event_timer(const EatEvent_st* event)
 {
@@ -139,11 +130,6 @@ static int event_timer(const EatEvent_st* event)
         case TIMER_MSG_RESEND:
             msg_resend();
             eat_timer_start(event->data.timer.timer_id, 60*1000);
-            break;
-
-        case TIMER_4_TEST:
-            msg_send();
-            eat_timer_start(event->data.timer.timer_id, 3*1000);
             break;
 
         default:

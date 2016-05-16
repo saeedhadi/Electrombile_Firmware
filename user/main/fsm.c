@@ -158,7 +158,6 @@ static void start_mainloop(void)
 {
     eat_timer_start(TIMER_LOOP, setting.main_loop_timer_period);
     eat_timer_start(TIMER_GPS_SEND, setting.gps_send_period);
-    eat_timer_start(TIMER_4_TEST, 3*1000);
 }
 
 

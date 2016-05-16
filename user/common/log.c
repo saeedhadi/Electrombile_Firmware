@@ -106,7 +106,6 @@ int log_GetLog(char buf[])
     int rc = 0;
     UINT readLen = 0;
     UINT filesize = 0;
-    int file_offset = 0;
     char buftmp[READ_BUFFER_LENGTH] = {0};
     char *pbuf = NULL;
 
