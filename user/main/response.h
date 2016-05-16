@@ -39,6 +39,7 @@ int cmd_GSMSignal_rsp(const void * msg);
 int cmd_GPSSignal_rsp(const void * msg);
 int cmd_433Signal_rsp(const void * msg);
 
+#define MAX_DEBUG_BUF_LEN 512
 
 
 #endif /* USER_MAIN_RESPONSE_H_ */

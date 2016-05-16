@@ -32,6 +32,7 @@
 #include "diagnosis.h"
 #include "mem.h"
 
+
 int cmd_Login_rsp(const void* msg)
 {
     LOG_DEBUG("get login respond.");
@@ -269,11 +270,10 @@ int cmd_Battery_rsp(const void* msg)
 
 int cmd_LogInfo_rsp(const void * msg)
 {
-#define MAX_BUF_LEN 512
-    MSG_LOGINFO_REQ *req = (MSG_LOGINFO_REQ*)msg;
-    MSG_LOGINFO_RSP *rsp = NULL;
+    MSG_DEBUG_REQ *req = (MSG_DEBUG_REQ*)msg;
+    MSG_DEBUG_RSP *rsp = NULL;
     int msgLen;
-    char *buf = (char*)malloc(MAX_BUF_LEN);
+    char *buf = (char*)malloc(MAX_DEBUG_BUF_LEN);
     if(!buf)
     {
         LOG_ERROR("alloc buf space failed!");
@@ -287,15 +287,17 @@ int cmd_LogInfo_rsp(const void * msg)
     if (!rsp)
     {
         LOG_ERROR("alloc LogInfo rsp message failed!");
+        free(buf);
         return -1;
     }
 
     rsp->header.signature = htons(START_FLAG);
     rsp->header.cmd = req->cmd;
     rsp->header.length = htons(msgLen - MSG_HEADER_LEN);
-    rsp->header.seq = req->seq;
+    rsp->header.seq = -7;//req->seq;
 
-    strncpy(rsp->log,buf,strlen(buf));
+    strncpy(rsp->data,buf,strlen(buf)+1);
+
     socket_sendDataDirectly(rsp, msgLen);
 
     free(buf);
@@ -304,61 +306,91 @@ int cmd_LogInfo_rsp(const void * msg)
 
 int cmd_GSMSignal_rsp(const void * msg)
 {
-    MSG_GSMSIGNAL_REQ *req = (MSG_GSMSIGNAL_REQ*)msg;
-    MSG_GSMSIGNAL_RSP *rsp = NULL;
+    MSG_DEBUG_REQ *req = (MSG_DEBUG_REQ*)msg;
+    MSG_DEBUG_RSP *rsp = NULL;
     char csq = diag_gsm_get();
-
-    rsp = alloc_rspMsg(req);
-    if (!rsp)
+    int msgLen;
+    char *buf = (char*)malloc(MAX_DEBUG_BUF_LEN);
+    if(!buf)
     {
-        LOG_ERROR("alloc GSMSignal rsp message failed!");
+        LOG_ERROR("alloc buf space failed!");
         return -1;
     }
-    rsp->csq = csq;
 
-    socket_sendDataDirectly(rsp, sizeof(MSG_GSMSIGNAL_RSP));
+    sprintf(buf,"GSM signal %d\0",csq);
+
+    msgLen = sizeof(MSG_HEADER) + strlen(buf) + 1;
+    rsp = malloc(msgLen);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc LogInfo rsp message failed!");
+        free(buf);
+        return -1;
+    }
+
+    rsp->header.signature = htons(START_FLAG);
+    rsp->header.cmd = req->cmd;
+    rsp->header.length = htons(msgLen - MSG_HEADER_LEN);
+    rsp->header.seq = req->seq;
+
+    strncpy(rsp->data,buf,strlen(buf)+1);
+
+    socket_sendDataDirectly(rsp, msgLen);
+
+    free(buf);
     return 0;
 }
 
 int cmd_GPSSignal_rsp(const void * msg)
 {
-    MSG_GPSSIGNAL_REQ *req = (MSG_GPSSIGNAL_REQ*)msg;
-    MSG_GPSSIGNAL_RSP *rsp = NULL;
-    char satellite = diag_gsm_get();
+    u8 msgLen = sizeof(MSG_THREAD);
+    MSG_THREAD* m = allocMsg(msgLen);
 
-    rsp = alloc_rspMsg(req);
-    if (!rsp)
-    {
-        LOG_ERROR("alloc GPSSiganl rsp message failed!");
-        return -1;
-    }
-    rsp->satellite = satellite;
+    m->cmd = CMD_THREAD_GPSHDOP;
+    m->length = 0;
+    LOG_DEBUG("send CMD_THREAD_GPSHDOP to THREAD_GPS.");
 
-    socket_sendDataDirectly(rsp, sizeof(MSG_GPSSIGNAL_RSP));
+    sendMsg(THREAD_GPS, m, msgLen);
     return 0;
 }
 
 int cmd_433Signal_rsp(const void * msg)
 {
-    MSG_433SIGNAL_REQ *req = (MSG_433SIGNAL_REQ*)msg;
-    MSG_433SIGNAL_RSP *rsp = NULL;
+    MSG_DEBUG_REQ *req = (MSG_DEBUG_REQ*)msg;
+    MSG_DEBUG_RSP *rsp = NULL;
     short signal_433 = diag_433_get();
-    if(!signal_433)
+
+    int msgLen;
+    char *buf = (char*)malloc(MAX_DEBUG_BUF_LEN);
+    if(!buf)
     {
-        LOG_ERROR("get 433 signal failed!");
+        LOG_ERROR("alloc buf space failed!");
         return -1;
     }
 
-    rsp = alloc_rspMsg(req);
+    sprintf(buf,"433 signal: %d\0",signal_433);
+
+    msgLen = sizeof(MSG_HEADER) + strlen(buf) + 1;
+    rsp = malloc(msgLen);
     if (!rsp)
     {
-        LOG_ERROR("alloc defend rsp message failed!");
+        LOG_ERROR("alloc LogInfo rsp message failed!");
+        free(buf);
         return -1;
     }
-    rsp->signal_433 = htons(signal_433);
 
-    socket_sendDataDirectly(rsp, sizeof(MSG_433SIGNAL_RSP));
+    rsp->header.signature = htons(START_FLAG);
+    rsp->header.cmd = req->cmd;
+    rsp->header.length = htons(msgLen - MSG_HEADER_LEN);
+    rsp->header.seq = req->seq;
+
+    strncpy(rsp->data,buf,strlen(buf)+1);
+
+    socket_sendDataDirectly(rsp, msgLen);
+
+    free(buf);
     return 0;
+
 }
 
 int cmd_DefendOn_rsp(const void* msg)

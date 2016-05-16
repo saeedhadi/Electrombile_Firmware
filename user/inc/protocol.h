@@ -63,10 +63,10 @@ enum
     CMD_REBOOT          = 27,
     CMD_DEVICE_INFO_GET = 28,
     CMD_GPS_PACK        = 29,
-    CMD_LOGINFO_GET     = 30,
-    CMD_GPS_STRENTH     = 31,
-    CMD_433_STRENTH     = 32,
-    CMD_GSM_STRENTH     = 33,
+    CMD_LOGINFO_GET     = -1,
+    CMD_GPS_STRENTH     = -2,
+    CMD_433_STRENTH     = -3,
+    CMD_GSM_STRENTH     = -4,
 };
 
 enum
@@ -487,38 +487,12 @@ typedef struct
 }__attribute__((__packed__)) MSG_GPS_PACK;
 
 
-typedef MSG_HEADER MSG_GSMSIGNAL_REQ;
+typedef MSG_HEADER MSG_DEBUG_REQ;
 typedef struct
 {
     MSG_HEADER header;
-    char csq;
-}__attribute__((__packed__)) MSG_GSMSIGNAL_RSP;
-
-
-typedef MSG_HEADER MSG_GPSSIGNAL_REQ;
-typedef struct
-{
-    MSG_HEADER header;
-    char satellite;
-}__attribute__((__packed__)) MSG_GPSSIGNAL_RSP;
-
-
-typedef MSG_HEADER MSG_433SIGNAL_REQ;
-typedef struct
-{
-    MSG_HEADER header;
-    short signal_433;
-}__attribute__((__packed__)) MSG_433SIGNAL_RSP;
-
-
-typedef MSG_HEADER MSG_LOGINFO_REQ;
-typedef struct
-{
-    MSG_HEADER header;
-    char log[];
-}__attribute__((__packed__)) MSG_LOGINFO_RSP;
-
-
+    char data[];
+}__attribute__((__packed__)) MSG_DEBUG_RSP;
 
 
 #pragma pack(pop)

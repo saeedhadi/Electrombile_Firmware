@@ -14,6 +14,7 @@
 enum CMD
 {
     CMD_THREAD_GPS,
+    CMD_THREAD_GPSHDOP,
     CMD_THREAD_SMS,
     CMD_THREAD_VIBRATE,
     CMD_THREAD_LOCATION,
@@ -70,6 +71,14 @@ typedef struct
     u32 itinerary;
 
 }__attribute__((__packed__))GPS_ITINERARY_INFO;
+
+
+typedef struct
+{
+    float hdop;
+    char satellites;
+}__attribute__((__packed__))GPS_HDOP_INFO;
+
 
 
 

@@ -103,6 +103,7 @@ int log_catlog(void)
 int log_GetLog(char buf[])
 {
     //TODO:GET THE LASTED FIVE LOGS
+    strcpy(buf,"piggysticker\0");
     return 0;
 }
 

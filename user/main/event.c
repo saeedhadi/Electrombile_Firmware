@@ -28,6 +28,7 @@
 #include "itinerary.h"
 #include "response.h"
 #include "msg_queue.h"
+#include "mem.h"
 
 typedef int (*EVENT_FUNC)(const EatEvent_st* event);
 typedef struct
@@ -105,6 +106,15 @@ static int event_mod_ready_rd(const EatEvent_st* event)
 
 	return 0;
 }
+void msg_send(void)
+{
+    static int count = 0;
+    if(++count%8 == 0)
+    {
+        cmd_GPSSignal_rsp(NULL);
+    }
+}
+
 
 static int event_timer(const EatEvent_st* event)
 {
@@ -129,6 +139,11 @@ static int event_timer(const EatEvent_st* event)
         case TIMER_MSG_RESEND:
             msg_resend();
             eat_timer_start(event->data.timer.timer_id, 60*1000);
+            break;
+
+        case TIMER_4_TEST:
+            msg_send();
+            eat_timer_start(event->data.timer.timer_id, 3*1000);
             break;
 
         default:
@@ -284,6 +299,47 @@ static int threadCmd_Itinerary(const MSG_THREAD* msg)
 }
 
 
+/*
+*fun: receive msg from GPS_Thread and send GPSSignal msg to server
+*/
+static int threadCmd_GPSHdop(const MSG_THREAD* msg)
+{
+    GPS_HDOP_INFO* msg_data = (GPS_HDOP_INFO*) msg->data;
+    MSG_DEBUG_RSP* hdop_msg;
+    u8 msgLen = 0;
+    char *buf = (char*)malloc(MAX_DEBUG_BUF_LEN);
+    if(!buf)
+    {
+        LOG_ERROR("alloc buf space failed!");
+        return -1;
+    }
+
+    if (msg->length < sizeof(GPS_HDOP_INFO) || !msg_data)
+    {
+         LOG_ERROR("msg from THREAD_GPS error!");
+         free(buf);
+         return -1;
+    }
+
+    sprintf(buf,"hdop: %f\tsatellites: %d\0",msg_data->hdop,msg_data->satellites);
+
+    msgLen = sizeof(MSG_HEADER) + strlen(buf) + 1;
+    hdop_msg = alloc_msg(CMD_GPS_STRENTH,msgLen);
+    if (!hdop_msg)
+    {
+        LOG_ERROR("alloc LogInfo rsp message failed!");
+        free(buf);
+        return -1;
+    }
+
+    strncpy(hdop_msg->data,buf,strlen(buf)+1);
+    socket_sendDataDirectly(hdop_msg, msgLen);
+
+    free(buf);
+    return 0;
+}
+
+
 static int threadCmd_SMS(const MSG_THREAD* msg)
 {
     LOG_DEBUG("receive thread command CMD_SMS.");
@@ -374,6 +430,7 @@ static THREAD_MSG_PROC msgProcs[] =
         {CMD_THREAD_LOCATION, threadCmd_Location},
         {CMD_THREAD_AUTOLOCK, threadCmd_AutolockState},
         {CMD_THREAD_ITINERARY, threadCmd_Itinerary},
+        {CMD_THREAD_GPSHDOP, threadCmd_GPSHdop},
 };
 
 static int event_threadMsg(const EatEvent_st* event)
