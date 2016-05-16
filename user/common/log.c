@@ -14,10 +14,10 @@
 #include "debug.h"
 #include "log.h"
 
-#define READ_BUFFER_LENGTH  512
 
 int log_catlog(void)
 {
+#define READ_BUFFER_LENGTH  512
     FS_HANDLE fh;
     int rc = 0;
     char buf[READ_BUFFER_LENGTH] = {0};
@@ -100,13 +100,12 @@ int log_catlog(void)
     return 0;
 }
 
-int log_GetLog(char buf[])
+int log_GetLog(char buf[], s32 len)
 {
     FS_HANDLE fh;
     int rc = 0;
     UINT readLen = 0;
     UINT filesize = 0;
-    char buftmp[READ_BUFFER_LENGTH] = {0};
     char *pbuf = NULL;
 
     fh = eat_fs_Open(LOG_FILE_NAME, FS_READ_ONLY);
@@ -130,9 +129,9 @@ int log_GetLog(char buf[])
         return -1;
     }
 
-    if(filesize > READ_BUFFER_LENGTH)
+    if(filesize > len)
     {
-        filesize = READ_BUFFER_LENGTH;
+        filesize = len;
     }
 
     rc = eat_fs_Seek(fh,-filesize,EAT_FS_FILE_END);
@@ -143,7 +142,7 @@ int log_GetLog(char buf[])
         return -1;
     }
 
-    eat_fs_Read(fh,buftmp,filesize,&readLen);
+    eat_fs_Read(fh,buf,filesize,&readLen);
     if (EAT_FS_NO_ERROR > rc)
     {
         LOG_ERROR("read file failed:%d", rc);
@@ -151,7 +150,7 @@ int log_GetLog(char buf[])
         return -1;
     }
 
-    pbuf = strstr(buftmp,"\r\n");
+    pbuf = strstr(buf,"\r\n");
     if(!pbuf)
     {
         strcpy(buf,"no log file!\0");

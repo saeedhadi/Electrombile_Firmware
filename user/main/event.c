@@ -293,7 +293,7 @@ static int threadCmd_GPSHdop(const MSG_THREAD* msg)
     GPS_HDOP_INFO* msg_data = (GPS_HDOP_INFO*) msg->data;
     MSG_DEBUG_RSP* hdop_msg;
     u8 msgLen = 0;
-    char *buf = (char*)malloc(MAX_DEBUG_BUF_LEN);
+    char buf[MAX_DEBUG_BUF_LEN] = {0};
     if(!buf)
     {
         LOG_ERROR("alloc buf space failed!");
@@ -303,25 +303,22 @@ static int threadCmd_GPSHdop(const MSG_THREAD* msg)
     if (msg->length < sizeof(GPS_HDOP_INFO) || !msg_data)
     {
          LOG_ERROR("msg from THREAD_GPS error!");
-         free(buf);
          return -1;
     }
 
-    sprintf(buf,"hdop: %f\tsatellites: %d\0",msg_data->hdop,msg_data->satellites);
+    sprintf(buf,"hdop: %f ;satellites: %d",msg_data->hdop,msg_data->satellites);
 
     msgLen = sizeof(MSG_HEADER) + strlen(buf) + 1;
     hdop_msg = alloc_msg(CMD_GPS_STRENTH,msgLen);
     if (!hdop_msg)
     {
         LOG_ERROR("alloc LogInfo rsp message failed!");
-        free(buf);
         return -1;
     }
 
     strncpy(hdop_msg->data,buf,strlen(buf)+1);
     socket_sendDataDirectly(hdop_msg, msgLen);
 
-    free(buf);
     return 0;
 }
 

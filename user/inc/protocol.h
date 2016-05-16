@@ -32,7 +32,10 @@ enum
 
 enum
 {
-
+    CMD_GSM_STRENTH     = -4,
+    CMD_433_STRENTH     = -3,
+    CMD_GPS_STRENTH     = -2,
+    CMD_LOGINFO_GET     = -1,
     CMD_WILD            =  0,
     CMD_LOGIN           =  1,
     CMD_PING            =  2,
@@ -63,10 +66,6 @@ enum
     CMD_REBOOT          = 27,
     CMD_DEVICE_INFO_GET = 28,
     CMD_GPS_PACK        = 29,
-    CMD_LOGINFO_GET     = -1,
-    CMD_GPS_STRENTH     = -2,
-    CMD_433_STRENTH     = -3,
-    CMD_GSM_STRENTH     = -4,
 };
 
 enum

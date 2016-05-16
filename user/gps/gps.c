@@ -211,6 +211,10 @@ static void gps_GPSSignalSend(const MSG_THREAD* thread_msg)
         LOG_DEBUG("send hdop to MainThread");
         sendMsg(THREAD_MAIN, msg, msgLen);
     }
+    else
+    {
+        LOG_ERROR("get gps info error ,and erturn is %d",rc);
+    }
 
     return;
 }
@@ -271,25 +275,23 @@ void app_gps_thread(void *data)
                     case CMD_THREAD_LOCATION:
                         LOG_DEBUG("gps get CMD_THREAD_LOCATION.");
                         location_handler(msg->cmd);
-                        free((void*)msg);
                         break;
 
                     case CMD_THREAD_ITINERARY:
                         LOG_DEBUG("gps get CMD_THREAD_ITINERARY.");
                         gps_ItinerarayHandler(msg);
-                        free((void*)msg);
                         break;
 
                     case CMD_THREAD_GPSHDOP:
                         LOG_DEBUG("gps get CMD_THREAD_GPSHDOP.");
                         gps_GPSSignalSend(msg);
-                        free((void*)msg);
                         break;
 
                     default:
                         LOG_ERROR("cmd(%d) not processed!", msg->cmd);
                         break;
                 }
+                freeMsg(msg);
                 break;
 
             default:

@@ -274,40 +274,26 @@ int cmd_LogInfo_rsp(const void * msg)
     MSG_DEBUG_RSP *rsp = NULL;
     int msgLen;
     int rc = 0;
-    char *buf = (char*)malloc(MAX_DEBUG_BUF_LEN);
-    if(!buf)
-    {
-        LOG_ERROR("alloc buf space failed!");
-        return -1;
-    }
+    char buf[MAX_DEBUG_BUF_LEN] = {0};
 
-    rc = log_GetLog(buf);
+    rc = log_GetLog(buf,MAX_DEBUG_BUF_LEN);
     if(MSG_SUCCESS > rc)
     {
         LOG_ERROR("get log file error");
-        free(buf);
         return -1;
     }
 
     msgLen = sizeof(MSG_HEADER) + strlen(buf) + 1;
-    rsp = malloc(msgLen);
+    rsp = alloc_msg(req->cmd,msgLen);
     if (!rsp)
     {
         LOG_ERROR("alloc LogInfo rsp message failed!");
-        free(buf);
         return -1;
     }
-
-    rsp->header.signature = htons(START_FLAG);
-    rsp->header.cmd = req->cmd;
-    rsp->header.length = htons(msgLen - MSG_HEADER_LEN);
-    rsp->header.seq = -7;//req->seq;
 
     strncpy(rsp->data,buf,strlen(buf)+1);
 
     socket_sendDataDirectly(rsp, msgLen);
-
-    free(buf);
     return 0;
 }
 
@@ -317,34 +303,27 @@ int cmd_GSMSignal_rsp(const void * msg)
     MSG_DEBUG_RSP *rsp = NULL;
     char csq = diag_gsm_get();
     int msgLen;
-    char *buf = (char*)malloc(MAX_DEBUG_BUF_LEN);
+    char buf[MAX_DEBUG_BUF_LEN] = {0};
+
     if(!buf)
     {
         LOG_ERROR("alloc buf space failed!");
         return -1;
     }
 
-    sprintf(buf,"GSM signal %d\0",csq);
+    sprintf(buf,"GSM signal %d",csq);
 
     msgLen = sizeof(MSG_HEADER) + strlen(buf) + 1;
-    rsp = malloc(msgLen);
+    rsp = alloc_msg(req->cmd,msgLen);
     if (!rsp)
     {
         LOG_ERROR("alloc LogInfo rsp message failed!");
-        free(buf);
         return -1;
     }
-
-    rsp->header.signature = htons(START_FLAG);
-    rsp->header.cmd = req->cmd;
-    rsp->header.length = htons(msgLen - MSG_HEADER_LEN);
-    rsp->header.seq = req->seq;
 
     strncpy(rsp->data,buf,strlen(buf)+1);
 
     socket_sendDataDirectly(rsp, msgLen);
-
-    free(buf);
     return 0;
 }
 
@@ -366,36 +345,22 @@ int cmd_433Signal_rsp(const void * msg)
     MSG_DEBUG_REQ *req = (MSG_DEBUG_REQ*)msg;
     MSG_DEBUG_RSP *rsp = NULL;
     short signal_433 = diag_433_get();
-
+    char buf[MAX_DEBUG_BUF_LEN] = {0};
     int msgLen;
-    char *buf = (char*)malloc(MAX_DEBUG_BUF_LEN);
-    if(!buf)
-    {
-        LOG_ERROR("alloc buf space failed!");
-        return -1;
-    }
 
-    sprintf(buf,"433 signal: %d\0",signal_433);
+    sprintf(buf,"433 signal: %d",signal_433);
 
     msgLen = sizeof(MSG_HEADER) + strlen(buf) + 1;
-    rsp = malloc(msgLen);
+    rsp = alloc_msg(req->cmd,msgLen);
     if (!rsp)
     {
         LOG_ERROR("alloc LogInfo rsp message failed!");
-        free(buf);
         return -1;
     }
-
-    rsp->header.signature = htons(START_FLAG);
-    rsp->header.cmd = req->cmd;
-    rsp->header.length = htons(msgLen - MSG_HEADER_LEN);
-    rsp->header.seq = req->seq;
 
     strncpy(rsp->data,buf,strlen(buf)+1);
 
     socket_sendDataDirectly(rsp, msgLen);
-
-    free(buf);
     return 0;
 
 }

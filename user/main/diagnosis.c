@@ -83,7 +83,7 @@ u32 diag_433_get(void)
     if (!rc)
     {
         LOG_ERROR("Get 433 signal quality failed");
-        return EAT_FALSE;
+        return 0;
     }
 
     return voltage;
