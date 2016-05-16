@@ -273,6 +273,7 @@ int cmd_LogInfo_rsp(const void * msg)
     MSG_DEBUG_REQ *req = (MSG_DEBUG_REQ*)msg;
     MSG_DEBUG_RSP *rsp = NULL;
     int msgLen;
+    int rc = 0;
     char *buf = (char*)malloc(MAX_DEBUG_BUF_LEN);
     if(!buf)
     {
@@ -280,7 +281,13 @@ int cmd_LogInfo_rsp(const void * msg)
         return -1;
     }
 
-    log_GetLog(buf);
+    rc = log_GetLog(buf);
+    if(MSG_SUCCESS > rc)
+    {
+        LOG_ERROR("get log file error");
+        free(buf);
+        return -1;
+    }
 
     msgLen = sizeof(MSG_HEADER) + strlen(buf) + 1;
     rsp = malloc(msgLen);

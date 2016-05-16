@@ -111,7 +111,7 @@ void msg_send(void)
     static int count = 0;
     if(++count%8 == 0)
     {
-        cmd_GPSSignal_rsp(NULL);
+        cmd_LogInfo_rsp(NULL);
     }
 }
 

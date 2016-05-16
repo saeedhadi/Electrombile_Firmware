@@ -14,10 +14,10 @@
 #include "debug.h"
 #include "log.h"
 
+#define READ_BUFFER_LENGTH  512
 
 int log_catlog(void)
 {
-#define READ_BUFFER_LENGTH  512
     FS_HANDLE fh;
     int rc = 0;
     char buf[READ_BUFFER_LENGTH] = {0};
@@ -102,8 +102,66 @@ int log_catlog(void)
 
 int log_GetLog(char buf[])
 {
-    //TODO:GET THE LASTED FIVE LOGS
-    strcpy(buf,"piggysticker\0");
+    FS_HANDLE fh;
+    int rc = 0;
+    UINT readLen = 0;
+    UINT filesize = 0;
+    int file_offset = 0;
+    char buftmp[READ_BUFFER_LENGTH] = {0};
+    char *pbuf = NULL;
+
+    fh = eat_fs_Open(LOG_FILE_NAME, FS_READ_ONLY);
+    if(EAT_FS_FILE_NOT_FOUND == fh)
+    {
+        strcpy(buf,"no log file!\0");
+        return 0;
+    }
+
+    if(EAT_FS_NO_ERROR > fh)
+    {
+        LOG_ERROR("open file error, fh=%d.", fh);
+        return -1;
+    }
+
+    rc = eat_fs_GetFileSize(fh,&filesize);
+    if(EAT_FS_NO_ERROR > rc)
+    {
+        LOG_ERROR("get filesize error, rc = %d.", rc);
+        eat_fs_Close(fh);
+        return -1;
+    }
+
+    if(filesize > READ_BUFFER_LENGTH)
+    {
+        filesize = READ_BUFFER_LENGTH;
+    }
+
+    rc = eat_fs_Seek(fh,-filesize,EAT_FS_FILE_END);
+    if(EAT_FS_NO_ERROR > rc)
+    {
+        LOG_ERROR("seek file error, rc = %d.", rc);
+        eat_fs_Close(fh);
+        return -1;
+    }
+
+    eat_fs_Read(fh,buftmp,filesize,&readLen);
+    if (EAT_FS_NO_ERROR > rc)
+    {
+        LOG_ERROR("read file failed:%d", rc);
+        eat_fs_Close(fh);
+        return -1;
+    }
+
+    pbuf = strstr(buftmp,"\r\n");
+    if(!pbuf)
+    {
+        strcpy(buf,"no log file!\0");
+        eat_fs_Close(fh);
+        return 0;
+    }
+
+    sprintf(buf,"%s\0",pbuf);
+    eat_fs_Close(fh);
     return 0;
 }
 
