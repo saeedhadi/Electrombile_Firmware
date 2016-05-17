@@ -77,8 +77,13 @@ typedef struct
 {
     float hdop;
     char satellites;
+    int managerSeq;
 }__attribute__((__packed__))GPS_HDOP_INFO;
 
+typedef struct
+{
+    int managerSeq;
+}__attribute__((__packed__))MANAGERSEQ_INFO;
 
 
 

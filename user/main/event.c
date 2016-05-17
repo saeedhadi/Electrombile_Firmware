@@ -291,7 +291,7 @@ static int threadCmd_Itinerary(const MSG_THREAD* msg)
 static int threadCmd_GPSHdop(const MSG_THREAD* msg)
 {
     GPS_HDOP_INFO* msg_data = (GPS_HDOP_INFO*) msg->data;
-    MSG_DEBUG_RSP* hdop_msg;
+    MSG_GET_GPS_RSP* hdop_msg;
     u8 msgLen = 0;
     char buf[MAX_DEBUG_BUF_LEN] = {0};
     if(!buf)
@@ -308,14 +308,14 @@ static int threadCmd_GPSHdop(const MSG_THREAD* msg)
 
     snprintf(buf,MAX_DEBUG_BUF_LEN,"hdop: %f ;satellites: %d",msg_data->hdop,msg_data->satellites);
 
-    msgLen = sizeof(MSG_HEADER) + strlen(buf) + 1;
-    hdop_msg = alloc_msg(CMD_GPS_STRENTH,msgLen);
+    msgLen = sizeof(MSG_GET_HEADER) + strlen(buf) + 1;
+    hdop_msg = alloc_msg(CMD_GET_GPS,msgLen);
     if (!hdop_msg)
     {
         LOG_ERROR("alloc LogInfo rsp message failed!");
         return -1;
     }
-
+    hdop_msg->managerSeq = msg_data->managerSeq;
     strncpy(hdop_msg->data,buf,strlen(buf)+1);
     socket_sendDataDirectly(hdop_msg, msgLen);
 

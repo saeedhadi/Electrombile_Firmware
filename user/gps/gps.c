@@ -174,6 +174,7 @@ static void gps_GPSSignalSend(const MSG_THREAD* thread_msg)
     u8 msgLen = 0;
     MSG_THREAD *msg = NULL;
     GPS_HDOP_INFO *data = NULL;
+    MANAGERSEQ_INFO *main_data = NULL;
     float longtitude = 0.0;
     float latitude = 0.0;
     float hdop = 0.0;
@@ -200,6 +201,7 @@ static void gps_GPSSignalSend(const MSG_THREAD* thread_msg)
             LOG_ERROR("alloc msg failed!");
             return ;
         }
+        main_data = (MANAGERSEQ_INFO*)thread_msg->data;
 
         msg->cmd = thread_msg->cmd;
         msg->length = sizeof(GPS_HDOP_INFO);
@@ -207,6 +209,7 @@ static void gps_GPSSignalSend(const MSG_THREAD* thread_msg)
 
         data->hdop = hdop;
         data->satellites = satellites;
+        data->managerSeq = main_data->managerSeq;
 
         LOG_DEBUG("send hdop to MainThread");
         sendMsg(THREAD_MAIN, msg, msgLen);
@@ -215,6 +218,7 @@ static void gps_GPSSignalSend(const MSG_THREAD* thread_msg)
     {
         LOG_ERROR("get gps info error ,and erturn is %d",rc);
     }
+
 
     return;
 }

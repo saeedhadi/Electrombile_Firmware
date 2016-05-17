@@ -61,10 +61,10 @@ static MC_MSG_PROC msgProcs[] =
     {CMD_DEVICE_INFO_GET, cmd_DeviceInfo_rsp},
     {CMD_ITINERARY, cmd_Itinerary_rsp},
     {CMD_SIM_INFO, cmd_SimInfo_rsp},
-    {CMD_LOGINFO_GET, cmd_LogInfo_rsp},
-    {CMD_GSM_STRENTH, cmd_GSMSignal_rsp},
-    {CMD_GPS_STRENTH, cmd_GPSSignal_rsp},
-    {CMD_433_STRENTH, cmd_433Signal_rsp},
+    {CMD_GET_LOG, cmd_LogInfo_rsp},
+    {CMD_GET_GSM, cmd_GSMSignal_rsp},
+    {CMD_GET_GPS, cmd_GPSSignal_rsp},
+    {CMD_GET_433, cmd_433Signal_rsp},
 };
 
 int client_handleOnePkt(const void* m, int msgLen)
