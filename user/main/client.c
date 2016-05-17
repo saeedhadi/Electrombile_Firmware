@@ -65,6 +65,7 @@ static MC_MSG_PROC msgProcs[] =
     {CMD_GET_GSM, cmd_GSMSignal_rsp},
     {CMD_GET_GPS, cmd_GPSSignal_rsp},
     {CMD_GET_433, cmd_433Signal_rsp},
+    {CMD_GET_SETTING, cmd_GetSetting_rsp},
 };
 
 int client_handleOnePkt(const void* m, int msgLen)

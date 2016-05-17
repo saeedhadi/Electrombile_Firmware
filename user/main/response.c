@@ -298,6 +298,40 @@ int cmd_LogInfo_rsp(const void * msg)
     return 0;
 }
 
+int cmd_GetSetting_rsp(const void * msg)
+{
+    MSG_GET_SETTING_REQ*req = (MSG_GET_SETTING_REQ*)msg;
+    MSG_GET_SETTING_RSP*rsp = NULL;
+    int msgLen;
+    int rc = 0;
+    char buf[MAX_DEBUG_BUF_LEN] = {0};
+    if(setting.addr_type == ADDR_TYPE_DOMAIN)
+    {
+        snprintf(buf,MAX_DEBUG_BUF_LEN,"server(%s:%d),isAutodefendFixed(%d),autodefendPeriod(%d),isVibrateFixed(%d)",\
+            setting.domain,setting.port,setting.isAutodefendFixed,setting.autodefendPeriod,setting.isVibrateFixed);
+    }
+    else
+    {
+        snprintf(buf,MAX_DEBUG_BUF_LEN,"server(%d.%d.%d.%d:%d),isAutodefendFixed(%d),autodefendPeriod(%d),isVibrateFixed(%d)",\
+            setting.ipaddr[0],setting.ipaddr[1],setting.ipaddr[2],setting.ipaddr[3],setting.port,setting.isAutodefendFixed,setting.autodefendPeriod,setting.isVibrateFixed);
+    }
+
+    msgLen = sizeof(MSG_GET_HEADER) + strlen(buf) + 1;
+    rsp = alloc_msg(req->header.cmd,msgLen);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc LogInfo rsp message failed!");
+        return -1;
+    }
+
+    strncpy(rsp->data,buf,strlen(buf)+1);
+    rsp->managerSeq = req->managerSeq;
+
+    socket_sendDataDirectly(rsp, msgLen);
+    return 0;
+}
+
+
 int cmd_GSMSignal_rsp(const void * msg)
 {
     MSG_GET_GSM_REQ*req = (MSG_GET_GSM_REQ*)msg;

@@ -38,6 +38,7 @@ int cmd_LogInfo_rsp(const void * msg);
 int cmd_GSMSignal_rsp(const void * msg);
 int cmd_GPSSignal_rsp(const void * msg);
 int cmd_433Signal_rsp(const void * msg);
+int cmd_GetSetting_rsp(const void * msg);
 
 #define MAX_DEBUG_BUF_LEN 128
 
