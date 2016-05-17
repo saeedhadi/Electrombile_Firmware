@@ -86,6 +86,8 @@ static eat_bool vibration_sendAlarm(void)
         avoid_freq_flag = EAT_TRUE;
         return sendMsg(THREAD_MAIN, msg, msgLen);
     }
+
+    return EAT_FALSE;
 }
 
 /*

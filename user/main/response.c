@@ -311,7 +311,7 @@ int cmd_GSMSignal_rsp(const void * msg)
         return -1;
     }
 
-    sprintf(buf,"GSM signal %d",csq);
+    snprintf(buf,MAX_DEBUG_BUF_LEN,"GSM signal %d",csq);
 
     msgLen = sizeof(MSG_HEADER) + strlen(buf) + 1;
     rsp = alloc_msg(req->cmd,msgLen);
@@ -348,7 +348,7 @@ int cmd_433Signal_rsp(const void * msg)
     char buf[MAX_DEBUG_BUF_LEN] = {0};
     int msgLen;
 
-    sprintf(buf,"433 signal: %d",signal_433);
+    snprintf(buf,MAX_DEBUG_BUF_LEN,"433 signal: %d",signal_433);
 
     msgLen = sizeof(MSG_HEADER) + strlen(buf) + 1;
     rsp = alloc_msg(req->cmd,msgLen);

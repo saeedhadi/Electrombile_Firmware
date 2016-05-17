@@ -306,7 +306,7 @@ static int threadCmd_GPSHdop(const MSG_THREAD* msg)
          return -1;
     }
 
-    sprintf(buf,"hdop: %f ;satellites: %d",msg_data->hdop,msg_data->satellites);
+    snprintf(buf,MAX_DEBUG_BUF_LEN,"hdop: %f ;satellites: %d",msg_data->hdop,msg_data->satellites);
 
     msgLen = sizeof(MSG_HEADER) + strlen(buf) + 1;
     hdop_msg = alloc_msg(CMD_GPS_STRENTH,msgLen);
