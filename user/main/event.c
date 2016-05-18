@@ -28,6 +28,7 @@
 #include "itinerary.h"
 #include "response.h"
 #include "msg_queue.h"
+#include "mem.h"
 
 typedef int (*EVENT_FUNC)(const EatEvent_st* event);
 typedef struct
@@ -284,6 +285,44 @@ static int threadCmd_Itinerary(const MSG_THREAD* msg)
 }
 
 
+/*
+*fun: receive msg from GPS_Thread and send GPSSignal msg to server
+*/
+static int threadCmd_GPSHdop(const MSG_THREAD* msg)
+{
+    GPS_HDOP_INFO* msg_data = (GPS_HDOP_INFO*) msg->data;
+    MSG_GET_GPS_RSP* hdop_msg;
+    u8 msgLen = 0;
+    char buf[MAX_DEBUG_BUF_LEN] = {0};
+    if(!buf)
+    {
+        LOG_ERROR("alloc buf space failed!");
+        return -1;
+    }
+
+    if (msg->length < sizeof(GPS_HDOP_INFO) || !msg_data)
+    {
+         LOG_ERROR("msg from THREAD_GPS error!");
+         return -1;
+    }
+
+    snprintf(buf,MAX_DEBUG_BUF_LEN,"hdop: %f ;satellites: %d",msg_data->hdop,msg_data->satellites);
+
+    msgLen = sizeof(MSG_GET_HEADER) + strlen(buf) + 1;
+    hdop_msg = alloc_msg(CMD_GET_GPS,msgLen);
+    if (!hdop_msg)
+    {
+        LOG_ERROR("alloc LogInfo rsp message failed!");
+        return -1;
+    }
+    hdop_msg->managerSeq = msg_data->managerSeq;
+    strncpy(hdop_msg->data,buf,strlen(buf)+1);
+    socket_sendDataDirectly(hdop_msg, msgLen);
+
+    return 0;
+}
+
+
 static int threadCmd_SMS(const MSG_THREAD* msg)
 {
     LOG_DEBUG("receive thread command CMD_SMS.");
@@ -374,6 +413,7 @@ static THREAD_MSG_PROC msgProcs[] =
         {CMD_THREAD_LOCATION, threadCmd_Location},
         {CMD_THREAD_AUTOLOCK, threadCmd_AutolockState},
         {CMD_THREAD_ITINERARY, threadCmd_Itinerary},
+        {CMD_THREAD_GPSHDOP, threadCmd_GPSHdop},
 };
 
 static int event_threadMsg(const EatEvent_st* event)

@@ -42,6 +42,10 @@ static eat_bool diag_batterCheck(void)
     return EAT_TRUE;
 }
 
+int diag_gsm_get(void)
+{
+    return eat_network_get_csq();;
+}
 
 /*
  * 检测GSM的信号强度是否 > 6
@@ -53,7 +57,7 @@ static eat_bool diag_gsmSignalCheck(void)
 
     for(count = 0; count < 100; count++)
     {
-        if((csq = eat_network_get_csq()) <= 0)// Most wait 10s for GSM
+        if((csq = diag_gsm_get()) <= 0)// Most wait 10s for GSM
         {
             eat_sleep(100);
         }
@@ -72,20 +76,26 @@ static eat_bool diag_gsmSignalCheck(void)
     return EAT_TRUE;
 }
 
+u32 diag_433_get(void)
+{
+    u32 voltage;
+    eat_bool rc = eat_get_adc_sync(ADC_433, &voltage);
+    if (!rc)
+    {
+        LOG_ERROR("Get 433 signal quality failed");
+        return 0;
+    }
+
+    return voltage;
+}
+
+
 /*
  * 检测433的信号强度
  */
 static eat_bool diag_433Check(void)
 {
-    eat_bool rc;
-    u32 voltage;
-
-    rc = eat_get_adc_sync(ADC_433, &voltage);
-    if (!rc)
-    {
-        LOG_ERROR("Get 433 signal quality failed");
-        return EAT_FALSE;
-    }
+    u32 voltage = diag_433_get();
 
     //检查433信号强度是否在[100mv, 1000mv]之间
     if (voltage < 100 || voltage > 1000)

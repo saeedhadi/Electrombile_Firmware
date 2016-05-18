@@ -100,6 +100,69 @@ int log_catlog(void)
     return 0;
 }
 
+int log_GetLog(char buf[], s32 len)
+{
+    FS_HANDLE fh;
+    int rc = 0;
+    UINT readLen = 0;
+    UINT filesize = 0;
+    char *pbuf = NULL;
+
+    fh = eat_fs_Open(LOG_FILE_NAME, FS_READ_ONLY);
+    if(EAT_FS_FILE_NOT_FOUND == fh)
+    {
+        strcpy(buf,"no log file!\0");
+        return 0;
+    }
+
+    if(EAT_FS_NO_ERROR > fh)
+    {
+        LOG_ERROR("open file error, fh=%d.", fh);
+        return -1;
+    }
+
+    rc = eat_fs_GetFileSize(fh,&filesize);
+    if(EAT_FS_NO_ERROR > rc)
+    {
+        LOG_ERROR("get filesize error, rc = %d.", rc);
+        eat_fs_Close(fh);
+        return -1;
+    }
+
+    if(filesize > len)
+    {
+        filesize = len;
+    }
+
+    rc = eat_fs_Seek(fh,-filesize,EAT_FS_FILE_END);
+    if(EAT_FS_NO_ERROR > rc)
+    {
+        LOG_ERROR("seek file error, rc = %d.", rc);
+        eat_fs_Close(fh);
+        return -1;
+    }
+
+    eat_fs_Read(fh,buf,filesize,&readLen);
+    if (EAT_FS_NO_ERROR > rc)
+    {
+        LOG_ERROR("read file failed:%d", rc);
+        eat_fs_Close(fh);
+        return -1;
+    }
+
+    pbuf = strstr(buf,"\r\n");
+    if(!pbuf)
+    {
+        strcpy(buf,"no log file!\0");
+        eat_fs_Close(fh);
+        return 0;
+    }
+
+    sprintf(buf,"%s\0",pbuf);
+    eat_fs_Close(fh);
+    return 0;
+}
+
 int cmd_catlog(const unsigned char* cmdString, unsigned short length)
 {
     print("cat log file begin:");

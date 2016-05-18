@@ -33,6 +33,9 @@ void log_file(const char* fmt, ...)__attribute__((format(printf, 1, 2)));
 
 #define MAX_LOGFILE_SIZE (4 * 1024)
 
+int log_GetLog(char buf[], s32 len);
+
+
 
 
 #endif /* USER_ELECTROMBILE_LOG_H_ */

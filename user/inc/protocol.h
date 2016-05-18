@@ -32,7 +32,13 @@ enum
 
 enum
 {
-
+    CMD_REBOOT          = -7,
+    CMD_GET_LOG         = -6,
+    CMD_GET_433         = -5,
+    CMD_GET_GSM         = -4,
+    CMD_GET_GPS         = -3,
+    CMD_GET_SETTING     = -2,
+    CMD_GET_BATTERY     = -1,
     CMD_WILD            =  0,
     CMD_LOGIN           =  1,
     CMD_PING            =  2,
@@ -60,7 +66,7 @@ enum
     CMD_UPGRADE_DATA    = 24,
     CMD_UPGRADE_END     = 25,
     CMD_SIM_INFO        = 26,
-    CMD_REBOOT          = 27,
+    //CMD_REBOOT          = 27,
     CMD_DEVICE_INFO_GET = 28,
     CMD_GPS_PACK        = 29,
 };
@@ -86,6 +92,96 @@ typedef struct
 }__attribute__((__packed__)) MSG_HEADER;
 
 #define MSG_HEADER_LEN sizeof(MSG_HEADER)
+
+/*
+ * reboot message structure
+ */
+typedef MSG_HEADER MSG_REBOOT_REQ;
+
+/*
+ * upgrade message structure
+ */
+typedef MSG_HEADER MSG_UPGRADE_REQ;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int managerSeq;
+}__attribute__((__packed__)) MSG_GET_HEADER;
+
+
+/*
+ * get log message structure
+ */
+
+typedef MSG_GET_HEADER MSG_GET_LOG_REQ;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int managerSeq;
+    char data[];
+}__attribute__((__packed__)) MSG_GET_LOG_RSP;
+
+/*
+ * get 433 message structure
+ */
+typedef MSG_GET_HEADER MSG_GET_433_REQ;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int managerSeq;
+    char data[];
+}__attribute__((__packed__)) MSG_GET_433_RSP;
+
+/*
+ * get GSM message structure
+ */
+typedef MSG_GET_HEADER MSG_GET_GSM_REQ;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int managerSeq;
+    char data[];
+}__attribute__((__packed__)) MSG_GET_GSM_RSP;
+
+/*
+ * get GPS message structure
+ */
+typedef MSG_GET_HEADER MSG_GET_GPS_REQ;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int managerSeq;
+    char data[];
+}__attribute__((__packed__)) MSG_GET_GPS_RSP;
+
+/*
+ * get setting message structure
+ */
+typedef MSG_GET_HEADER MSG_GET_SETTING_REQ;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int managerSeq;
+    char data[];
+}__attribute__((__packed__)) MSG_GET_SETTING_RSP;
+
+/*
+ * get battery message structure
+ */
+typedef MSG_GET_HEADER MSG_GET_BATTERY_REQ;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int managerSeq;
+    char data[];
+}__attribute__((__packed__)) MSG_GET_BATTERY_RSP;
 
 /*
  * Login message structure
@@ -481,6 +577,14 @@ typedef struct
     MSG_HEADER header;
     GPS gps[];
 }__attribute__((__packed__)) MSG_GPS_PACK;
+
+
+typedef MSG_HEADER MSG_DEBUG_REQ;
+typedef struct
+{
+    MSG_HEADER header;
+    char data[];
+}__attribute__((__packed__)) MSG_DEBUG_RSP;
 
 
 #pragma pack(pop)

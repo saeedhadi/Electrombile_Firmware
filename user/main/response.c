@@ -29,6 +29,9 @@
 #include "request.h"
 #include "timer.h"
 #include "msg_queue.h"
+#include "diagnosis.h"
+#include "mem.h"
+
 
 int cmd_Login_rsp(const void* msg)
 {
@@ -265,6 +268,143 @@ int cmd_Battery_rsp(const void* msg)
     return 0;
 }
 
+int cmd_LogInfo_rsp(const void * msg)
+{
+    MSG_GET_LOG_REQ*req = (MSG_GET_LOG_REQ*)msg;
+    MSG_GET_LOG_RSP*rsp = NULL;
+    int msgLen;
+    int rc = 0;
+    char buf[MAX_DEBUG_BUF_LEN] = {0};
+
+    rc = log_GetLog(buf,MAX_DEBUG_BUF_LEN);
+    if(MSG_SUCCESS > rc)
+    {
+        LOG_ERROR("get log file error");
+        return -1;
+    }
+
+    msgLen = sizeof(MSG_GET_HEADER) + strlen(buf) + 1;
+    rsp = alloc_msg(req->header.cmd,msgLen);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc LogInfo rsp message failed!");
+        return -1;
+    }
+
+    strncpy(rsp->data,buf,strlen(buf)+1);
+    rsp->managerSeq = req->managerSeq;
+
+    socket_sendDataDirectly(rsp, msgLen);
+    return 0;
+}
+
+int cmd_GetSetting_rsp(const void * msg)
+{
+    MSG_GET_SETTING_REQ*req = (MSG_GET_SETTING_REQ*)msg;
+    MSG_GET_SETTING_RSP*rsp = NULL;
+    int msgLen;
+    int rc = 0;
+    char buf[MAX_DEBUG_BUF_LEN] = {0};
+    if(setting.addr_type == ADDR_TYPE_DOMAIN)
+    {
+        snprintf(buf,MAX_DEBUG_BUF_LEN,"server(%s:%d),isAutodefendFixed(%d),autodefendPeriod(%d),isVibrateFixed(%d)",\
+            setting.domain,setting.port,setting.isAutodefendFixed,setting.autodefendPeriod,setting.isVibrateFixed);
+    }
+    else
+    {
+        snprintf(buf,MAX_DEBUG_BUF_LEN,"server(%d.%d.%d.%d:%d),isAutodefendFixed(%d),autodefendPeriod(%d),isVibrateFixed(%d)",\
+            setting.ipaddr[0],setting.ipaddr[1],setting.ipaddr[2],setting.ipaddr[3],setting.port,setting.isAutodefendFixed,setting.autodefendPeriod,setting.isVibrateFixed);
+    }
+
+    msgLen = sizeof(MSG_GET_HEADER) + strlen(buf) + 1;
+    rsp = alloc_msg(req->header.cmd,msgLen);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc LogInfo rsp message failed!");
+        return -1;
+    }
+
+    strncpy(rsp->data,buf,strlen(buf)+1);
+    rsp->managerSeq = req->managerSeq;
+
+    socket_sendDataDirectly(rsp, msgLen);
+    return 0;
+}
+
+
+int cmd_GSMSignal_rsp(const void * msg)
+{
+    MSG_GET_GSM_REQ*req = (MSG_GET_GSM_REQ*)msg;
+    MSG_GET_GSM_RSP *rsp = NULL;
+    char csq = diag_gsm_get();
+    int msgLen;
+    char buf[MAX_DEBUG_BUF_LEN] = {0};
+
+    if(!buf)
+    {
+        LOG_ERROR("alloc buf space failed!");
+        return -1;
+    }
+
+    snprintf(buf,MAX_DEBUG_BUF_LEN,"GSM signal %d",csq);
+
+    msgLen = sizeof(MSG_GET_HEADER) + strlen(buf) + 1;
+    rsp = alloc_msg(req->header.cmd,msgLen);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc LogInfo rsp message failed!");
+        return -1;
+    }
+
+    strncpy(rsp->data,buf,strlen(buf)+1);
+    rsp->managerSeq = req->managerSeq;
+
+    socket_sendDataDirectly(rsp, msgLen);
+    return 0;
+}
+
+int cmd_GPSSignal_rsp(const void * msg)
+{
+    u8 msgLen = sizeof(MSG_THREAD) + sizeof(MANAGERSEQ_INFO);
+    MSG_GET_HEADER *server_msg = (MSG_GET_HEADER*)msg;
+    MANAGERSEQ_INFO *data = NULL;
+    MSG_THREAD* m = allocMsg(msgLen);
+
+    m->cmd = CMD_THREAD_GPSHDOP;
+    m->length = sizeof(MANAGERSEQ_INFO);
+    data = (MANAGERSEQ_INFO*)m->data;
+    data->managerSeq = server_msg->managerSeq;
+
+    LOG_DEBUG("send CMD_THREAD_GPSHDOP to THREAD_GPS.");
+    sendMsg(THREAD_GPS, m, msgLen);
+    return 0;
+}
+
+int cmd_433Signal_rsp(const void * msg)
+{
+    MSG_GET_433_REQ*req = (MSG_GET_433_REQ*)msg;
+    MSG_GET_433_RSP*rsp = NULL;
+    short signal_433 = diag_433_get();
+    char buf[MAX_DEBUG_BUF_LEN] = {0};
+    int msgLen;
+
+    snprintf(buf,MAX_DEBUG_BUF_LEN,"433 signal: %d",signal_433);
+
+    msgLen = sizeof(MSG_GET_HEADER) + strlen(buf) + 1;
+    rsp = alloc_msg(req->header.cmd,msgLen);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc LogInfo rsp message failed!");
+        return -1;
+    }
+
+    strncpy(rsp->data,buf,strlen(buf)+1);
+    rsp->managerSeq = req->managerSeq;
+
+    socket_sendDataDirectly(rsp, msgLen);
+    return 0;
+
+}
 
 int cmd_DefendOn_rsp(const void* msg)
 {
@@ -546,7 +686,7 @@ int cmd_DeviceInfo_rsp(const void* msg)
         msgLen = sizeof(MSG_DEVICE_INFO_GET_RSP)-sizeof(GPS) + 4*sizeof(short);
     }
 
-    rsp = eat_mem_alloc(msgLen);
+    rsp = malloc(msgLen);
     if (!rsp)
     {
         LOG_ERROR("alloc defend rsp message failed!");
