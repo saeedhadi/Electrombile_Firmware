@@ -3,7 +3,7 @@
 
 void app_battery_thread(void *data);
 
-u8 battery_get_percent(void);
+
 
 
 

@@ -168,6 +168,7 @@ static void gps_ItinerarayHandler(const MSG_THREAD* msg)
 */
 static void gps_GPSSignalSend(const MSG_THREAD* thread_msg)
 {
+#define GPS_NOT_FIX_HDOP 99.99
     unsigned char buf[1024] = {0};
     unsigned char* buf_p1 = NULL;
     int rc;
@@ -190,34 +191,34 @@ static void gps_GPSSignalSend(const MSG_THREAD* thread_msg)
         return;
     }
 
+    msgLen = sizeof(MSG_THREAD)+sizeof(GPS_HDOP_INFO);
+    msg = allocMsg(msgLen);
+    if (!msg)
+    {
+        LOG_ERROR("alloc msg failed!");
+        return ;
+    }
+    main_data = (MANAGERSEQ_INFO*)thread_msg->data;
+    msg->cmd = thread_msg->cmd;
+    msg->length = sizeof(GPS_HDOP_INFO);
+    data = (GPS_HDOP_INFO*)(msg->data);
+    data->managerSeq = main_data->managerSeq;
+
     buf_p1 = string_bypass(buf, "$GPGGA,");
     rc = sscanf(buf_p1,"%*f,%f,%*c,%f,%*c,%*d,%d,%f,%*s",&latitude,&longtitude,&satellites,&hdop);
     if(rc == 4 && latitude > 0 && longtitude > 0)
     {
-        msgLen = sizeof(MSG_THREAD)+sizeof(GPS_HDOP_INFO);
-        msg = allocMsg(msgLen);
-        if (!msg)
-        {
-            LOG_ERROR("alloc msg failed!");
-            return ;
-        }
-        main_data = (MANAGERSEQ_INFO*)thread_msg->data;
-
-        msg->cmd = thread_msg->cmd;
-        msg->length = sizeof(GPS_HDOP_INFO);
-        data = (GPS_HDOP_INFO*)(msg->data);
-
         data->hdop = hdop;
         data->satellites = satellites;
-        data->managerSeq = main_data->managerSeq;
-
-        LOG_DEBUG("send hdop to MainThread");
-        sendMsg(THREAD_MAIN, msg, msgLen);
     }
     else
     {
-        LOG_ERROR("get gps info error ,and erturn is %d",rc);
+        data->hdop = GPS_NOT_FIX_HDOP;
+        data->satellites = satellites;
     }
+
+    LOG_DEBUG("send hdop to MainThread");
+    sendMsg(THREAD_MAIN, msg, msgLen);
 
 
     return;

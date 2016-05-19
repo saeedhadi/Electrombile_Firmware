@@ -21,7 +21,7 @@
 #include "fs.h"
 #include "utils.h"
 
-
+#define ACK_MESSAGE_LEN 64
 static eat_bool ResetFlag = EAT_FALSE;
 
 
@@ -52,12 +52,12 @@ static eat_sms_flash_message_cb(EatSmsReadCnf_st smsFlashMessage)
 static void sms_version_proc(u8 *p, u8 *number)
 {
     unsigned char *ptr1;
-    unsigned char ack_message[64]={0};
+    unsigned char ack_message[ACK_MESSAGE_LEN]={0};
 
     ptr1 = string_bypass(p, "VERSION?");
     if(NULL != ptr1)
     {
-        sprintf(ack_message, "VER:%s\r\nCORE:%s", VERSION_STR, eat_get_version());
+        snprintf(ack_message, ACK_MESSAGE_LEN, "VER:%s\r\nCORE:%s", VERSION_STR, eat_get_version());
         eat_send_text_sms(number, ack_message);
     }
 
@@ -67,7 +67,7 @@ static void sms_version_proc(u8 *p, u8 *number)
 static void sms_factory_proc(u8 *p, u8 *number)
 {
     unsigned char *ptr1;
-    char ack_message[64] = {0};
+    char ack_message[ACK_MESSAGE_LEN] = {0};
     eat_fs_error_enum fs_Op_ret;
 
 
@@ -75,7 +75,7 @@ static void sms_factory_proc(u8 *p, u8 *number)
     if(NULL != ptr1)
     {
 
-        sprintf(ack_message, "Factory default ok");
+        snprintf(ack_message, ACK_MESSAGE_LEN, "Factory default ok");
 
         LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
         eat_send_text_sms(number, ack_message);
@@ -128,14 +128,14 @@ static void sms_factory_proc(u8 *p, u8 *number)
 static void sms_reboot_proc(u8 *p, u8 *number)
 {
     unsigned char *ptr1;
-    char ack_message[64] = {0};
+    char ack_message[ACK_MESSAGE_LEN] = {0};
 
 
     ptr1 = string_bypass(p, "RESET");
     if(NULL != ptr1)
     {
 
-        sprintf(ack_message, "Reset ok");
+        snprintf(ack_message, ACK_MESSAGE_LEN, "Reset ok");
 
         LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
         eat_send_text_sms(number, ack_message);
@@ -152,7 +152,7 @@ static void sms_reboot_proc(u8 *p, u8 *number)
 static void sms_server_proc(u8 *p, u8 *number)
 {
     unsigned char *ptr1;
-    char ack_message[64] = {0};
+    char ack_message[ACK_MESSAGE_LEN] = {0};
     char domainORip[MAX_DOMAIN_NAME_LEN] = {0};
     char domain[MAX_DOMAIN_NAME_LEN] = {0};
     u32 ip[4] = {0};
@@ -164,11 +164,11 @@ static void sms_server_proc(u8 *p, u8 *number)
     {
         if(setting.addr_type == ADDR_TYPE_IP)
         {
-            sprintf(ack_message, "SERVER %d.%d.%d.%d:%d",setting.ipaddr[0],setting.ipaddr[1],setting.ipaddr[2],setting.ipaddr[3],setting.port);
+            snprintf(ack_message, ACK_MESSAGE_LEN, "SERVER %d.%d.%d.%d:%d",setting.ipaddr[0],setting.ipaddr[1],setting.ipaddr[2],setting.ipaddr[3],setting.port);
         }
         else if(setting.addr_type == ADDR_TYPE_DOMAIN)
         {
-            sprintf(ack_message, "SERVER %s:%d",setting.domain,setting.port);
+            snprintf(ack_message, ACK_MESSAGE_LEN, "SERVER %s:%d",setting.domain,setting.port);
         }
 
         LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
@@ -201,12 +201,12 @@ static void sms_server_proc(u8 *p, u8 *number)
                     ResetFlag = EAT_TRUE;
 
                     //return ok
-                    sprintf(ack_message, "%s:%u OK", domainORip, port);
+                    snprintf(ack_message, ACK_MESSAGE_LEN, "%s:%u OK", domainORip, port);
                 }
                 else
                 {
                     //return error
-                    sprintf(ack_message, "%s:%u ERROR", domainORip, port);
+                    snprintf(ack_message, ACK_MESSAGE_LEN, "%s:%u ERROR", domainORip, port);
                 }
             }
             else
@@ -217,7 +217,7 @@ static void sms_server_proc(u8 *p, u8 *number)
                 {
                     //domainORip is domain
                     setting.addr_type = ADDR_TYPE_DOMAIN;
-                    strcpy(setting.domain, domainORip);
+                    strncpy(setting.domain, domainORip,MAX_DOMAIN_NAME_LEN);
                     setting.port = (u16)port;
 
                     setting_save();
@@ -226,18 +226,18 @@ static void sms_server_proc(u8 *p, u8 *number)
                     ResetFlag = EAT_TRUE;
 
                     //return ok
-                    sprintf(ack_message, "%s:%u OK", domain, port);
+                    snprintf(ack_message, ACK_MESSAGE_LEN, "%s:%u OK", domain, port);
                 }
                 else
                 {
                     //return error
-                    sprintf(ack_message, "%s:%u ERROR", domainORip, port);
+                    snprintf(ack_message, ACK_MESSAGE_LEN, "%s:%u ERROR", domainORip, port);
                 }
             }
         }
         else
         {
-            sprintf(ack_message, "%s ERROR", ptr1);
+            snprintf(ack_message, ACK_MESSAGE_LEN, "%s ERROR", ptr1);
         }
 
         LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
@@ -251,14 +251,14 @@ static void sms_server_proc(u8 *p, u8 *number)
 static void sms_timer_proc(u8 *p, u8 *number)
 {
     unsigned char *ptr1;
-    char ack_message[64] = {0};
+    char ack_message[ACK_MESSAGE_LEN] = {0};
     u32 timer_period = 0;
     int count = 0;
 
     ptr1 = string_bypass(p, "TIMER?");
     if(NULL != ptr1)
     {
-        sprintf(ack_message, "TIMER:%u", (30 * 1000 / 1000));
+        snprintf(ack_message, ACK_MESSAGE_LEN, "TIMER:%u", (30 * 1000 / 1000));
 
         LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
         eat_send_text_sms(number, ack_message);
@@ -272,7 +272,7 @@ static void sms_timer_proc(u8 *p, u8 *number)
         {
             if(0 == timer_period)
             {
-                sprintf(ack_message, "SET TIMER to 0 OK");
+                snprintf(ack_message, ACK_MESSAGE_LEN, "SET TIMER to 0 OK");
             }
             else if(timer_period <= 10)
             {
@@ -280,7 +280,7 @@ static void sms_timer_proc(u8 *p, u8 *number)
 
                 setting_save();
 
-                sprintf(ack_message, "SET TIMER to 10 OK");
+                snprintf(ack_message, ACK_MESSAGE_LEN, "SET TIMER to 10 OK");
             }
             else if(timer_period >= 21600)
             {
@@ -288,7 +288,7 @@ static void sms_timer_proc(u8 *p, u8 *number)
 
                 setting_save();
 
-                sprintf(ack_message, "SET TIMER to 21600 OK");
+                snprintf(ack_message, ACK_MESSAGE_LEN, "SET TIMER to 21600 OK");
             }
             else
             {
@@ -296,12 +296,12 @@ static void sms_timer_proc(u8 *p, u8 *number)
 
                 setting_save();
 
-                sprintf(ack_message, "SET TIMER to %d OK", timer_period);
+                snprintf(ack_message, ACK_MESSAGE_LEN, "SET TIMER to %d OK", timer_period);
             }
         }
         else
         {
-            sprintf(ack_message, "SET TIMER to %s ERROR", ptr1);
+            snprintf(ack_message, ACK_MESSAGE_LEN, "SET TIMER to %s ERROR", ptr1);
         }
 
         LOG_DEBUG("send reply sms to %d:%s",number,ack_message);

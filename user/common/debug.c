@@ -100,7 +100,7 @@ static int cmd_chipid(const unsigned char* cmdString, unsigned short length)
     eat_get_chipid(chipid, MAX_CHIPID_LEN);
     for (i = 0; i < MAX_CHIPID_LEN; i++)
     {
-        sprintf(chipid_desc + i * 2, "%02X", chipid[i]);
+        snprintf(chipid_desc + i * 2, 2, "%02X", chipid[i]);
     }
     DBG_OUT("chipd = %s", chipid_desc);
     return 0;

@@ -140,7 +140,7 @@ static void setting_initial(void)
     /* Server configuration */
 #if 1
     setting.addr_type = ADDR_TYPE_DOMAIN;
-    strcpy(setting.domain, "www.xiaoan110.com");
+    strncpy(setting.domain, "www.xiaoan110.com",MAX_DOMAIN_NAME_LEN);
 #else
     setting.addr_type = ADDR_TYPE_IP;
     setting.ipaddr[0] = 121;

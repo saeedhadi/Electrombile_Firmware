@@ -89,7 +89,7 @@ static char* fsm_getStateName(STATE state)
         default:
         {
             static char state_name[10] = {0};
-            sprintf(state_name, "%d", state);
+            snprintf(state_name, 10, "%d", state);
             return state_name;
         }
     }
@@ -115,7 +115,7 @@ static char* fsm_getEventName(EVENT event)
         default:
         {
             static char event_name[10] = {0};
-            sprintf(event_name, "%d", event);
+            snprintf(event_name, 10, "%d", event);
             return event_name;
         }
     }

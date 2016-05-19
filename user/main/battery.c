@@ -13,6 +13,7 @@
 #include "data.h"
 #include "log.h"
 #include "adc.h"
+#include "mem.h"
 
 enum
 {
@@ -22,24 +23,47 @@ enum
     BATTERY_TYPE60 = 60,
     BATTERY_TYPE72 = 72,
 };
+
+#define MAX_PERCENT_NUM 100
+
 #define ADvalue_2_Realvalue(x) x*103/3/1000.f //unit mV, 3K & 100k divider
 #define Voltage2Percent(x) exp((x-37.873)/2.7927)
 
+static u32 BatteryVoltage[MAX_VLOTAGE_NUM] = {0};
 
 /*
-*fun:event adc proc
+*set the battery's voltage
 */
-static void battery_event_adc(EatEvent_st *event)
+static void battery_store_voltage(u32 voltage)
 {
-    if(event->data.adc.pin == ADC_VOLTAGE)
+    static int count = 0;
+
+    if(count >= MAX_VLOTAGE_NUM)
     {
-        battery_store_voltage(event->data.adc.v);
+        count = 0;
     }
-    else
-    {
-        LOG_ERROR("ADC_433 = %d",event->data.adc.v);
-    }
+
+    BatteryVoltage[count++] = voltage;
 }
+
+/*
+* get the battery's voltage
+*/
+static u32 battery_get_Voltage(void)
+{
+    u32 voltage = 0;
+    int count;
+
+    for(count = 0;count < MAX_VLOTAGE_NUM;count++)
+    {
+        voltage += BatteryVoltage[count];
+    }
+
+    voltage /= MAX_VLOTAGE_NUM;
+
+    return voltage;
+}
+
 
 /*
 *fun:judge if there is new battery type and return battery percent
@@ -72,7 +96,7 @@ static u8 battery_Judge_type(u32 voltage)
     }
 
     percent = (int)Voltage2Percent(ADvalue_2_Realvalue(voltage));
-    percent = percent>100?100:percent;
+    percent = percent>MAX_PERCENT_NUM?MAX_PERCENT_NUM:percent;
 
     if(percent > 30 && percent < 70)
     {
@@ -108,13 +132,13 @@ static u8 battery_getType_percent(u32 voltage)
     }
     else
     {
-        return 101;         //BATTERY_TYPENULL as 101 > 100
+        return (MAX_PERCENT_NUM+1); //BATTERY_TYPENULL as MAX_PERCENT_NUM + 1 > MAX_PERCENT_NUM
     }
 
     percent = (int)Voltage2Percent(ADvalue_2_Realvalue(voltage));
-    percent = percent>100?100:percent;
+    percent = percent>MAX_PERCENT_NUM?MAX_PERCENT_NUM:percent;
 
-    if(percent == 0)//if percent == 0,mostly judge error,set type to default
+    if(percent == 0)                //if percent == 0,mostly judged error,set type to default
     {
         set_battery_type(BATTERY_TYPENULL);
     }
@@ -123,7 +147,7 @@ static u8 battery_getType_percent(u32 voltage)
 }
 
 
-u8 battery_get_percent(void)
+static u8 battery_get_percent(void)
 {
     u8 percent = 0;
     u8 percent_tmp = 0;
@@ -133,12 +157,88 @@ u8 battery_get_percent(void)
 
     percent_tmp = battery_Judge_type(voltage);//judge new battery type
 
-    if((percent = battery_getType_percent(voltage)) > 100)//if battery type is not judged , get battery as no type
+    if((percent = battery_getType_percent(voltage)) > MAX_PERCENT_NUM)//if battery type is not judged , get battery as no type
     {
         percent = percent_tmp;
     }
 
     return percent;
+}
+
+static u8 battery_get_miles(void)
+{
+    return 0;
+}
+
+static int battery_get_handler(u8 cmd)
+{
+    u8 msgLen = sizeof(MSG_THREAD) + sizeof(BATTERY_INFO);
+    MSG_THREAD *msg = allocMsg(msgLen);
+    BATTERY_INFO *msg_state = 0;
+
+    if (!msg)
+    {
+        LOG_ERROR("alloc battery msg failed!");
+        return EAT_FALSE;
+    }
+
+    msg->cmd = cmd;
+    msg->length = sizeof(BATTERY_INFO);
+
+    msg_state = (BATTERY_INFO*)msg->data;
+    msg_state->percent= battery_get_percent();
+    msg_state->miles = battery_get_miles();
+
+    LOG_DEBUG("send battery state msg to Main_thread:%d,%d",msg_state->percent,msg_state->miles);
+    sendMsg(THREAD_MAIN, msg, msgLen);
+
+    return 0;
+
+}
+
+static int battery_get_msg(const MSG_THREAD* thread_msg)
+{
+    u8 msgLen = sizeof(MSG_THREAD) + sizeof(BATTERY_GET_INFO);
+    MANAGERSEQ_INFO *main_data = (MANAGERSEQ_INFO*)thread_msg->data;
+    MSG_THREAD *msg = allocMsg(msgLen);
+    BATTERY_GET_INFO *msg_state = (BATTERY_GET_INFO*)msg->data;
+
+    if (!msg)
+    {
+        LOG_ERROR("alloc battery msg failed!");
+        return EAT_FALSE;
+    }
+
+    msg->cmd = thread_msg->cmd;
+    msg->length = sizeof(BATTERY_GET_INFO);
+
+    msg_state = (BATTERY_GET_INFO*)msg->data;
+    msg_state->percent= battery_get_percent();
+    msg_state->miles = battery_get_miles();
+    msg_state->managerSeq = main_data->managerSeq;
+
+    LOG_DEBUG("send battery msg to Main_thread:%d,%d",msg_state->percent,msg_state->miles);
+    sendMsg(THREAD_MAIN, msg, msgLen);
+
+    return 0;
+
+}
+
+
+
+/*
+*fun:event adc proc
+*/
+static void battery_event_adc(EatEvent_st *event)
+{
+    if(event->data.adc.pin == ADC_VOLTAGE)
+    {
+        battery_store_voltage(event->data.adc.v);
+    }
+    else
+    {
+        LOG_ERROR("ADC_433 = %d",event->data.adc.v);
+    }
 }
 
 void app_battery_thread(void *data)
@@ -178,10 +278,23 @@ void app_battery_thread(void *data)
 
                 switch (msg->cmd)
                 {
+                    case CMD_THREAD_BATTERY:
+                        battery_get_handler(msg->cmd);
+                        break;
+
+                    case CMD_THREAD_BATTERY_INFO:
+                        battery_get_handler(msg->cmd);
+                        break;
+
+                    case CMD_THREAD_BATTERY_GET:
+                        battery_get_msg(msg);
+                        break;
+
                     default:
                         LOG_ERROR("cmd(%d) not processed!", msg->cmd);
                         break;
                 }
+                freeMsg(msg);
                 break;
 
             default:

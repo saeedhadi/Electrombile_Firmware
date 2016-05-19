@@ -111,7 +111,7 @@ int log_GetLog(char buf[], s32 len)
     fh = eat_fs_Open(LOG_FILE_NAME, FS_READ_ONLY);
     if(EAT_FS_FILE_NOT_FOUND == fh)
     {
-        strcpy(buf,"no log file!\0");
+        strncpy(buf,"no log file!",len);
         return 0;
     }
 
@@ -153,12 +153,12 @@ int log_GetLog(char buf[], s32 len)
     pbuf = strstr(buf,"\r\n");
     if(!pbuf)
     {
-        strcpy(buf,"no log file!\0");
+        strncpy(buf,"no log file!",len);
         eat_fs_Close(fh);
         return 0;
     }
 
-    sprintf(buf,"%s\0",pbuf);
+    snprintf(buf, len, "%s",pbuf);
     eat_fs_Close(fh);
     return 0;
 }

@@ -71,7 +71,7 @@ static char* getEventDescription(EatEvent_enum event)
         default:
         {
             static char soc_event[10] = {0};
-            sprintf(soc_event, "%d", event);
+            snprintf(soc_event, 10, "%d", event);
             return soc_event;
         }
     }
@@ -284,6 +284,123 @@ static int threadCmd_Itinerary(const MSG_THREAD* msg)
     return 0;
 }
 
+/*
+*fun: receive msg from battery_Thread and send battery msg to server for use
+*/
+static int threadCmd_Battery(const MSG_THREAD* msg)
+{
+    BATTERY_INFO *msg_data = (BATTERY_INFO*) msg->data;
+    MSG_BATTERY_RSP* battery_msg;
+
+    if (msg->length < sizeof(BATTERY_INFO) || !msg_data)
+    {
+         LOG_ERROR("msg from THREAD_BATTERY error!");
+         return -1;
+    }
+
+
+    battery_msg = alloc_msg(CMD_BATTERY, sizeof(MSG_BATTERY_RSP));
+    battery_msg->percent = msg_data->percent;
+    battery_msg->miles = msg_data->miles;
+
+    LOG_DEBUG("send battery msg: %d",msg_data->percent);
+
+    socket_sendDataDirectly(battery_msg, sizeof(MSG_BATTERY_RSP));
+    return 0;
+}
+/*
+*fun: receive battery msg from battery_Thread and send deviceinfo msg to server
+*/
+static int threadCmd_DeviceInfo(const MSG_THREAD* msg)
+{
+    BATTERY_INFO *msg_data = (BATTERY_INFO*)msg->data;
+    MSG_DEVICE_INFO_GET_RSP* rsp = NULL;
+    int msgLen;
+    LOCAL_GPS* local_gps = gps_get_last();
+
+    if (msg->length < sizeof(BATTERY_INFO) || !msg_data)
+    {
+         LOG_ERROR("msg from THREAD_BATTERY error!");
+         return -1;
+    }
+
+    if(local_gps->isGps)    //becaus of auto malloc ram,cant use alloc_rspMsg
+    {
+        msgLen = sizeof(MSG_DEVICE_INFO_GET_RSP);
+    }
+    else
+    {
+        msgLen = sizeof(MSG_DEVICE_INFO_GET_RSP)-sizeof(GPS) + 4*sizeof(short);
+    }
+
+    rsp = alloc_msg(CMD_DEVICE_INFO_GET, msgLen);
+    if (!rsp)
+    {
+        LOG_ERROR("alloc defend rsp message failed!");
+        return -1;
+    }
+
+    rsp->isGps = local_gps->isGps;
+    rsp->autolock = setting.isAutodefendFixed;
+    rsp->autoperiod = setting.autodefendPeriod;
+    rsp->defend = setting.isVibrateFixed;
+    rsp->percent = msg_data->percent;
+    rsp->miles = msg_data->miles;
+
+    if(rsp->isGps)
+    {
+        rsp->gps.timestamp = htonl(local_gps->gps.timestamp);
+        rsp->gps.latitude = local_gps->gps.latitude;
+        rsp->gps.longitude = local_gps->gps.longitude;
+        rsp->gps.speed = local_gps->gps.speed;
+        rsp->gps.course = htons(local_gps->gps.course);
+    }
+    else
+    {
+        rsp->mcc = htons(local_gps->cellInfo.mcc);
+        rsp->mnc = htons(local_gps->cellInfo.mnc);
+        rsp->lac = htons(local_gps->cellInfo.cell[0].lac);
+        rsp->cid = htons(local_gps->cellInfo.cell[0].cellid);
+    }
+
+    socket_sendDataDirectly(rsp,msgLen);
+    return 0;
+
+}
+
+/*
+*fun: receive msg from Battery_Thread and send battery msg to server for manager
+*/
+static int threadCmd_Batteryget(const MSG_THREAD* msg)
+{
+    BATTERY_GET_INFO* msg_data = (BATTERY_GET_INFO*) msg->data;
+    MSG_GET_GPS_RSP* battery_msg;
+    u8 msgLen = 0;
+    char buf[MAX_DEBUG_BUF_LEN] = {0};
+
+    if (msg->length < sizeof(BATTERY_GET_INFO) || !msg_data)
+    {
+         LOG_ERROR("msg from THREAD_GPS error!");
+         return -1;
+    }
+
+    snprintf(buf,MAX_DEBUG_BUF_LEN,"percent: %d ;miles: %d",msg_data->percent,msg_data->miles);
+
+    msgLen = sizeof(MSG_GET_HEADER) + strlen(buf) + 1;
+    battery_msg = alloc_msg(CMD_GET_BATTERY,msgLen);
+    if (!battery_msg)
+    {
+        LOG_ERROR("alloc LogInfo rsp message failed!");
+        return -1;
+    }
+    battery_msg->managerSeq = msg_data->managerSeq;
+    strncpy(battery_msg->data,buf,strlen(buf)+1);
+    socket_sendDataDirectly(battery_msg, msgLen);
+
+    return 0;
+}
+
+
 
 /*
 *fun: receive msg from GPS_Thread and send GPSSignal msg to server
@@ -294,11 +411,6 @@ static int threadCmd_GPSHdop(const MSG_THREAD* msg)
     MSG_GET_GPS_RSP* hdop_msg;
     u8 msgLen = 0;
     char buf[MAX_DEBUG_BUF_LEN] = {0};
-    if(!buf)
-    {
-        LOG_ERROR("alloc buf space failed!");
-        return -1;
-    }
 
     if (msg->length < sizeof(GPS_HDOP_INFO) || !msg_data)
     {
@@ -306,7 +418,14 @@ static int threadCmd_GPSHdop(const MSG_THREAD* msg)
          return -1;
     }
 
-    snprintf(buf,MAX_DEBUG_BUF_LEN,"hdop: %f ;satellites: %d",msg_data->hdop,msg_data->satellites);
+    if(!msg_data->satellites)
+    {
+        snprintf(buf,MAX_DEBUG_BUF_LEN,"GPS not fixed,hdop:%f;satellites:%d",msg_data->hdop,msg_data->satellites);
+    }
+    else
+    {
+        snprintf(buf,MAX_DEBUG_BUF_LEN,"GPS fixed,hdop:%f;satellites:%d",msg_data->hdop,msg_data->satellites);
+    }
 
     msgLen = sizeof(MSG_GET_HEADER) + strlen(buf) + 1;
     hdop_msg = alloc_msg(CMD_GET_GPS,msgLen);
@@ -413,6 +532,9 @@ static THREAD_MSG_PROC msgProcs[] =
         {CMD_THREAD_LOCATION, threadCmd_Location},
         {CMD_THREAD_AUTOLOCK, threadCmd_AutolockState},
         {CMD_THREAD_ITINERARY, threadCmd_Itinerary},
+        {CMD_THREAD_BATTERY, threadCmd_Battery},
+        {CMD_THREAD_BATTERY_GET, threadCmd_Batteryget},
+        {CMD_THREAD_BATTERY_INFO, threadCmd_DeviceInfo},
         {CMD_THREAD_GPSHDOP, threadCmd_GPSHdop},
 };
 

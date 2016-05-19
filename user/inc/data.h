@@ -27,10 +27,6 @@ eat_bool gps_dequeue(GPS* gps);
 
 int gps_size(void);
 
-u32 battery_get_Voltage(void);
-unsigned char battery_get_miles(void);
-void battery_store_voltage(u32 voltage);
-
 LOCAL_GPS* gps_get_last(void);
 int gps_save_last(LOCAL_GPS* gps);
 

@@ -20,6 +20,9 @@ enum CMD
     CMD_THREAD_LOCATION,
     CMD_THREAD_AUTOLOCK,
     CMD_THREAD_ITINERARY,
+    CMD_THREAD_BATTERY,
+    CMD_THREAD_BATTERY_INFO,
+    CMD_THREAD_BATTERY_GET,
 };
 
 
@@ -85,6 +88,18 @@ typedef struct
     int managerSeq;
 }__attribute__((__packed__))MANAGERSEQ_INFO;
 
+typedef struct
+{
+    char percent;
+    char miles;
+}__attribute__((__packed__))BATTERY_INFO;
+
+typedef struct
+{
+    char percent;
+    char miles;
+    int managerSeq;
+}__attribute__((__packed__))BATTERY_GET_INFO;
 
 
 
