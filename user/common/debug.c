@@ -46,11 +46,12 @@ static CMD_MAP cmd_map[MAX_CMD_NUMBER] =
         {"imei",        cmd_imei},
         {"imsi",        cmd_imsi},
         {"chipid",      cmd_chipid},
+        {"AT",          cmd_AT},
+        {"at",          cmd_AT},
 #ifdef APP_DEBUG
         {"reboot",      cmd_reboot},
         {"halt",        cmd_halt},
         {"rtc",         cmd_rtc},
-        {"AT",          cmd_AT},
 #endif
 };
 
@@ -106,6 +107,14 @@ static int cmd_chipid(const unsigned char* cmdString, unsigned short length)
     return 0;
 }
 
+static int cmd_AT(const unsigned char* cmdString, unsigned short length)
+{
+    //forward AT command to modem
+    eat_modem_write(cmdString, length);
+    eat_modem_write("\n", 1);
+    return 0;
+}
+
 #ifdef APP_DEBUG
 static int cmd_reboot(const unsigned char* cmdString, unsigned short length)
 {
@@ -136,13 +145,6 @@ static int cmd_rtc(const unsigned char* cmdString, unsigned short length)
     return 0;
 }
 
-static int cmd_AT(const unsigned char* cmdString, unsigned short length)
-{
-    //forward AT command to modem
-    eat_modem_write(cmdString, length);
-    eat_modem_write("\n", 1);
-    return 0;
-}
 #endif
 
 int debug_proc(const unsigned char* cmdString, unsigned short length)
