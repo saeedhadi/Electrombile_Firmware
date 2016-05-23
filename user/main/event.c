@@ -259,18 +259,23 @@ static int threadCmd_Itinerary(const MSG_THREAD* msg)
     GPS_ITINERARY_INFO* msg_data = (GPS_ITINERARY_INFO*) msg->data;
     MSG_ITINERARY_REQ* itinerary_msg;
 
-    if(msg_data->itinerary <= 0)
-    {
-        LOG_DEBUG("miles is 0,do not send msg!");
-        return 0;
-    }
-
     if (msg->length < sizeof(GPS_ITINERARY_INFO) || !msg_data)
     {
          LOG_ERROR("msg from THREAD_GPS error!");
          return -1;
     }
 
+    if(0 >= msg_data->itinerary)
+    {
+        LOG_DEBUG("miles is 0,do not send msg!");
+        return 0;
+    }
+
+    if (0 > msg_data->starttime || 0 > msg_data->endtime)
+    {
+         LOG_ERROR("itinerary time error: %ld->%ld", msg_data->starttime, msg_data->endtime);
+         return -1;
+    }
 
     itinerary_msg = alloc_msg(CMD_ITINERARY, sizeof(MSG_ITINERARY_REQ));
     itinerary_msg->starttime = htonl(msg_data->starttime);
@@ -279,7 +284,7 @@ static int threadCmd_Itinerary(const MSG_THREAD* msg)
 
     LOG_DEBUG("send itinerary msg,start:%d end:%d itinerary:%d",msg_data->starttime,msg_data->endtime,msg_data->itinerary);
 
-    socket_sendDataWaitAck((MSG_ITINERARY_REQ*)itinerary_msg, sizeof(MSG_ITINERARY_REQ),Itinerary_Store_cb, NULL);
+    socket_sendDataWaitAck(itinerary_msg, sizeof(MSG_ITINERARY_REQ),Itinerary_Store_cb, NULL);
 
     return 0;
 }
