@@ -77,36 +77,6 @@ static char* getEventDescription(EatEvent_enum event)
     }
 }
 
-
-static int event_mod_ready_rd(const EatEvent_st* event)
-{
-	u8 buf[256] = {0};
-	u16 len = 0;
-
-	len = eat_modem_read(buf, 256);
-	if (!len)
-	{
-	    LOG_ERROR("modem received nothing.");
-	    return -1;
-	}
-    LOG_DEBUG("modem recv: %s", buf);
-
-    if (modem_IsCallReady(buf))
-    {
-        diag_check();
-
-        fsm_run(EVT_CALL_READY);
-    }
-
-    if(modem_IsCCIDOK(buf))
-    {
-        cmd_SimInfo(buf + 9);//str(AT+CCID\r\n) = 9
-    }
-
-
-	return 0;
-}
-
 static int event_timer(const EatEvent_st* event)
 {
     switch (event->data.timer.timer_id)
@@ -526,6 +496,62 @@ static int threadCmd_Location(const MSG_THREAD* msg)
     }
 
     return 0;
+}
+
+static int cmd_get_AT(char *data)
+{
+    MSG_GET_AT_RSP* msg;
+    u8 msgLen = 0;
+    char buf[MAX_DEBUG_BUF_LEN] = {0};
+
+    snprintf(buf,MAX_DEBUG_BUF_LEN,"%s",data);
+
+    msgLen = sizeof(MSG_GET_HEADER) + strlen(buf) + 1;
+    msg = alloc_msg(CMD_GET_AT,msgLen);
+    if (!msg)
+    {
+        LOG_ERROR("alloc LogInfo rsp message failed!");
+        return -1;
+    }
+    msg->managerSeq = get_manager_seq();
+    strncpy(msg->data,buf,strlen(buf)+1);
+    socket_sendDataDirectly(msg, msgLen);
+
+    return 0;
+}
+
+static int event_mod_ready_rd(const EatEvent_st* event)
+{
+	u8 buf[256] = {0};
+	u16 len = 0;
+
+	len = eat_modem_read(buf, 256);
+	if (!len)
+	{
+	    LOG_ERROR("modem received nothing.");
+	    return -1;
+	}
+    LOG_DEBUG("modem recv: %s", buf);
+    if(get_manager_ATcmd_state())
+    {
+        set_manager_ATcmd_state(EAT_FALSE);
+        cmd_get_AT(buf);
+    }
+
+    if (modem_IsCallReady(buf))
+    {
+        diag_check();
+
+        fsm_run(EVT_CALL_READY);
+    }
+
+    if(modem_IsCCIDOK(buf))
+    {
+        cmd_SimInfo(buf + 9);//str(AT+CCID\r\n) = 9
+    }
+
+
+	return 0;
 }
 
 

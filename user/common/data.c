@@ -23,6 +23,10 @@ static LOCAL_GPS* last_gps = &last_gps_info;
 static char isItineraryStart = ITINERARY_END;
 int VibrationTime = 0;
 
+static eat_bool manager_ATcmd_flag = EAT_FALSE;
+static int manager_seq = 0;
+
+
 /*
  * to judge whether the queue is full
  */
@@ -162,6 +166,24 @@ char get_itinerary_state(void)
 void set_itinerary_state(char state)
 {
     isItineraryStart = state;
+}
+
+void set_manager_ATcmd_state(char state)
+{
+    manager_ATcmd_flag = state;
+}
+eat_bool get_manager_ATcmd_state(void)
+{
+    return manager_ATcmd_flag;
+}
+
+void set_manager_seq(int seq)
+{
+    manager_seq= seq;
+}
+int get_manager_seq(void)
+{
+    return manager_seq;
 }
 
 
