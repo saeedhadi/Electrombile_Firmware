@@ -69,9 +69,9 @@ typedef struct
 
 typedef struct
 {
-    u32 starttime;
-    u32 endtime;
-    u32 itinerary;
+    int starttime;
+    int endtime;
+    int itinerary;
 
 }__attribute__((__packed__))GPS_ITINERARY_INFO;
 
