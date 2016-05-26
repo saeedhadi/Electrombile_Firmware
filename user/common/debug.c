@@ -31,12 +31,13 @@ static int cmd_version(const unsigned char* cmdString, unsigned short length);
 static int cmd_imei(const unsigned char* cmdString, unsigned short length);
 static int cmd_imsi(const unsigned char* cmdString, unsigned short length);
 static int cmd_chipid(const unsigned char* cmdString, unsigned short length);
+static int cmd_AT(const unsigned char* cmdString, unsigned short length);
+
 
 #ifdef APP_DEBUG
 static int cmd_reboot(const unsigned char* cmdString, unsigned short length);
 static int cmd_halt(const unsigned char* cmdString, unsigned short length);
 static int cmd_rtc(const unsigned char* cmdString, unsigned short length);
-static int cmd_AT(const unsigned char* cmdString, unsigned short length);
 #endif
 
 static CMD_MAP cmd_map[MAX_CMD_NUMBER] =
