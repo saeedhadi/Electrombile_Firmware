@@ -510,12 +510,13 @@ static eat_bool gps_GetGps(void)
     rc = sscanf(buf_p1,"%f,%f,%f,%lf,%*d,%d,%f,%f",\
         &latitude,&longitude,&altitude,&iGpstime,&satellite,&speed,&course);
 
+    if(!rtc_synced())
+    {
+        rtc_update((long long)iGpstime);
+    }
+
     if(longitude > 0 && latitude > 0)//get GPS
     {
-        if(!rtc_synced())
-        {
-            rtc_update((long long)iGpstime);
-        }
         iGpsFixed = EAT_TRUE;
     }
     else
