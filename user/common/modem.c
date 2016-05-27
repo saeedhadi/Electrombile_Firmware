@@ -167,7 +167,10 @@ eat_bool modem_GNSS(void)
 
 eat_bool modem_AT(unsigned char *cmd)
 {
-    strncpy(cmd+strlen(cmd),"\r",2);
-    return modem_cmd(cmd);
+#define MAX_MODEM_BUF_LEN 36
+    u8 cmd_at[MAX_MODEM_BUF_LEN] = {0};
+
+    snprintf(cmd_at, MAX_MODEM_BUF_LEN, "%s\r", cmd);
+    return modem_cmd(cmd_at);
 }
 
