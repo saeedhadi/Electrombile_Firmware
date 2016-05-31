@@ -71,7 +71,6 @@ static float speed = 0.0;
 static float course = 0.0;
 
 static eat_bool isCellGet = EAT_FALSE;
-extern eat_bool isMoved;
 static short mcc = 0;//mobile country code
 static short mnc = 0;//mobile network code
 static char  cellNo = 0;//cell count
@@ -641,7 +640,7 @@ static eat_bool gps_DuplicateCheck(LOCAL_GPS *pre_gps, LOCAL_GPS *gps)
 
             distance = getdistance(pre_gps,gps);
             //if the distance change 10m but not float,push the information of GPS
-            if(distance <= 10 ||isMoved == EAT_FALSE)
+            if(distance <= 10 || !Vibration_isMoved())
             {
                 LOG_DEBUG("GPS is the same. %f, %f.", pre_gps->gps.latitude, gps->gps.latitude);
                 return EAT_TRUE;

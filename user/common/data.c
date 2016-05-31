@@ -21,10 +21,12 @@ static LOCAL_GPS last_gps_info;
 static LOCAL_GPS* last_gps = &last_gps_info;
 
 static char isItineraryStart = ITINERARY_END;
-int VibrationTime = 0;
+static int VibrationTime = 0;
 
 static eat_bool manager_ATcmd_flag = EAT_FALSE;
 static int manager_seq = 0;
+
+static eat_bool isMoved = EAT_FALSE;
 
 
 /*
@@ -186,4 +188,12 @@ int get_manager_seq(void)
     return manager_seq;
 }
 
+void Vibration_setMoved(eat_bool state)
+{
+    isMoved = state;
+}
+eat_bool Vibration_isMoved(void)
+{
+    return isMoved;
+}
 

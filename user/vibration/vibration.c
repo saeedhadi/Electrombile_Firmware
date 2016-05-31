@@ -27,7 +27,6 @@
 static eat_bool avoid_freq_flag = EAT_FALSE;
 static int AlarmCount = 0;
 
-eat_bool isMoved = EAT_FALSE;
 
 void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
 {
@@ -278,27 +277,27 @@ static void vibration_timer_handler(void)
         {
             isFirstTime = EAT_FALSE;
 
-            isMoved = EAT_FALSE;
+            Vibration_setMoved(EAT_FALSE);
         }
         else
         {
-            isMoved = EAT_TRUE;
+            Vibration_setMoved(EAT_TRUE);
         }
     }
     else
     {
-        isMoved = EAT_FALSE;
+        Vibration_setMoved(EAT_FALSE);
     }
 
     //always to judge if need to alarm , just judge the defend state before send alarm
-    if(isMoved && avoid_freq_flag == EAT_FALSE)
+    if(Vibration_isMoved() && avoid_freq_flag == EAT_FALSE)
     {
         avoid_fre_send(EAT_FALSE);
         eat_timer_start(TIMER_MOVE_ALARM, MOVE_TIMER_PERIOD);
         //vibration_sendAlarm();  //bec use displacement judgement , there do not alarm
     }
 
-    if(isMoved)
+    if(Vibration_isMoved())
     {
         ResetVibrationTime();
         LOG_DEBUG("shake!");

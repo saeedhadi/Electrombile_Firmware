@@ -43,6 +43,8 @@ eat_bool get_manager_ATcmd_state(void);
 void set_manager_seq(int seq);
 int get_manager_seq(void);
 
+void Vibration_setMoved(eat_bool state);
+eat_bool Vibration_isMoved(void);
 
 
 #define MAX_GPS_COUNT 10
