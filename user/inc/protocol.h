@@ -70,6 +70,7 @@ enum
     //CMD_REBOOT          = 27,
     CMD_DEVICE_INFO_GET = 28,
     CMD_GPS_PACK        = 29,
+    CMD_BATTERY_ALARM   = 30,
 };
 
 enum
@@ -595,6 +596,16 @@ typedef struct
     MSG_HEADER header;
     GPS gps[];
 }__attribute__((__packed__)) MSG_GPS_PACK;
+
+/*
+ * Battery Alarm message structure
+ */
+typedef struct
+{
+    MSG_HEADER header;
+    char alarm_type;
+}__attribute__((__packed__)) MSG_BATTERY_ALARM;
+
 
 
 typedef MSG_HEADER MSG_DEBUG_REQ;

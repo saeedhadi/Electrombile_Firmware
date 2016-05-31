@@ -23,6 +23,7 @@ enum CMD
     CMD_THREAD_BATTERY,
     CMD_THREAD_BATTERY_INFO,
     CMD_THREAD_BATTERY_GET,
+    CMD_THREAD_BATTERY_ALARM,
 };
 
 
@@ -93,6 +94,12 @@ typedef struct
     char percent;
     char miles;
 }__attribute__((__packed__))BATTERY_INFO;
+
+typedef struct
+{
+    char alarm_type;
+}__attribute__((__packed__))BATTERY_ALARM_INFO;
+
 
 typedef struct
 {
