@@ -37,6 +37,13 @@ int getVibrationTime(void);
 int VibrationTimeAdd(void);
 int ResetVibrationTime(void);
 
+void set_manager_ATcmd_state(char state);
+eat_bool get_manager_ATcmd_state(void);
+
+void set_manager_seq(int seq);
+int get_manager_seq(void);
+
+
 
 #define MAX_GPS_COUNT 10
 #define MAX_VLOTAGE_NUM 10

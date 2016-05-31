@@ -27,4 +27,8 @@ eat_bool modem_IsCCIDOK(char* modem_rsp);
 
 eat_bool modem_GNSS(void);
 
+eat_bool modem_AT(unsigned char *cmd);
+
+
+
 #endif /* USER_INC_MODEM_H_ */

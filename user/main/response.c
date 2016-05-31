@@ -419,6 +419,37 @@ int cmd_433Signal_rsp(const void * msg)
 
 }
 
+int cmd_GetAT_rsp(const void* msg)
+{
+    MSG_GET_AT_REQ *req = (MSG_GET_AT_REQ*)msg;
+    MSG_GET_AT_RSP*rsp = NULL;
+    char buf[MAX_DEBUG_BUF_LEN] = {0};
+    int msgLen;
+    eat_bool rc = EAT_FALSE;
+
+    set_manager_ATcmd_state(EAT_TRUE);
+    set_manager_seq(req->managerSeq);
+
+    rc = modem_AT(req->data);
+    if(EAT_TRUE != rc)
+    {
+        snprintf(buf,MAX_DEBUG_BUF_LEN,"AT error!!");
+        msgLen = sizeof(MSG_GET_HEADER) + strlen(buf) + 1;
+        rsp = alloc_msg(req->header.cmd,msgLen);
+        if (!rsp)
+        {
+            LOG_ERROR("alloc LogInfo rsp message failed!");
+            return -1;
+        }
+        strncpy(rsp->data,buf,strlen(buf)+1);
+        rsp->managerSeq = req->managerSeq;
+        socket_sendDataDirectly(rsp, msgLen);
+    }
+
+    return 0;
+}
+
+
 int cmd_DefendOn_rsp(const void* msg)
 {
     MSG_HEADER* req = (MSG_HEADER*)msg;
