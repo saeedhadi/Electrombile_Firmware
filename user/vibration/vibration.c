@@ -68,20 +68,21 @@ static eat_bool vivration_AutolockStateSend(eat_bool state)
 
 static eat_bool vibration_sendAlarm(void)
 {
-    u8 msgLen = sizeof(MSG_THREAD) + 1;
-    MSG_THREAD* msg = NULL;
+    u8 msgLen = sizeof(MSG_THREAD) + sizeof(ALARM_INFO);
+    MSG_THREAD *msg = NULL;
+    ALARM_INFO *msg_data = NULL;
     unsigned char* alarmType = NULL;
 
     if(AlarmCount++ <= 3)
     {
         msg = allocMsg(msgLen);
-        alarmType = (unsigned char*)msg->data;
+        msg_data = (ALARM_INFO*)msg->data;
 
-        msg->cmd = CMD_THREAD_VIBRATE;
-        msg->length = 1;
-        *alarmType = ALARM_VIBRATE;
+        msg->cmd = CMD_THREAD_ALARM;
+        msg->length = sizeof(ALARM_INFO);
+        msg_data->alarm_type = ALARM_VIBRATE;
 
-        LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
+        LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, msg_data->alarm_type);
         avoid_freq_flag = EAT_TRUE;
         return sendMsg(THREAD_MAIN, msg, msgLen);
     }

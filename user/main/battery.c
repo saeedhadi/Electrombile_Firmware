@@ -28,8 +28,8 @@ enum
 enum
 {
     BATTERY_ALARM_NULL  = 0,
-    BATTERY_ALARM_30    = 30,
-    BATTERY_ALARM_50    = 50,
+    BATTERY_ALARM_30    = 4,
+    BATTERY_ALARM_50    = 5,
 };
 
 
@@ -210,33 +210,26 @@ static char battery_percent_check(void)
 
 static int battery_alarm_handler(void)
 {
-    u8 msgLen = sizeof(MSG_THREAD) + sizeof(BATTERY_ALARM_INFO);
+    u8 msgLen = sizeof(MSG_THREAD) + sizeof(ALARM_INFO);
     MSG_THREAD *msg = NULL;
-    BATTERY_ALARM_INFO *msg_state = 0;
-    char alarm_type = battery_percent_check();
+    ALARM_INFO *alarmType = NULL;
+    char type = battery_percent_check();
 
-    if(alarm_type == BATTERY_ALARM_NULL)
+    if(type == BATTERY_ALARM_NULL)
     {
         return 0;
     }
 
     msg = allocMsg(msgLen);
-    if (!msg)
-    {
-        LOG_ERROR("alloc battery msg failed!");
-        return EAT_FALSE;
-    }
+    alarmType = (ALARM_INFO*)msg->data;
 
-    msg->cmd = CMD_THREAD_BATTERY_ALARM;
-    msg->length = sizeof(BATTERY_ALARM_INFO);
+    msg->cmd = CMD_THREAD_ALARM;
+    msg->length = sizeof(ALARM_INFO);
+    alarmType->alarm_type = type;
 
-    msg_state = (BATTERY_ALARM_INFO*)msg->data;
-    msg_state->alarm_type = alarm_type;
+    LOG_DEBUG("battery alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, type);
 
-    LOG_DEBUG("send battery alarm msg to Main_thread:%d",msg_state->alarm_type);
-    sendMsg(THREAD_MAIN, msg, msgLen);
-
-    return 0;
+    return sendMsg(THREAD_MAIN, msg, msgLen);
 
 }
 
