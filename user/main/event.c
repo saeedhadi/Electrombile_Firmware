@@ -306,6 +306,8 @@ static int threadCmd_BatteryAlarm(const MSG_THREAD* msg)
     LOG_DEBUG("send battery alarm msg: %d",msg_data->alarm_type);
 
     socket_sendDataDirectly(alarm_msg, sizeof(MSG_BATTERY_ALARM));
+
+    return 0;
 }
 
 /*

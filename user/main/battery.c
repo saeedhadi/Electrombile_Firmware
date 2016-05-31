@@ -28,13 +28,13 @@ enum
 enum
 {
     BATTERY_ALARM_NULL  = 0,
-    BATTERY_ALARM_50    = 1,
-    BATTERY_ALARM_30    = 2,
+    BATTERY_ALARM_30    = 30,
+    BATTERY_ALARM_50    = 50,
 };
 
 
 #define MAX_PERCENT_NUM 100
-#define BATTERY_TIMER_PEROID (10*60*1000)
+#define BATTERY_TIMER_PEROID (10*60*1000)   //10mins check once
 
 
 #define ADvalue_2_Realvalue(x) x*103/3/1000.f //unit mV, 3K & 100k divider
@@ -181,22 +181,25 @@ static u8 battery_get_miles(void)
     return 0;
 }
 
+/*
+*func:check battery 10mins once while not moved,if battery low,alarm:BATTERY_ALARM_50, BATTERY_ALARM_30
+*/
 static char battery_percent_check(void)
 {
     static char state = BATTERY_ALARM_NULL;
     u8 percent = battery_get_percent();
 
-    if(70 < percent)    //battery > 70 , reset and wait for reducing to 50
+    if(70 < percent)    //battery > 70, assume as charge, reset and wait for reducing to 50
     {
         state = BATTERY_ALARM_NULL;
     }
     else if(50 > percent)
     {
-        if(30 < percent && state != BATTERY_ALARM_50)
+        if(30 < percent && state != BATTERY_ALARM_50)//30 < battery <50,alarm once,and wait for reducing to 30
         {
             return state = BATTERY_ALARM_50;
         }
-        else if(state != BATTERY_ALARM_30)
+        else if(state != BATTERY_ALARM_30)//30 < battery,alarm once,and do nothing
         {
             return state = BATTERY_ALARM_30;
         }
