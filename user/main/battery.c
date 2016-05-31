@@ -28,8 +28,8 @@ enum
 enum
 {
     BATTERY_ALARM_NULL  = 0,
-    BATTERY_ALARM_30    = 4,
-    BATTERY_ALARM_50    = 5,
+    BATTERY_ALARM_50    = 4,
+    BATTERY_ALARM_30    = 5,
 };
 
 
