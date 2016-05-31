@@ -570,6 +570,7 @@ typedef struct
 }__attribute__((__packed__)) MSG_GPS_PACK;
 
 typedef MSG_HEADER MSG_DEBUG_REQ;
+
 typedef struct
 {
     MSG_HEADER header;
