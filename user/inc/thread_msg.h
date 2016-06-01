@@ -101,6 +101,13 @@ typedef struct
     int managerSeq;
 }__attribute__((__packed__))BATTERY_GET_INFO;
 
+typedef struct
+{
+    char number[TEL_NO_LENGTH];
+    char type;
+    char smsLen;
+    char content[];
+}__attribute__((__packed__))SMS_SEND_INFO;
 
 
 #define allocMsg(len) eat_mem_alloc(len)

@@ -301,6 +301,13 @@ typedef MSG_HEADER MSG_ALARM_RSP;
 /*
  * SMS message structure
  */
+ enum ALARM_TYPE
+{
+    SMS_SEND_DIRECT = 0,
+    SMS_SEND_PROCED = 1,
+    SMS_SEND_SERVER = 2,
+};
+
 typedef struct
 {
     MSG_HEADER header;

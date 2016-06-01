@@ -10,6 +10,6 @@
 
 
 void app_sms_thread(void *data);
-
+#define ACK_MESSAGE_LEN 64
 
 #endif /* USER_ELECTROMBILE_SMS_H_ */

@@ -17,48 +17,42 @@
 #include "log.h"
 #include "thread.h"
 #include "version.h"
-#include "timer.h"
 #include "fs.h"
 #include "utils.h"
+#include "thread_msg.h"
 
-#define ACK_MESSAGE_LEN 64
 static eat_bool ResetFlag = EAT_FALSE;
-
-
-static eat_sms_flash_message_cb(EatSmsReadCnf_st smsFlashMessage)
-{
-    u8 format = 0;
-
-    LOG_DEBUG("flash message.");
-    eat_get_sms_format(&format);
-    if(1 == format)//TEXTģʽ
-    {
-        LOG_DEBUG("recv TEXT sms.");
-        LOG_DEBUG("msg=%s.",smsFlashMessage.data);
-        LOG_DEBUG("datetime=%s.",smsFlashMessage.datetime);
-        LOG_DEBUG("name=%s.",smsFlashMessage.name);
-        LOG_DEBUG("status=%d.",smsFlashMessage.status);
-        LOG_DEBUG("len=%d.",smsFlashMessage.len);
-        LOG_DEBUG("number=%s.",smsFlashMessage.number);
-    }
-    else//PDUģʽ
-    {
-        LOG_DEBUG("recv PDU sms.");
-        LOG_DEBUG("msg=%s",smsFlashMessage.data);
-        LOG_DEBUG("len=%d",smsFlashMessage.len);
-    }
-}
 
 static void sms_version_proc(u8 *p, u8 *number)
 {
-    unsigned char *ptr1;
-    unsigned char ack_message[ACK_MESSAGE_LEN]={0};
+    MSG_THREAD *msg = NULL;
+    SMS_SEND_INFO *data = NULL;
+    u8 msgLen = 0;
+    u8 *ptr1;
+    u8 ack_message[ACK_MESSAGE_LEN]={0};
 
     ptr1 = string_bypass(p, "VERSION?");
     if(NULL != ptr1)
     {
         snprintf(ack_message, ACK_MESSAGE_LEN, "VER:%s\r\nCORE:%s", VERSION_STR, eat_get_version());
-        eat_send_text_sms(number, ack_message);
+        msgLen = sizeof(MSG_THREAD) + sizeof(SMS_SEND_INFO) + strlen(ack_message);
+        msg = allocMsg(msgLen);
+        if (!msg)
+        {
+            LOG_ERROR("alloc sms msg failed!");
+            return;
+        }
+
+        msg->cmd = CMD_THREAD_SMS;
+        msg->length = sizeof(SMS_SEND_INFO) + strlen(ack_message);
+
+        data = (SMS_SEND_INFO*)msg->data;
+        strncpy(data->number,number,TEL_NO_LENGTH + 1);
+        data->type = SMS_SEND_DIRECT;
+        data->smsLen = strlen(ack_message);
+        strncpy(data->content,ack_message,ACK_MESSAGE_LEN);
+
+        sendMsg(THREAD_MAIN, msg, msgLen);
     }
 
     return;
@@ -66,93 +60,96 @@ static void sms_version_proc(u8 *p, u8 *number)
 
 static void sms_factory_proc(u8 *p, u8 *number)
 {
-    unsigned char *ptr1;
-    char ack_message[ACK_MESSAGE_LEN] = {0};
-    eat_fs_error_enum fs_Op_ret;
-
+    MSG_THREAD *msg = NULL;
+    SMS_SEND_INFO *data = NULL;
+    u8 msgLen = 0;
+    u8 *ptr1;
+    u8 ack_message[ACK_MESSAGE_LEN]={0};
+    int rc = 0;
 
     ptr1 = string_bypass(p, "Factory");
     if(NULL != ptr1)
     {
-
-        snprintf(ack_message, ACK_MESSAGE_LEN, "Factory default ok");
-
-        LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
-        eat_send_text_sms(number, ack_message);
-
-        fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(SETTINGFILE_NAME);
-
-        if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
+        rc = fs_factory();
+        if(0 > rc)
         {
-            LOG_ERROR("Delete settingfile Fail,and Return Error is %d",fs_Op_ret);
+            snprintf(ack_message, ACK_MESSAGE_LEN, "Factory default error");
         }
         else
         {
-            LOG_DEBUG("Delete settingfile Success");
+            snprintf(ack_message, ACK_MESSAGE_LEN, "Factory default ok");
         }
-
-
-        fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(LOG_FILE_BAK);
-
-        if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
+        msgLen = sizeof(MSG_THREAD) + sizeof(SMS_SEND_INFO) + strlen(ack_message);
+        msg = allocMsg(msgLen);
+        if (!msg)
         {
-            LOG_ERROR("Delete old logfile Fail,and Return Error is %d",fs_Op_ret);
-        }
-        else
-        {
-            LOG_DEBUG("Delete old logfile Success");
+            LOG_ERROR("alloc sms msg failed!");
+            return;
         }
 
+        msg->cmd = CMD_THREAD_SMS;
+        msg->length = sizeof(SMS_SEND_INFO) + strlen(ack_message);
 
-        fs_Op_ret = (eat_fs_error_enum)eat_fs_Delete(LOG_FILE_NAME);
+        data = (SMS_SEND_INFO*)msg->data;
+        strncpy(data->number,number,TEL_NO_LENGTH + 1);
+        data->type = SMS_SEND_DIRECT;
+        data->smsLen = strlen(ack_message);
+        strncpy(data->content,ack_message,ACK_MESSAGE_LEN);
 
-        if(EAT_FS_NO_ERROR != fs_Op_ret && EAT_FS_FILE_NOT_FOUND != fs_Op_ret)
-        {
-            LOG_ERROR("Delete new logfile Fail,and Return Error is %d",fs_Op_ret);
-        }
-        else
-        {
-            LOG_DEBUG("Delete new logfile Success");
-        }
+        sendMsg(THREAD_MAIN, msg, msgLen);
 
-
-        // if time is less , send text will send fail,so proposal not to reply sms there
-        eat_sleep(10*1000);
-
-        eat_reset_module();
-
+        ResetFlag = EAT_TRUE;
     }
+
+    return;
 }
 
 
 static void sms_reboot_proc(u8 *p, u8 *number)
 {
-    unsigned char *ptr1;
-    char ack_message[ACK_MESSAGE_LEN] = {0};
-
+    MSG_THREAD *msg = NULL;
+    SMS_SEND_INFO *data = NULL;
+    u8 msgLen = 0;
+    u8 *ptr1;
+    u8 ack_message[ACK_MESSAGE_LEN]={0};
 
     ptr1 = string_bypass(p, "RESET");
     if(NULL != ptr1)
     {
-
         snprintf(ack_message, ACK_MESSAGE_LEN, "Reset ok");
+        msgLen = sizeof(MSG_THREAD) + sizeof(SMS_SEND_INFO) + strlen(ack_message);
+        msg = allocMsg(msgLen);
+        if (!msg)
+        {
+            LOG_ERROR("alloc sms msg failed!");
+            return;
+        }
 
-        LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
-        eat_send_text_sms(number, ack_message);
-        LOG_DEBUG("ready to reboot...");
+        msg->cmd = CMD_THREAD_SMS;
+        msg->length = sizeof(SMS_SEND_INFO) + strlen(ack_message);
 
-        // if time is less , send text will send fail,so proposal not to reply sms there
-        eat_sleep(10*1000);
+        data = (SMS_SEND_INFO*)msg->data;
+        strncpy(data->number,number,TEL_NO_LENGTH + 1);
+        data->type = SMS_SEND_DIRECT;
+        data->smsLen = strlen(ack_message);
+        strncpy(data->content,ack_message,ACK_MESSAGE_LEN);
 
-        eat_reset_module();
+        sendMsg(THREAD_MAIN, msg, msgLen);
+
+        ResetFlag = EAT_TRUE;
     }
+
+    return;
 }
 
 
 static void sms_server_proc(u8 *p, u8 *number)
 {
-    unsigned char *ptr1;
-    char ack_message[ACK_MESSAGE_LEN] = {0};
+    MSG_THREAD *msg = NULL;
+    SMS_SEND_INFO *data = NULL;
+    u8 msgLen = 0;
+    u8 *ptr1;
+    u8 ack_message[ACK_MESSAGE_LEN]={0};
     char domainORip[MAX_DOMAIN_NAME_LEN] = {0};
     char domain[MAX_DOMAIN_NAME_LEN] = {0};
     u32 ip[4] = {0};
@@ -170,9 +167,6 @@ static void sms_server_proc(u8 *p, u8 *number)
         {
             snprintf(ack_message, ACK_MESSAGE_LEN, "SERVER %s:%d",setting.domain,setting.port);
         }
-
-        LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
-        eat_send_text_sms(number, ack_message);
     }
 
     ptr1 = string_bypass(p, "SERVER ");
@@ -184,10 +178,8 @@ static void sms_server_proc(u8 *p, u8 *number)
             count = sscanf(domainORip, "%u.%u.%u.%u", &ip[0], &ip[1], &ip[2], &ip[3]);
             if(4 == count)
             {
-                //validity check
                 if(ip[0] <= 255 && ip[1] <= 255 && ip[2] <= 255 && ip[3] <= 255)
                 {
-                    //domainORip is ip
                     setting.addr_type = ADDR_TYPE_IP;
                     setting.ipaddr[0] = (u8)ip[0];
                     setting.ipaddr[1] = (u8)ip[1];
@@ -196,41 +188,31 @@ static void sms_server_proc(u8 *p, u8 *number)
                     setting.port = (u16)port;
 
                     setting_save();
-
-                    //eat_reset_module();//TO DO
                     ResetFlag = EAT_TRUE;
 
-                    //return ok
                     snprintf(ack_message, ACK_MESSAGE_LEN, "%s:%u OK", domainORip, port);
                 }
                 else
                 {
-                    //return error
                     snprintf(ack_message, ACK_MESSAGE_LEN, "%s:%u ERROR", domainORip, port);
                 }
             }
             else
             {
-                //validity check; a-zA-Z0-9 not work
                 count = sscanf(domainORip, "%[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.]", domain);
                 if(1 == count)
                 {
-                    //domainORip is domain
                     setting.addr_type = ADDR_TYPE_DOMAIN;
                     strncpy(setting.domain, domainORip,MAX_DOMAIN_NAME_LEN);
                     setting.port = (u16)port;
 
                     setting_save();
-
-                    //eat_reset_module();//TO DO
                     ResetFlag = EAT_TRUE;
 
-                    //return ok
                     snprintf(ack_message, ACK_MESSAGE_LEN, "%s:%u OK", domain, port);
                 }
                 else
                 {
-                    //return error
                     snprintf(ack_message, ACK_MESSAGE_LEN, "%s:%u ERROR", domainORip, port);
                 }
             }
@@ -239,104 +221,71 @@ static void sms_server_proc(u8 *p, u8 *number)
         {
             snprintf(ack_message, ACK_MESSAGE_LEN, "%s ERROR", ptr1);
         }
-
-        LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
-        eat_send_text_sms(number, ack_message);
     }
+
+    msgLen = sizeof(MSG_THREAD) + sizeof(SMS_SEND_INFO) + strlen(ack_message);
+    msg = allocMsg(msgLen);
+    if (!msg)
+    {
+        LOG_ERROR("alloc sms msg failed!");
+        return;
+    }
+
+    msg->cmd = CMD_THREAD_SMS;
+    msg->length = sizeof(SMS_SEND_INFO) + strlen(ack_message);
+
+    data = (SMS_SEND_INFO*)msg->data;
+    strncpy(data->number,number,TEL_NO_LENGTH + 1);
+    data->type = SMS_SEND_DIRECT;
+    data->smsLen = strlen(ack_message);
+    strncpy(data->content,ack_message,ACK_MESSAGE_LEN);
+
+    sendMsg(THREAD_MAIN, msg, msgLen);
 
     return;
 }
 
-//TODO: fix the gps upload timer
-static void sms_timer_proc(u8 *p, u8 *number)
+static void eat_sms_flash_message_cb(EatSmsReadCnf_st smsFlashMessage)
 {
-    unsigned char *ptr1;
-    char ack_message[ACK_MESSAGE_LEN] = {0};
-    u32 timer_period = 0;
-    int count = 0;
+    u8 format = 0;
 
-    ptr1 = string_bypass(p, "TIMER?");
-    if(NULL != ptr1)
+    LOG_DEBUG("flash message.");
+    eat_get_sms_format(&format);
+    if(1 == format) //TEXTģʽ
     {
-        snprintf(ack_message, ACK_MESSAGE_LEN, "TIMER:%u", (30 * 1000 / 1000));
-
-        LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
-        eat_send_text_sms(number, ack_message);
+        LOG_DEBUG("recv TEXT sms.");
+        LOG_DEBUG("msg=%s.",smsFlashMessage.data);
+        LOG_DEBUG("datetime=%s.",smsFlashMessage.datetime);
+        LOG_DEBUG("name=%s.",smsFlashMessage.name);
+        LOG_DEBUG("status=%d.",smsFlashMessage.status);
+        LOG_DEBUG("len=%d.",smsFlashMessage.len);
+        LOG_DEBUG("number=%s.",smsFlashMessage.number);
     }
-
-    ptr1 = string_bypass(p, "TIMER ");
-    if(NULL != ptr1)
+    else            //PDUģʽ
     {
-        count = sscanf(ptr1, "%u", &timer_period);
-        if(1 == count)
-        {
-            if(0 == timer_period)
-            {
-                snprintf(ack_message, ACK_MESSAGE_LEN, "SET TIMER to 0 OK");
-            }
-            else if(timer_period <= 10)
-            {
-//                setting.gps_send_timer_period = 10000;
-
-                setting_save();
-
-                snprintf(ack_message, ACK_MESSAGE_LEN, "SET TIMER to 10 OK");
-            }
-            else if(timer_period >= 21600)
-            {
-//                setting.gps_send_timer_period = 21600 * 1000;
-
-                setting_save();
-
-                snprintf(ack_message, ACK_MESSAGE_LEN, "SET TIMER to 21600 OK");
-            }
-            else
-            {
-//                setting.gps_send_timer_period = timer_period * 1000;
-
-                setting_save();
-
-                snprintf(ack_message, ACK_MESSAGE_LEN, "SET TIMER to %d OK", timer_period);
-            }
-        }
-        else
-        {
-            snprintf(ack_message, ACK_MESSAGE_LEN, "SET TIMER to %s ERROR", ptr1);
-        }
-
-        LOG_DEBUG("send reply sms to %d:%s",number,ack_message);
-        eat_send_text_sms(number, ack_message);
+        LOG_DEBUG("recv PDU sms.");
+        LOG_DEBUG("msg=%s",smsFlashMessage.data);
+        LOG_DEBUG("len=%d",smsFlashMessage.len);
     }
-
-    return;
 }
 
 static void eat_sms_read_cb(EatSmsReadCnf_st smsReadCnfContent)
 {
     u8 format = 0;
     unsigned char *p = smsReadCnfContent.data;
-    //unsigned char *ptr1;
-    //unsigned char *ptr2;
-    //char ack_message[64]={0};
-    //int count = 0;
-    //u8 ipaddr[4] = {0};
-    //int port = 0;
-    //s8 domain[MAX_DOMAIN_NAME_LEN];
-    //u32 timer_period = 0;
 
     LOG_DEBUG("new message.");
     eat_get_sms_format(&format);
-    if(1 == format)//TEXTģʽ
+    if(1 == format) //TEXTģʽ
     {
         LOG_DEBUG("recv TEXT sms.");
 
         sms_version_proc(p, smsReadCnfContent.number);
         sms_server_proc(p, smsReadCnfContent.number);
-        sms_timer_proc(p, smsReadCnfContent.number);
         sms_reboot_proc(p, smsReadCnfContent.number);
         sms_factory_proc(p, smsReadCnfContent.number);
     }
-    else//PDUģʽ
+    else            //PDUģʽ
     {
         LOG_DEBUG("recv PDU sms.");
     }
