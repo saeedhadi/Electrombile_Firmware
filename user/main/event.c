@@ -283,6 +283,7 @@ static int threadCmd_Battery(const MSG_THREAD* msg)
     socket_sendDataDirectly(battery_msg, sizeof(MSG_BATTERY_RSP));
     return 0;
 }
+
 /*
 *fun: receive battery msg from battery_Thread and send deviceinfo msg to server
 */
@@ -424,18 +425,18 @@ static int threadCmd_SMS(const MSG_THREAD* msg)
     return 0;
 }
 
-static int threadCmd_Vibrate(const MSG_THREAD* msg)
+static int threadCmd_Alarm(const MSG_THREAD* msg)
 {
-    unsigned char* alarm_type = (unsigned char*)msg->data;
+    ALARM_INFO *msg_data = (ALARM_INFO*)msg->data;
 
-    if (msg->length != sizeof(*alarm_type))
+    if (msg->length != sizeof(ALARM_INFO))
     {
         LOG_ERROR("msg length error: msgLen(%d)!", msg->length);
         return -1;
     }
-    LOG_DEBUG("receive thread command CMD_VIBRATE: alarmType(%d).", *alarm_type);
+    LOG_DEBUG("receive thread command CMD_VIBRATE: alarmType(%d).", msg_data->alarm_type);
 
-    return cmd_alarm(*alarm_type);
+    return cmd_alarm(msg_data->alarm_type);
 }
 
 
@@ -559,7 +560,7 @@ static THREAD_MSG_PROC msgProcs[] =
 {
         {CMD_THREAD_GPS, threadCmd_GPS},
         {CMD_THREAD_SMS, threadCmd_SMS},
-        {CMD_THREAD_VIBRATE, threadCmd_Vibrate},
+        {CMD_THREAD_ALARM, threadCmd_Alarm},
         {CMD_THREAD_LOCATION, threadCmd_Location},
         {CMD_THREAD_AUTOLOCK, threadCmd_AutolockState},
         {CMD_THREAD_ITINERARY, threadCmd_Itinerary},

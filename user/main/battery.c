@@ -14,6 +14,7 @@
 #include "log.h"
 #include "adc.h"
 #include "mem.h"
+#include "timer.h"
 
 enum
 {
@@ -24,7 +25,17 @@ enum
     BATTERY_TYPE72 = 72,
 };
 
+enum
+{
+    BATTERY_ALARM_NULL  = 0,
+    BATTERY_ALARM_50    = 4,
+    BATTERY_ALARM_30    = 5,
+};
+
+
 #define MAX_PERCENT_NUM 100
+#define BATTERY_TIMER_PEROID (10*60*1000)   //10mins check once
+
 
 #define ADvalue_2_Realvalue(x) x*103/3/1000.f //unit mV, 3K & 100k divider
 #define Voltage2Percent(x) exp((x-37.873)/2.7927)
@@ -170,6 +181,59 @@ static u8 battery_get_miles(void)
     return 0;
 }
 
+/*
+*func:check battery 10mins once while not moved,if battery low,alarm:BATTERY_ALARM_50, BATTERY_ALARM_30
+*/
+static char battery_percent_check(void)
+{
+    static char state = BATTERY_ALARM_NULL;
+    u8 percent = battery_get_percent();
+
+    if(70 < percent)    //battery > 70, assume as charge, reset and wait for reducing to 50
+    {
+        state = BATTERY_ALARM_NULL;
+    }
+    else if(50 > percent)
+    {
+        if(30 < percent && state != BATTERY_ALARM_50)//30 < battery <50,alarm once,and wait for reducing to 30
+        {
+            return state = BATTERY_ALARM_50;
+        }
+        else if(state != BATTERY_ALARM_30)//30 < battery,alarm once,and do nothing
+        {
+            return state = BATTERY_ALARM_30;
+        }
+    }
+
+    return BATTERY_ALARM_NULL;
+}
+
+static int battery_alarm_handler(void)
+{
+    u8 msgLen = sizeof(MSG_THREAD) + sizeof(ALARM_INFO);
+    MSG_THREAD *msg = NULL;
+    ALARM_INFO *alarmType = NULL;
+    char type = battery_percent_check();
+
+    if(type == BATTERY_ALARM_NULL)
+    {
+        return 0;
+    }
+
+    msg = allocMsg(msgLen);
+    alarmType = (ALARM_INFO*)msg->data;
+
+    msg->cmd = CMD_THREAD_ALARM;
+    msg->length = sizeof(ALARM_INFO);
+    alarmType->alarm_type = type;
+
+    LOG_DEBUG("battery alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, type);
+
+    return sendMsg(THREAD_MAIN, msg, msgLen);
+
+}
+
+
 static int battery_get_handler(u8 cmd)
 {
     u8 msgLen = sizeof(MSG_THREAD) + sizeof(BATTERY_INFO);
@@ -253,6 +317,9 @@ void app_battery_thread(void *data)
         eat_sleep(100);//if failed ,try again after 100ms
     }
 
+	LOG_INFO("TIMER_BATTERY_CHECK start.");
+    eat_timer_start(TIMER_BATTERY_CHECK,BATTERY_TIMER_PEROID);
+
 	while(EAT_TRUE)
 	{
         eat_get_event_for_user(THREAD_BATTERY, &event);
@@ -261,6 +328,14 @@ void app_battery_thread(void *data)
             case EAT_EVENT_TIMER:
                 switch (event.data.timer.timer_id)
                 {
+                    case TIMER_BATTERY_CHECK:
+                        if(!Vibration_isMoved())
+                        {
+                            battery_alarm_handler();
+                        }
+                        eat_timer_start(event.data.timer.timer_id,BATTERY_TIMER_PEROID);
+                        break;
+
                     default:
                         LOG_ERROR("timer(%d) expire!", event.data.timer.timer_id);
                         break;

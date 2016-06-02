@@ -16,7 +16,7 @@ enum CMD
     CMD_THREAD_GPS,
     CMD_THREAD_GPSHDOP,
     CMD_THREAD_SMS,
-    CMD_THREAD_VIBRATE,
+    CMD_THREAD_ALARM,
     CMD_THREAD_LOCATION,
     CMD_THREAD_AUTOLOCK,
     CMD_THREAD_ITINERARY,
@@ -62,6 +62,11 @@ typedef struct
 
 typedef struct
 {
+    char alarm_type;
+}__attribute__((__packed__))ALARM_INFO;
+
+typedef struct
+{
     char state;
 
 }VIBRATION_ITINERARY_INFO;
@@ -93,6 +98,7 @@ typedef struct
     char percent;
     char miles;
 }__attribute__((__packed__))BATTERY_INFO;
+
 
 typedef struct
 {

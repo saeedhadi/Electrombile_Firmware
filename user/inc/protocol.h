@@ -81,6 +81,7 @@ enum
 };
 
 #pragma pack(push, 1)
+
 /*
  * Message header definition
  */
@@ -93,6 +94,12 @@ typedef struct
 }__attribute__((__packed__)) MSG_HEADER;
 
 #define MSG_HEADER_LEN sizeof(MSG_HEADER)
+
+typedef struct
+{
+    MSG_HEADER header;
+    int managerSeq;
+}__attribute__((__packed__)) MSG_GET_HEADER;
 
 /*
  * get log message structure
@@ -117,21 +124,8 @@ typedef struct
 typedef MSG_HEADER MSG_REBOOT_REQ;
 
 /*
- * upgrade message structure
- */
-typedef MSG_HEADER MSG_UPGRADE_REQ;
-
-typedef struct
-{
-    MSG_HEADER header;
-    int managerSeq;
-}__attribute__((__packed__)) MSG_GET_HEADER;
-
-
-/*
  * get log message structure
  */
-
 typedef MSG_GET_HEADER MSG_GET_LOG_REQ;
 
 typedef struct
@@ -222,6 +216,17 @@ enum DeviceType{
 typedef MSG_HEADER MSG_LOGIN_RSP;
 
 /*
+ * ping message structure
+ */
+typedef struct
+{
+    MSG_HEADER header;
+    short status;   //TODO: to define the status bits
+}__attribute__((__packed__)) MSG_PING_REQ;
+
+typedef MSG_HEADER MSG_PING_RSP;
+
+/*
  * GPS structure
  */
 typedef struct
@@ -233,9 +238,6 @@ typedef struct
     short course;
 }__attribute__((__packed__)) GPS;
 
-/*
- * GPS message structure
- */
 typedef struct
 {
     MSG_HEADER header;
@@ -260,25 +262,11 @@ typedef struct
     //CELL cell[];
 }__attribute__((__packed__)) CGI;       //Cell Global Identifier
 
-/*
- * CGI message structure
- */
- typedef struct
- {
-     MSG_HEADER header;
-     CGI cgi;
- }__attribute__((__packed__)) MSG_CGI;
-
-/*
- * heartbeat message structure
- */
 typedef struct
 {
     MSG_HEADER header;
-    short status;   //TODO: to define the status bits
-}__attribute__((__packed__)) MSG_PING_REQ;
-
-typedef MSG_HEADER MSG_PING_RSP;
+    CGI cgi;
+}__attribute__((__packed__)) MSG_CGI;
 
 /*
  * alarm message structure
@@ -286,8 +274,10 @@ typedef MSG_HEADER MSG_PING_RSP;
 enum ALARM_TYPE
 {
     ALARM_FENCE_OUT = 1,
-    ALARM_FENCE_IN,
-    ALARM_VIBRATE,
+    ALARM_FENCE_IN  = 2,
+    ALARM_VIBRATE   = 3,
+    ALARM_BATTERY50 = 4,
+    ALARM_BATTERY30 = 5,
 };
 
 typedef struct
@@ -322,63 +312,28 @@ typedef struct
 }__attribute__((__packed__)) MSG_433;
 
 /*
- * GPS set_time message structure
- */
-
-typedef struct
-{
-    MSG_HEADER header;
-    int timer;
-}__attribute__((__packed__)) MSG_SET_TIMER_REQ;
-
-typedef struct
-{
-    MSG_HEADER header;
-    int result;
-}__attribute__((__packed__)) MSG_SET_TIMER_RSP;
-
-/*
-*server set_ip/domain message structure
-*this message has no response
-*/
-typedef struct
-{
-    MSG_HEADER header;
-    int port;
-    char server[];
-}__attribute__((__packed__)) MSG_SET_SERVER;
-
-/*
  * defend message structure
  */
- enum DEFEND_TYPE
+enum DEFEND_TYPE
 {
     DEFEND_ON   = 0x01,
     DEFEND_OFF  = 0x02,
     DEFEND_GET  = 0x03,
 };
 
-/*
- * defend switch message structure
- */
 typedef struct
 {
     MSG_HEADER header;
+    int token;
+    char operator;     // refer to DEFEND_TYPE
+}__attribute__((__packed__)) MSG_DEFEND_REQ;
+
+typedef struct
+{
+    MSG_HEADER header;
+    int token;
     char result;
-}__attribute__((__packed__)) MSG_DEFEND_ON_RSP;
-
-typedef struct
-{
-    MSG_HEADER header;
-    char result;
-}__attribute__((__packed__)) MSG_DEFEND_OFF_RSP;
-
-typedef struct
-{
-    MSG_HEADER header;
-    char status;             //0: OFF,1: ON
-}__attribute__((__packed__)) MSG_DEFEND_GET_RSP;
-
+}__attribute__((__packed__)) MSG_DEFEND_RSP;
 
 /*
  * switch on the seek mode
@@ -403,23 +358,35 @@ typedef struct
     char result;
 }__attribute__((__packed__)) MSG_SEEK_RSP;
 
-typedef MSG_HEADER MSG_LOCATE;
+/*
+*server set_ip/domain message structure
+*this message has no response
+*/
+typedef struct
+{
+    MSG_HEADER header;
+    int port;
+    char server[];
+}__attribute__((__packed__)) MSG_SET_SERVER;
+
+/*
+ * GPS set_time message structure
+ */
+typedef struct
+{
+    MSG_HEADER header;
+    int timer;
+}__attribute__((__packed__)) MSG_SET_TIMER_REQ;
 
 typedef struct
 {
     MSG_HEADER header;
-    char isGps;
-    GPS gps;
-}__attribute__((__packed__)) MSG_GPSLOCATION_RSP;   //FIXME: change the name
+    int result;
+}__attribute__((__packed__)) MSG_SET_TIMER_RSP;
 
-typedef struct
-{
-    MSG_HEADER header;
-    char isGps;
-}__attribute__((__packed__)) MSG_CELLLOCATION_HEADER;   //FIXME: change the name
-
-
-
+/*
+ * autolock set message structure
+ */
 enum AUTODEFEND_SWITCH
 {
     AUTO_DEFEND_OFF,
@@ -440,6 +407,9 @@ typedef struct
     unsigned char result;
 }__attribute__((__packed__)) MSG_AUTODEFEND_SWITCH_SET_RSP;
 
+/*
+ * autolock get message structure
+ */
 typedef struct
 {
     MSG_HEADER header;
@@ -453,6 +423,9 @@ typedef struct
     unsigned char result;
 }__attribute__((__packed__)) MSG_AUTODEFEND_SWITCH_GET_RSP;
 
+/*
+ * autoperiod set message structure
+ */
 typedef struct
 {
     MSG_HEADER header;
@@ -467,7 +440,9 @@ typedef struct
     unsigned char result;
 }__attribute__((__packed__)) MSG_AUTODEFEND_PERIOD_SET_RSP;
 
-
+/*
+ * autoperiod get message structure
+ */
 typedef struct
 {
     MSG_HEADER header;
@@ -481,6 +456,9 @@ typedef struct
     unsigned char period;   //time unit: minutes
 }__attribute__((__packed__)) MSG_AUTODEFEND_PERIOD_GET_RSP;
 
+/*
+ * itinerary message structure
+ */
 typedef struct
 {
     MSG_HEADER header;
@@ -489,6 +467,11 @@ typedef struct
     int mileage;
 }__attribute__((__packed__)) MSG_ITINERARY_REQ;
 
+typedef MSG_HEADER MSG_ITINERARY_RSP;
+
+/*
+ * battery message structure
+ */
 typedef struct
 {
     MSG_HEADER header;
@@ -496,6 +479,26 @@ typedef struct
     char miles;
 }__attribute__((__packed__)) MSG_BATTERY_RSP;
 
+/*
+ * defend switch message structure
+ */
+typedef struct
+{
+    MSG_HEADER header;
+    char result;
+}__attribute__((__packed__)) MSG_DEFEND_ON_RSP;
+
+typedef struct
+{
+    MSG_HEADER header;
+    char result;
+}__attribute__((__packed__)) MSG_DEFEND_OFF_RSP;
+
+typedef struct
+{
+    MSG_HEADER header;
+    char status;             //0: OFF,1: ON
+}__attribute__((__packed__)) MSG_DEFEND_GET_RSP;
 
 typedef struct
 {
@@ -503,6 +506,9 @@ typedef struct
     char state;             //0 express OFF,1 express ON
 }__attribute__((__packed__)) MSG_AUTODEFEND_STATE_REQ;
 
+/*
+ * upgrade message structure
+ */
 typedef struct
 {
     MSG_HEADER header;
@@ -542,6 +548,9 @@ typedef struct
     char code;
 }__attribute__((__packed__)) MSG_UPGRADE_END_RSP;
 
+/*
+ * sim info message structure
+ */
 typedef struct
 {
     MSG_HEADER header;
@@ -550,6 +559,37 @@ typedef struct
 }__attribute__((__packed__)) MSG_SIM_INFO;
 
 typedef MSG_HEADER MSG_DEVICE_INFO_GET_REQ;
+
+/*
+ * packed GPS message structure
+ */
+typedef struct
+{
+    MSG_HEADER header;
+    GPS gps[];
+}__attribute__((__packed__)) MSG_GPS_PACK;
+
+typedef MSG_HEADER MSG_DEBUG_REQ;
+
+typedef struct
+{
+    MSG_HEADER header;
+    char data[];
+}__attribute__((__packed__)) MSG_DEBUG_RSP;
+
+typedef struct
+{
+    MSG_HEADER header;
+    char isGps;
+    GPS gps;
+}__attribute__((__packed__)) MSG_GPSLOCATION_RSP;   //FIXME: change the name
+
+typedef struct
+{
+    MSG_HEADER header;
+    char isGps;
+}__attribute__((__packed__)) MSG_CELLLOCATION_HEADER;   //FIXME: change the name
+
 #pragma anon_unions
 typedef struct
 {
@@ -586,24 +626,6 @@ typedef struct
     }__attribute__((__packed__));
 
 }__attribute__((__packed__)) MSG_DEVICE_INFO_GET_RSP;
-
-/*
- * packed GPS message structure
- */
-typedef struct
-{
-    MSG_HEADER header;
-    GPS gps[];
-}__attribute__((__packed__)) MSG_GPS_PACK;
-
-
-typedef MSG_HEADER MSG_DEBUG_REQ;
-typedef struct
-{
-    MSG_HEADER header;
-    char data[];
-}__attribute__((__packed__)) MSG_DEBUG_RSP;
-
 
 #pragma pack(pop)
 

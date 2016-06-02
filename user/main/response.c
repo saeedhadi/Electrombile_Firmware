@@ -31,6 +31,7 @@
 #include "msg_queue.h"
 #include "diagnosis.h"
 #include "mem.h"
+#include "modem.h"
 
 
 int cmd_Login_rsp(const void* msg)
@@ -316,7 +317,6 @@ int cmd_GetSetting_rsp(const void * msg)
     MSG_GET_SETTING_REQ*req = (MSG_GET_SETTING_REQ*)msg;
     MSG_GET_SETTING_RSP*rsp = NULL;
     int msgLen;
-    int rc = 0;
     char buf[MAX_DEBUG_BUF_LEN] = {0};
     if(setting.addr_type == ADDR_TYPE_DOMAIN)
     {
