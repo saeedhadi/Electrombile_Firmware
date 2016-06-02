@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <error.h>
 
 #include "eat_modem.h"
 #include "eat_interface.h"
@@ -23,13 +24,13 @@
 
 static eat_bool ResetFlag = EAT_FALSE;
 
-static void sms_version_proc(u8 *p, u8 *number)
+static void sms_version_proc(char *p, u8 *number)
 {
     MSG_THREAD *msg = NULL;
     SMS_SEND_INFO *data = NULL;
-    u8 msgLen = 0;
-    u8 *ptr1;
-    u8 ack_message[ACK_MESSAGE_LEN]={0};
+    char msgLen = 0;
+    char *ptr1;
+    char ack_message[ACK_MESSAGE_LEN]={0};
 
     ptr1 = string_bypass(p, "VERSION?");
     if(NULL != ptr1)
@@ -58,13 +59,13 @@ static void sms_version_proc(u8 *p, u8 *number)
     return;
 }
 
-static void sms_factory_proc(u8 *p, u8 *number)
+static void sms_factory_proc(char *p, u8 *number)
 {
     MSG_THREAD *msg = NULL;
     SMS_SEND_INFO *data = NULL;
-    u8 msgLen = 0;
-    u8 *ptr1;
-    u8 ack_message[ACK_MESSAGE_LEN]={0};
+    char msgLen = 0;
+    char *ptr1;
+    char ack_message[ACK_MESSAGE_LEN]={0};
     int rc = 0;
 
     ptr1 = string_bypass(p, "Factory");
@@ -98,20 +99,20 @@ static void sms_factory_proc(u8 *p, u8 *number)
 
         sendMsg(THREAD_MAIN, msg, msgLen);
 
-        ResetFlag = EAT_TRUE;
+        //ResetFlag = EAT_TRUE;
     }
 
     return;
 }
 
 
-static void sms_reboot_proc(u8 *p, u8 *number)
+static void sms_reboot_proc(char *p, u8 *number)
 {
     MSG_THREAD *msg = NULL;
     SMS_SEND_INFO *data = NULL;
-    u8 msgLen = 0;
-    u8 *ptr1;
-    u8 ack_message[ACK_MESSAGE_LEN]={0};
+    char msgLen = 0;
+    char *ptr1;
+    char ack_message[ACK_MESSAGE_LEN]={0};
 
     ptr1 = string_bypass(p, "RESET");
     if(NULL != ptr1)
@@ -136,25 +137,75 @@ static void sms_reboot_proc(u8 *p, u8 *number)
 
         sendMsg(THREAD_MAIN, msg, msgLen);
 
-        ResetFlag = EAT_TRUE;
+        //ResetFlag = EAT_TRUE;
     }
 
     return;
 }
 
 
-static void sms_server_proc(u8 *p, u8 *number)
+static void sms_seek_proc(char *p, u8 *number)
 {
     MSG_THREAD *msg = NULL;
     SMS_SEND_INFO *data = NULL;
-    u8 msgLen = 0;
-    u8 *ptr1;
-    u8 ack_message[ACK_MESSAGE_LEN]={0};
+    char msgLen = 0;
+    char *ptr1;
+    int result = -1;
+    char ack_message[ACK_MESSAGE_LEN]={0};
+
+    ptr1 = string_bypass(p, "SEEK 1");
+    if(NULL != ptr1)
+    {
+        snprintf(ack_message, ACK_MESSAGE_LEN, "SEEK ON OK");
+        result = SUCCESS;
+    }
+
+    ptr1 = string_bypass(p, "SEEK 0");
+    if(NULL != ptr1)
+    {
+        snprintf(ack_message, ACK_MESSAGE_LEN, "SEEK OFF OK");
+        result = SUCCESS;
+    }
+
+    if(SUCCESS == result)
+    {
+        msgLen = sizeof(MSG_THREAD) + sizeof(SMS_SEND_INFO) + strlen(ack_message);
+        msg = allocMsg(msgLen);
+        if (!msg)
+        {
+            LOG_ERROR("alloc sms msg failed!");
+            return;
+        }
+
+        msg->cmd = CMD_THREAD_SMS;
+        msg->length = sizeof(SMS_SEND_INFO) + strlen(ack_message);
+
+        data = (SMS_SEND_INFO*)msg->data;
+        strncpy(data->number,number,TEL_NO_LENGTH + 1);
+        data->type = SMS_SEND_DIRECT;
+        data->smsLen = strlen(ack_message);
+        strncpy(data->content,ack_message,ACK_MESSAGE_LEN);
+
+        sendMsg(THREAD_MAIN, msg, msgLen);
+    }
+
+    return;
+}
+
+
+static void sms_server_proc(char *p, u8 *number)
+{
+    MSG_THREAD *msg = NULL;
+    SMS_SEND_INFO *data = NULL;
+    char msgLen = 0;
+    char *ptr1;
+    char ack_message[ACK_MESSAGE_LEN]={0};
     char domainORip[MAX_DOMAIN_NAME_LEN] = {0};
     char domain[MAX_DOMAIN_NAME_LEN] = {0};
     u32 ip[4] = {0};
     u32 port = 0;
     int count = 0;
+    int result = -1;
 
     ptr1 = string_bypass(p, "SERVER?");
     if(NULL != ptr1)
@@ -167,6 +218,7 @@ static void sms_server_proc(u8 *p, u8 *number)
         {
             snprintf(ack_message, ACK_MESSAGE_LEN, "SERVER %s:%d",setting.domain,setting.port);
         }
+        result = SUCCESS;
     }
 
     ptr1 = string_bypass(p, "SERVER ");
@@ -181,10 +233,10 @@ static void sms_server_proc(u8 *p, u8 *number)
                 if(ip[0] <= 255 && ip[1] <= 255 && ip[2] <= 255 && ip[3] <= 255)
                 {
                     setting.addr_type = ADDR_TYPE_IP;
-                    setting.ipaddr[0] = (u8)ip[0];
-                    setting.ipaddr[1] = (u8)ip[1];
-                    setting.ipaddr[2] = (u8)ip[2];
-                    setting.ipaddr[3] = (u8)ip[3];
+                    setting.ipaddr[0] = (char)ip[0];
+                    setting.ipaddr[1] = (char)ip[1];
+                    setting.ipaddr[2] = (char)ip[2];
+                    setting.ipaddr[3] = (char)ip[3];
                     setting.port = (u16)port;
 
                     setting_save();
@@ -216,38 +268,45 @@ static void sms_server_proc(u8 *p, u8 *number)
                     snprintf(ack_message, ACK_MESSAGE_LEN, "%s:%u ERROR", domainORip, port);
                 }
             }
+
+            //ResetFlag = EAT_TRUE;
         }
         else
         {
             snprintf(ack_message, ACK_MESSAGE_LEN, "%s ERROR", ptr1);
         }
+
+        result = SUCCESS;
     }
 
-    msgLen = sizeof(MSG_THREAD) + sizeof(SMS_SEND_INFO) + strlen(ack_message);
-    msg = allocMsg(msgLen);
-    if (!msg)
+    if(SUCCESS == result)
     {
-        LOG_ERROR("alloc sms msg failed!");
-        return;
+        msgLen = sizeof(MSG_THREAD) + sizeof(SMS_SEND_INFO) + strlen(ack_message);
+        msg = allocMsg(msgLen);
+        if (!msg)
+        {
+            LOG_ERROR("alloc sms msg failed!");
+            return;
+        }
+
+        msg->cmd = CMD_THREAD_SMS;
+        msg->length = sizeof(SMS_SEND_INFO) + strlen(ack_message);
+
+        data = (SMS_SEND_INFO*)msg->data;
+        strncpy(data->number,number,TEL_NO_LENGTH + 1);
+        data->type = SMS_SEND_DIRECT;
+        data->smsLen = strlen(ack_message);
+        strncpy(data->content,ack_message,ACK_MESSAGE_LEN);
+
+        sendMsg(THREAD_MAIN, msg, msgLen);
     }
-
-    msg->cmd = CMD_THREAD_SMS;
-    msg->length = sizeof(SMS_SEND_INFO) + strlen(ack_message);
-
-    data = (SMS_SEND_INFO*)msg->data;
-    strncpy(data->number,number,TEL_NO_LENGTH + 1);
-    data->type = SMS_SEND_DIRECT;
-    data->smsLen = strlen(ack_message);
-    strncpy(data->content,ack_message,ACK_MESSAGE_LEN);
-
-    sendMsg(THREAD_MAIN, msg, msgLen);
 
     return;
 }
 
 static void eat_sms_flash_message_cb(EatSmsReadCnf_st smsFlashMessage)
 {
-    u8 format = 0;
+    char format = 0;
 
     LOG_DEBUG("flash message.");
     eat_get_sms_format(&format);
@@ -271,8 +330,8 @@ static void eat_sms_flash_message_cb(EatSmsReadCnf_st smsFlashMessage)
 
 static void eat_sms_read_cb(EatSmsReadCnf_st smsReadCnfContent)
 {
-    u8 format = 0;
-    unsigned char *p = smsReadCnfContent.data;
+    char format = 0;
+    u8 *p = smsReadCnfContent.data;
 
     LOG_DEBUG("new message.");
     eat_get_sms_format(&format);
@@ -284,6 +343,7 @@ static void eat_sms_read_cb(EatSmsReadCnf_st smsReadCnfContent)
         sms_server_proc(p, smsReadCnfContent.number);
         sms_reboot_proc(p, smsReadCnfContent.number);
         sms_factory_proc(p, smsReadCnfContent.number);
+        sms_seek_proc(p, smsReadCnfContent.number);
     }
     else            //PDUģʽ
     {
@@ -307,7 +367,7 @@ static void eat_sms_send_cb(eat_bool result)
     }
 }
 
-static eat_sms_new_message_cb(EatSmsNewMessageInd_st smsNewMessage)
+static void eat_sms_new_message_cb(EatSmsNewMessageInd_st smsNewMessage)
 {
     LOG_DEBUG("smsNewMessage.index=%d.", smsNewMessage.index);
     eat_read_sms(smsNewMessage.index, eat_sms_read_cb);
