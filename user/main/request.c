@@ -138,8 +138,8 @@ int cmd_SMS(char number[], char type, char smsLen, char content[])
 
     msg->type = type;
     msg->smsLen = smsLen;
-    number[TEL_NO_LENGTH] = 0;
-    strncpy(msg->telphone, number, TEL_NO_LENGTH + 1);
+    strncpy(msg->telphone, number, TEL_NO_LENGTH);
+    msg->telphone[TEL_NO_LENGTH] = 0;
     strncpy(msg->sms, content, smsLen);
 
     socket_sendDataDirectly(msg, msgLen);
