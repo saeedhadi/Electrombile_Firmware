@@ -291,10 +291,18 @@ typedef MSG_HEADER MSG_ALARM_RSP;
 /*
  * SMS message structure
  */
+ enum SMS_TYPE
+{
+    SMS_SEND_DIRECT = 0,
+    SMS_SEND_PROCED = 1,
+    SMS_SEND_SERVER = 2,
+};
+
 typedef struct
 {
     MSG_HEADER header;
     char telphone[TEL_NO_LENGTH + 1];
+    char type;
     char smsLen;
     char sms[];
 }__attribute__((__packed__)) MSG_SMS_REQ;

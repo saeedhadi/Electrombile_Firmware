@@ -238,3 +238,56 @@ SINT64 fs_getDiskFreeSize(void)
 
     return size;
 }
+
+int fs_factory(void)
+{
+    int rc = 0;
+    int result = 0;
+
+    rc = eat_fs_Delete(SETTINGFILE_NAME);
+    if (rc == EAT_FS_FILE_NOT_FOUND || rc >= EAT_FS_NO_ERROR)
+    {
+        LOG_DEBUG("delete setting file ok");
+    }
+    else
+    {
+        LOG_DEBUG("delete setting file error: %d",rc);
+        result = -1;
+    }
+
+    rc = eat_fs_Delete(LOG_FILE_BAK);
+    if (rc == EAT_FS_FILE_NOT_FOUND || rc >= EAT_FS_NO_ERROR)
+    {
+        LOG_DEBUG("delete log.old file ok");
+    }
+    else
+    {
+        LOG_DEBUG("delete log.old file error: %d",rc);
+        result = -1;
+    }
+
+    rc = eat_fs_Delete(LOG_FILE_NAME);
+    if (rc == EAT_FS_FILE_NOT_FOUND || rc >= EAT_FS_NO_ERROR)
+    {
+        LOG_DEBUG("delete log.txt file ok");
+    }
+    else
+    {
+        LOG_DEBUG("delete log.txt file error: %d",rc);
+        result = -1;
+    }
+
+    rc = eat_fs_Delete(ITINERARYFILE_NAME);
+    if (rc == EAT_FS_FILE_NOT_FOUND || rc >= EAT_FS_NO_ERROR)
+    {
+        LOG_DEBUG("delete itinerary file ok");
+    }
+    else
+    {
+        LOG_DEBUG("delete itinerary file error: %d",rc);
+        result = -1;
+    }
+
+    return result;
+}
+

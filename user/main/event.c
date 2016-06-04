@@ -420,9 +420,14 @@ static int threadCmd_GPSHdop(const MSG_THREAD* msg)
 
 static int threadCmd_SMS(const MSG_THREAD* msg)
 {
-    LOG_DEBUG("receive thread command CMD_SMS.");
+    SMS_SEND_INFO *data = (SMS_SEND_INFO *)msg->data;
+    if (msg->length != sizeof(SMS_SEND_INFO) + data->smsLen)
+    {
+        LOG_ERROR("msg length error: msgLen(%d)!", msg->length);
+        return -1;
+    }
 
-    return 0;
+    return cmd_SMS(data->number, data->type, data->smsLen, data->content);
 }
 
 static int threadCmd_Alarm(const MSG_THREAD* msg)
