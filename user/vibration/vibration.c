@@ -317,13 +317,6 @@ static void vibration_timer_handler(void)
                     set_vibration_state(EAT_TRUE);
                 }
             }
-
-
-            if(AlarmCount > 0)
-            {
-                AlarmCount = 0;
-            }
-
         }
 
         if(getVibrationTime() * setting.vibration_timer_period >= (2 * 60000))// 2min dont move ,judge one itinerary
@@ -331,6 +324,11 @@ static void vibration_timer_handler(void)
             if(ITINERARY_START == get_itinerary_state())
             {
                 vivration_SendItinerarayState(ITINERARY_END);
+            }
+
+            if(AlarmCount > 0)
+            {
+                AlarmCount = 0;
             }
         }
     }
