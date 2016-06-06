@@ -46,6 +46,10 @@ int get_manager_seq(void);
 void Vibration_setMoved(eat_bool state);
 eat_bool Vibration_isMoved(void);
 
+void Reset_AlarmCount(void);
+int Get_AlarmCount(void);
+void Add_AlarmCount(void);
+
 
 #define MAX_GPS_COUNT 10
 #define MAX_VLOTAGE_NUM 10

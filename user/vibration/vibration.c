@@ -25,7 +25,6 @@
 #define MOVE_THRESHOLD 5
 
 static eat_bool avoid_freq_flag = EAT_FALSE;
-static int AlarmCount = 0;
 
 
 void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
@@ -71,9 +70,9 @@ static eat_bool vibration_sendAlarm(void)
     u8 msgLen = sizeof(MSG_THREAD) + sizeof(ALARM_INFO);
     MSG_THREAD *msg = NULL;
     ALARM_INFO *msg_data = NULL;
-    unsigned char* alarmType = NULL;
 
-    if(AlarmCount++ <= 3)
+    Add_AlarmCount();
+    if(Get_AlarmCount() <= 3)
     {
         msg = allocMsg(msgLen);
         msg_data = (ALARM_INFO*)msg->data;
@@ -326,10 +325,7 @@ static void vibration_timer_handler(void)
                 vivration_SendItinerarayState(ITINERARY_END);
             }
 
-            if(AlarmCount > 0)
-            {
-                AlarmCount = 0;
-            }
+            Reset_AlarmCount();
         }
     }
 

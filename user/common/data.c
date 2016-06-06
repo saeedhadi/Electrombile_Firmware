@@ -22,6 +22,7 @@ static LOCAL_GPS* last_gps = &last_gps_info;
 
 static char isItineraryStart = ITINERARY_END;
 static int VibrationTime = 0;
+static int AlarmCount = 0;
 
 static eat_bool manager_ATcmd_flag = EAT_FALSE;
 static int manager_seq = 0;
@@ -196,4 +197,19 @@ eat_bool Vibration_isMoved(void)
 {
     return isMoved;
 }
+
+void Reset_AlarmCount(void)
+{
+    AlarmCount = 0;
+}
+int Get_AlarmCount(void)
+{
+    return AlarmCount;
+}
+
+void Add_AlarmCount(void)
+{
+    AlarmCount++;
+}
+
 
