@@ -195,7 +195,7 @@ static char battery_percent_check(void)
     }
     else if(50 > percent)
     {
-        if(30 < percent && state != BATTERY_ALARM_50)//30 < battery <50,alarm once,and wait for reducing to 30
+        if(30 < percent && state != BATTERY_ALARM_50 && state != BATTERY_ALARM_30)//30 < battery <50,alarm once,and wait for reducing to 30
         {
             return state = BATTERY_ALARM_50;
         }
