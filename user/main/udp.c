@@ -1,8 +1,8 @@
 /*
- * socket.c
+ * udp.c
  *
- *  Created on: 2015/7/8/
- *      Author: jk
+ *  Created on: 2016/6/18/
+ *      Author: lc
  */
 #include <stdio.h>
 #include <eat_interface.h>
@@ -18,86 +18,7 @@
 #include "error.h"
 #include "msg_queue.h"
 
-
 static s8 socket_id_udp = 0;
-
-static u32 request_id = 0;
-
-#define DESC_DEF(x)	case x:\
-                        return #x
-
-/*
-SOC_READ    = 0x01,   Notify for read
-SOC_WRITE   = 0x02,   Notify for write
-SOC_ACCEPT  = 0x04,   Notify for accept
-SOC_CONNECT = 0x08,   Notify for connect
-SOC_CLOSE   = 0x10,   Notify for close
-SOC_ACKED   = 0x20,   Notify for acked
-*/
-static char* getEventDescription(soc_event_enum event)
-{
-	switch (event)
-	{
-#ifdef APP_DEBUG
-		DESC_DEF(SOC_READ);
-		DESC_DEF(SOC_WRITE);
-		DESC_DEF(SOC_ACCEPT);
-		DESC_DEF(SOC_CONNECT);
-		DESC_DEF(SOC_CLOSE);
-		DESC_DEF(SOC_ACKED);
-#endif
-		default:
-		{
-			static char soc_event[10] = {0};
-			snprintf(soc_event, 10, "%d", event);
-			return soc_event;
-		}
-	}
-}
-
-static void soc_notify_cb_udp(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
-{
-    u8 buffer[1152] = {0};//TODO:certain the size
-    s32 rc = 0;
-
-    LOG_DEBUG("SOCKET notify:socketid(%d), event(%s).", s, getEventDescription(event));
-
-    switch (event)
-    {
-        case SOC_READ:
-
-            rc = eat_soc_recv(socket_id_udp, buffer, 1152);
-            if (rc > 0)
-            {
-                client_proc(buffer, rc);
-            }
-            else
-            {
-                LOG_ERROR("eat_soc_recv error:rc=%d!", rc);
-            }
-
-            break;
-
-        case SOC_CONNECT:
-                LOG_DEBUG("SOC_CONNECT success.");
-            break;
-
-        case SOC_CLOSE:
-            LOG_INFO("SOC_CLOSE:socketid = %d", s);
-            eat_soc_close(s);
-            break;
-
-        case SOC_ACKED:
-            LOG_DEBUG("acked size of send data: %d.", ack_size);
-            break;
-
-        default:
-            LOG_INFO("SOC_NOTIFY %d not handled", event);
-            break;
-    }
-
-}
-
 
 int socket_connect_udp(void)
 {
@@ -165,7 +86,7 @@ int socket_connect_udp(void)
     }
 }
 
-int socket_sendData_udp(void* data, s32 len)
+int socket_sendData_UDP(void* data, s32 len)
 {
     s32 rc;
 
