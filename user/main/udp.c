@@ -57,7 +57,7 @@ static char* getEventDescription(soc_event_enum event)
 
 static void soc_notify_cb_udp(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
 {
-    u8 buffer[1152] = {0};//1K + 128 for upgrade module
+    u8 buffer[1152] = {0};//TODO:certain the size
     s32 rc = 0;
 
     LOG_DEBUG("SOCKET notify:socketid(%d), event(%s).", s, getEventDescription(event));
@@ -66,7 +66,7 @@ static void soc_notify_cb_udp(s8 s,soc_event_enum event,eat_bool result, u16 ack
     {
         case SOC_READ:
 
-            rc = eat_soc_recv(socket_id_udp, buffer, 1152);//1K + 128 for upgrade module
+            rc = eat_soc_recv(socket_id_udp, buffer, 1152);
             if (rc > 0)
             {
                 client_proc(buffer, rc);

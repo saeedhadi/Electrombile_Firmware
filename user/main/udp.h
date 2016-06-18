@@ -1,8 +1,8 @@
 /*
- * uart.h
+ * udp.c
  *
- *  Created on: 2015/7/8
- *      Author: jk
+ *  Created on: 2016/6/18/
+ *      Author: lc
  */
 
 #ifndef UDP_CLIENT_H_

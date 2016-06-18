@@ -1,8 +1,8 @@
 /*
- * socket.c
+ * udp.c
  *
- *  Created on: 2015/7/8/
- *      Author: jk
+ *  Created on: 2016/6/18/
+ *      Author: lc
  */
 #include <stdio.h>
 #include <eat_interface.h>
@@ -99,7 +99,7 @@ static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_siz
     {
         case SOC_READ:
 
-            rc = eat_soc_recv(socket_id, buffer, 1152);//1K + 128 for upgrade module
+            rc = eat_soc_recv(s, buffer, 1152);//1K + 128 for upgrade module
             if (rc > 0)
             {
                 client_proc(buffer, rc);
