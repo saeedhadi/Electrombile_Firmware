@@ -155,6 +155,7 @@ void app_main(void *data)
     startWatchdog();
 
 
+
     while(EAT_TRUE)
     {
     	unsigned int event_num = eat_get_event_num();

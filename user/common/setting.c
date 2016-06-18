@@ -138,7 +138,7 @@ static void setting_initial(void)
     regist_cmd(CMD_STRING_SERVER, setting_changeServer);
 
     /* Server configuration */
-#if 0
+#if 1
     setting.addr_type = ADDR_TYPE_DOMAIN;
     strncpy(setting.domain, "www.xiaoan110.com",MAX_DOMAIN_NAME_LEN);
 #else
@@ -149,7 +149,8 @@ static void setting_initial(void)
     setting.ipaddr[3] = 93;
 #endif
 
-    setting.port = 3300;
+    setting.port = 9880;
+    setting.port_udp= 8888;
 
     /* Timer configuration */
     setting.main_loop_timer_period = 5000;

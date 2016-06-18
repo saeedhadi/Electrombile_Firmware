@@ -152,10 +152,10 @@ int socket_connect(u8 ip_addr[4])
     s8 rc = SOC_SUCCESS;
     s8 val = EAT_TRUE;
 
-    sockaddr_struct address = {SOC_SOCK_DGRAM};
+    sockaddr_struct address = {SOC_SOCK_STREAM};
 
     eat_soc_notify_register(soc_notify_cb);
-    socket_id = eat_soc_create(SOC_SOCK_DGRAM, SOC_SOCK_STREAM);
+    socket_id = eat_soc_create(SOC_SOCK_STREAM, SOC_SOCK_STREAM);
     if (socket_id < 0)
     {
         LOG_ERROR("eat_soc_create return error :%d!", socket_id);
@@ -172,14 +172,14 @@ int socket_connect(u8 ip_addr[4])
         LOG_ERROR("eat_soc_setsockopt set SOC_NBIO failed: %d!", rc);
         return ERR_SOCKET_OPTION_FAILED;
     }
-/*
+
     rc = eat_soc_setsockopt(socket_id, SOC_NODELAY, &val, sizeof(val));
     if (rc != SOC_SUCCESS)
     {
         LOG_ERROR("eat_soc_setsockopt set SOC_NODELAY failed: %d!", rc);
         return ERR_SOCKET_OPTION_FAILED;
     }
-*/
+
     val = SOC_READ | SOC_WRITE | SOC_CLOSE | SOC_CONNECT;
     rc = eat_soc_setsockopt(socket_id, SOC_ASYNC, &val, sizeof(val));
     if (rc != SOC_SUCCESS)
@@ -190,7 +190,7 @@ int socket_connect(u8 ip_addr[4])
 
 
 
-    address.sock_type = SOC_SOCK_DGRAM;
+    address.sock_type = SOC_SOCK_STREAM;
     address.addr_len = 4;
 
     address.addr[0] = ip_addr[0];

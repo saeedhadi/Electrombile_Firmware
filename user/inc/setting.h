@@ -30,6 +30,7 @@ typedef struct
 		u8 ipaddr[4];
 	};
 	u16 port;
+    u16 port_udp;
 
 	//Timer configuration
     struct

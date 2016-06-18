@@ -29,6 +29,7 @@
 #include "response.h"
 #include "msg_queue.h"
 #include "mem.h"
+#include "udp.h"
 
 typedef int (*EVENT_FUNC)(const EatEvent_st* event);
 typedef struct
@@ -100,6 +101,16 @@ static int event_timer(const EatEvent_st* event)
         case TIMER_MSG_RESEND:
             msg_resend();
             eat_timer_start(event->data.timer.timer_id, 60*1000);
+            break;
+
+        case TIMER_4_TEST:
+        {
+            char *msg = NULL;
+            msg = (char*)malloc(sizeof(char)*6);
+            strncpy(msg,"112233",6);
+            socket_sendData_udp(msg, 6);
+            eat_timer_start(event->data.timer.timer_id, 20*1000);
+        }
             break;
 
         default:
