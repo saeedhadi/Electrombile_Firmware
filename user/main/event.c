@@ -103,16 +103,6 @@ static int event_timer(const EatEvent_st* event)
             eat_timer_start(event->data.timer.timer_id, 60*1000);
             break;
 
-        case TIMER_4_TEST:
-        {
-            char *msg = NULL;
-            msg = (char*)malloc(sizeof(char)*6);
-            strncpy(msg,"112233",6);
-            socket_sendData_UDP(msg, 6);
-            eat_timer_start(event->data.timer.timer_id, 20*1000);
-        }
-            break;
-
         default:
             LOG_ERROR ("timer(%d) not processed!", event->data.timer.timer_id);
             break;

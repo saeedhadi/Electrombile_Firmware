@@ -258,8 +258,7 @@ static int action_onBearDeactivated(void)
 static int action_onSocketConnected(void)
 {
     cmd_Login();
-    socket_connect_udp();
-    eat_timer_start(TIMER_4_TEST,20*1000);
+    socket_connect_udp(setting.ipaddr);
 
     fsm_trans(STATE_WAIT_LOGIN);
 

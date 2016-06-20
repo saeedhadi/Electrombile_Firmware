@@ -20,7 +20,7 @@
 
 static s8 socket_id_udp = 0;
 
-int socket_connect_udp(void)
+int socket_connect_udp(u8 ip_addr[4])
 {
     s8 rc = SOC_SUCCESS;
     s8 val = EAT_TRUE;
@@ -58,10 +58,10 @@ int socket_connect_udp(void)
     address.sock_type = SOC_SOCK_DGRAM;
     address.addr_len = 4;
 
-    address.addr[0] = 121;//ip_addr[0];
-    address.addr[1] = 42;//ip_addr[1];
-    address.addr[2] = 38;//ip_addr[2];
-    address.addr[3] = 93;//ip_addr[3];
+    address.addr[0] = ip_addr[0];
+    address.addr[1] = ip_addr[1];
+    address.addr[2] = ip_addr[2];
+    address.addr[3] = ip_addr[3];
 
     LOG_DEBUG("ip: %d.%d.%d.%d:%d.", address.addr[0], address.addr[1], address.addr[2], address.addr[3], setting.port_udp);
 

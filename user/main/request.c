@@ -21,6 +21,7 @@
 #include "modem.h"
 #include "response.h"
 #include "itinerary.h"
+#include "udp.h"
 
 int cmd_Login(void)
 {
@@ -224,7 +225,7 @@ int cmd_GPSPack(void)
         msg->gps[count].course = htons(msg->gps[count].course);
     }
 
-    socket_sendDataDirectly(msg, msgLen);
+    socket_sendData_UDP(msg, msgLen);
 
     return 0;
 

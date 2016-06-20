@@ -317,11 +317,10 @@ int socket_setup(void)
     }
     else
     {
-        u8 ipaddr[4] = {0};
         u8 len = 0;
 
         eat_soc_gethost_notify_register(hostname_notify_cb);
-        rc = eat_soc_gethostbyname(setting.domain, ipaddr, &len, request_id++);
+        rc = eat_soc_gethostbyname(setting.domain, setting.ipaddr, &len, request_id++);
         if (rc == SOC_WOULDBLOCK)
         {
             LOG_DEBUG("eat_soc_gethostbyname wait callback.");
@@ -329,8 +328,8 @@ int socket_setup(void)
         }
         else if (rc == SOC_SUCCESS)
         {
-            LOG_DEBUG("host:%s -> %d.%d.%d.%d:%d.", setting.domain, ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3], setting.port);
-            return socket_connect(ipaddr);
+            LOG_DEBUG("host:%s -> %d.%d.%d.%d:%d.", setting.domain, setting.ipaddr[0], setting.ipaddr[1], setting.ipaddr[2], setting.ipaddr[3], setting.port);
+            return socket_connect(setting.ipaddr);
         }
         else
         {
