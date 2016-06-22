@@ -16,11 +16,13 @@
  * 1.2.0: add battery, for RC1
  * 1.2.1: add message re-send mechanism
  * 1.2.2: add nmealib, and fix the battery bug
+ * 1.2.3: add diagnostic function
+ * 1.2.4: change SMS ack to socket message instead of real SMS
  */
 
 #define VERSION_MAJOR   1
 #define VERSION_MINOR   2
-#define VERSION_MICRO   2
+#define VERSION_MICRO   4
 
 #define VERSION_INT(a, b, c)    (a << 16 | b << 8 | c)
 #define VERSION_DOT(a, b, c)    a##.##b##.##c
