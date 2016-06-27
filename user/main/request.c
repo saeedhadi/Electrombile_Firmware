@@ -22,6 +22,7 @@
 #include "response.h"
 #include "itinerary.h"
 #include "udp.h"
+#include "mem.h"
 
 int cmd_Login(void)
 {
@@ -71,7 +72,6 @@ int cmd_SimInfo(char* buf)
     socket_sendDataWaitAck(msg, sizeof(MSG_SIM_INFO),NULL,NULL);
     return 0;
 }
-
 
 void cmd_Heartbeat(void)
 {
@@ -197,9 +197,16 @@ int cmd_GPS(GPS* gps)
 int cmd_GPSPack(void)
 {
     //TODO: send all the gps data in the queue
-    u8 msgLen = sizeof(MSG_HEADER) + gps_size()*sizeof(GPS);
-    MSG_GPS_PACK* msg;
+    u8 msgLen = sizeof(MSG_UDP_HEADER) + gps_size()*sizeof(GPS);
+    MSG_GPS_PACK_UDP* msg;
+    u8 imei[MAX_IMEI_LENGTH] = {0};
     int count = 0;
+
+    if(!eat_get_imei(imei,MAX_IMEI_LENGTH))
+    {
+        LOG_ERROR("get imei error!");
+        return -1;
+    }
 
     if(gps_isQueueEmpty())//if queue is empty , do not send gps msg
     {
@@ -208,12 +215,17 @@ int cmd_GPSPack(void)
 
     LOG_DEBUG("msgLen %d, sizeof(GPS) %d", msgLen, sizeof(GPS));
 
-    msg = alloc_msg(CMD_GPS_PACK, msgLen);
+    msg = (MSG_GPS_PACK_UDP*)malloc(msgLen);
     if (!msg)
     {
         LOG_ERROR("alloc GPSPack message failed!");
         return -1;
     }
+
+    msg->header.signature = htons(START_FLAG_UDP);
+    msg->header.cmd = CMD_GPS_PACK;
+    memcpy(msg->header.imei, imei, MAX_IMEI_LENGTH);
+    msg->header.length = htons(msgLen - MSG_UDP_HEADER_LEN);
 
     for(count = 0;count < MAX_GPS_COUNT;count++)
     {
