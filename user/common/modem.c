@@ -164,3 +164,9 @@ eat_bool modem_GNSS(void)
 
     return modem_cmd(cmd);
 }
+
+eat_bool modem_AT(unsigned char *cmd)
+{
+    return modem_cmd(cmd);
+}
+

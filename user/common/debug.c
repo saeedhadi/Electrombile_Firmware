@@ -31,12 +31,13 @@ static int cmd_version(const unsigned char* cmdString, unsigned short length);
 static int cmd_imei(const unsigned char* cmdString, unsigned short length);
 static int cmd_imsi(const unsigned char* cmdString, unsigned short length);
 static int cmd_chipid(const unsigned char* cmdString, unsigned short length);
+static int cmd_AT(const unsigned char* cmdString, unsigned short length);
+
 
 #ifdef APP_DEBUG
 static int cmd_reboot(const unsigned char* cmdString, unsigned short length);
 static int cmd_halt(const unsigned char* cmdString, unsigned short length);
 static int cmd_rtc(const unsigned char* cmdString, unsigned short length);
-static int cmd_AT(const unsigned char* cmdString, unsigned short length);
 #endif
 
 static CMD_MAP cmd_map[MAX_CMD_NUMBER] =
@@ -46,11 +47,12 @@ static CMD_MAP cmd_map[MAX_CMD_NUMBER] =
         {"imei",        cmd_imei},
         {"imsi",        cmd_imsi},
         {"chipid",      cmd_chipid},
+        {"AT",          cmd_AT},
+        {"at",          cmd_AT},
 #ifdef APP_DEBUG
         {"reboot",      cmd_reboot},
         {"halt",        cmd_halt},
         {"rtc",         cmd_rtc},
-        {"AT",          cmd_AT},
 #endif
 };
 
@@ -100,9 +102,17 @@ static int cmd_chipid(const unsigned char* cmdString, unsigned short length)
     eat_get_chipid(chipid, MAX_CHIPID_LEN);
     for (i = 0; i < MAX_CHIPID_LEN; i++)
     {
-        sprintf(chipid_desc + i * 2, "%02X", chipid[i]);
+        snprintf(chipid_desc + i * 2, 2, "%02X", chipid[i]);
     }
     DBG_OUT("chipd = %s", chipid_desc);
+    return 0;
+}
+
+static int cmd_AT(const unsigned char* cmdString, unsigned short length)
+{
+    //forward AT command to modem
+    eat_modem_write(cmdString, length);
+    eat_modem_write("\n", 1);
     return 0;
 }
 
@@ -136,13 +146,6 @@ static int cmd_rtc(const unsigned char* cmdString, unsigned short length)
     return 0;
 }
 
-static int cmd_AT(const unsigned char* cmdString, unsigned short length)
-{
-    //forward AT command to modem
-    eat_modem_write(cmdString, length);
-    eat_modem_write("\n", 1);
-    return 0;
-}
 #endif
 
 int debug_proc(const unsigned char* cmdString, unsigned short length)

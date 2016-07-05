@@ -55,6 +55,10 @@ SETTING setting;
 #define TAG_LOCK    "lock"
 #define TAG_PERIOD  "period"
 
+#define TAG_BATTERY  "battery"
+#define TAG_BATTERYTYPE "batterytype"
+
+
 //the setting file format is as follow
 //{
 //    "SERVER":   {
@@ -136,7 +140,7 @@ static void setting_initial(void)
     /* Server configuration */
 #if 1
     setting.addr_type = ADDR_TYPE_DOMAIN;
-    strcpy(setting.domain, "www.xiaoan110.com");
+    strncpy(setting.domain, "www.xiaoan110.com",MAX_DOMAIN_NAME_LEN);
 #else
     setting.addr_type = ADDR_TYPE_IP;
     setting.ipaddr[0] = 121;
@@ -160,6 +164,9 @@ static void setting_initial(void)
     //autolock configuration
     setting.isAutodefendFixed = EAT_TRUE;
     setting.autodefendPeriod = 5;
+
+    //Baterry Type
+    setting.BaterryType = 0;    //Initial default NULL,wait for certainly judge type
 
     return;
 }
@@ -196,6 +203,17 @@ void set_autodefend_period(unsigned char period)
     setting_save();
 }
 
+unsigned char get_battery_type(void)
+{
+    return setting.BaterryType;
+}
+
+void set_battery_type(unsigned char batterytype)
+{
+    setting.BaterryType = batterytype;
+    setting_save();
+}
+
 
 
 eat_bool setting_restore(void)
@@ -207,6 +225,7 @@ eat_bool setting_restore(void)
     cJSON *conf = 0;
     cJSON *addr = 0;
     cJSON *autolock = 0;
+    cJSON *battery = 0;
 
     setting_initial();
 
@@ -326,6 +345,19 @@ eat_bool setting_restore(void)
     setting.isAutodefendFixed = cJSON_GetObjectItem(autolock, TAG_LOCK)->valueint ? EAT_TRUE : EAT_FALSE;
     setting.autodefendPeriod = cJSON_GetObjectItem(autolock, TAG_PERIOD)->valueint;
 
+    battery = cJSON_GetObjectItem(conf, TAG_BATTERY);
+    if(!battery)
+    {
+        LOG_ERROR("no battery config in setting file!");
+        eat_fs_Close(fh);
+        free(buf);
+        cJSON_Delete(conf);
+        return EAT_FALSE;
+    }
+    setting.BaterryType = cJSON_GetObjectItem(battery, TAG_BATTERYTYPE)->valueint;
+
+    LOG_DEBUG("BATTERY TYPE IS %d", setting.BaterryType);
+
     free(buf);
     eat_fs_Close(fh);
     cJSON_Delete(conf);
@@ -342,6 +374,7 @@ eat_bool setting_save(void)
     cJSON *root = cJSON_CreateObject();
     cJSON *address = cJSON_CreateObject();
     cJSON *autolock = cJSON_CreateObject();
+    cJSON *battery = cJSON_CreateObject();
 
     char *content = 0;
 
@@ -365,6 +398,9 @@ eat_bool setting_save(void)
     cJSON_AddNumberToObject(autolock, TAG_PERIOD, setting.autodefendPeriod);
 
     cJSON_AddItemToObject(root, TAG_AUTOLOCK, autolock);
+
+    cJSON_AddNumberToObject(battery, TAG_BATTERYTYPE, setting.BaterryType);
+    cJSON_AddItemToObject(root, TAG_BATTERY, battery);
 
 
     content = cJSON_Print(root);

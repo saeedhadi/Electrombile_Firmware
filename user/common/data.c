@@ -17,12 +17,18 @@ typedef struct queue
 }QUEUE;
 
 static QUEUE gps_queue = {0, 0};
-static u32 BatteryVoltage[MAX_VLOTAGE_NUM] = {0};
 static LOCAL_GPS last_gps_info;
 static LOCAL_GPS* last_gps = &last_gps_info;
 
 static char isItineraryStart = ITINERARY_END;
-int VibrationTime = 0;
+static int VibrationTime = 0;
+static int AlarmCount = 0;
+
+static eat_bool manager_ATcmd_flag = EAT_FALSE;
+static int manager_seq = 0;
+
+static eat_bool isMoved = EAT_FALSE;
+
 
 /*
  * to judge whether the queue is full
@@ -134,62 +140,6 @@ int gps_save_last(LOCAL_GPS* gps)
 
 
 /*
-*set the battery's voltage
-*/
-void battery_store_voltage(u32 voltage)
-{
-    static int count = 0;
-
-    if(count >= MAX_VLOTAGE_NUM)
-    {
-        count = 0;
-    }
-
-    BatteryVoltage[count++] = voltage;
-}
-
-/*
-* get the battery's voltage
-*/
-unsigned char battery_get_percent(void)
-{
-#define ADvalue_2_Realvalue(x) x*103/3/1000.f //unit mV, 3K & 100k divider
-#define Voltage2Percent(x) (unsigned char)exp((x-37.873)/2.7927)
-    u32 voltage = 0;
-    int count;
-    unsigned char percent;
-
-    for(count = 0;count < MAX_VLOTAGE_NUM;count++)
-    {
-        voltage += BatteryVoltage[count];
-    }
-
-    voltage /= MAX_VLOTAGE_NUM;
-
-    if(ADvalue_2_Realvalue(voltage) > 55)
-    {
-        voltage = voltage*48/60;    //normalizing to 48V
-    }
-    else if(ADvalue_2_Realvalue(voltage) > 40)
-    {
-        voltage = voltage;
-    }
-    else if(ADvalue_2_Realvalue(voltage) > 28)
-    {
-        voltage = voltage*48/36;    //normalizing to 48V
-    }
-
-    percent = Voltage2Percent(ADvalue_2_Realvalue(voltage));
-
-    return percent>100?100:percent;
-}
-
-unsigned char battery_get_miles(void)
-{
-    return 0;
-}
-
-/*
 *vibration time ,for autolock & initerary
 */
 int getVibrationTime(void)
@@ -219,6 +169,47 @@ char get_itinerary_state(void)
 void set_itinerary_state(char state)
 {
     isItineraryStart = state;
+}
+
+void set_manager_ATcmd_state(char state)
+{
+    manager_ATcmd_flag = state;
+}
+eat_bool get_manager_ATcmd_state(void)
+{
+    return manager_ATcmd_flag;
+}
+
+void set_manager_seq(int seq)
+{
+    manager_seq= seq;
+}
+int get_manager_seq(void)
+{
+    return manager_seq;
+}
+
+void Vibration_setMoved(eat_bool state)
+{
+    isMoved = state;
+}
+eat_bool Vibration_isMoved(void)
+{
+    return isMoved;
+}
+
+void Reset_AlarmCount(void)
+{
+    AlarmCount = 0;
+}
+int Get_AlarmCount(void)
+{
+    return AlarmCount;
+}
+
+void Add_AlarmCount(void)
+{
+    AlarmCount++;
 }
 
 

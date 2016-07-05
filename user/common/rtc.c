@@ -68,7 +68,7 @@ void rtc_update(long long time)
     }
     else
     {
-        LOG_DEBUG("GPS's time is blocked:%lld",time);
+        LOG_DEBUG("GPS's time is blocked:%ld",time);
     }
 }
 

@@ -51,6 +51,9 @@ typedef struct
         unsigned char autodefendPeriod;
     };
 
+    //battery type
+    unsigned char BaterryType;
+
 
 }SETTING;
 
@@ -66,6 +69,10 @@ unsigned char get_autodefend_period(void);
 
 void set_autodefend_period(unsigned char period);
 eat_bool get_autodefend_state(void);
+
+unsigned char get_battery_type(void);
+void set_battery_type(unsigned char batterytype);
+
 
 eat_bool setting_restore(void);
 eat_bool setting_save(void);

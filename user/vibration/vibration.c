@@ -25,9 +25,7 @@
 #define MOVE_THRESHOLD 5
 
 static eat_bool avoid_freq_flag = EAT_FALSE;
-static int AlarmCount = 0;
 
-eat_bool isMoved = EAT_FALSE;
 
 void DigitalIntegrate(float * sour, float * dest,int len,float cycle)
 {
@@ -69,23 +67,26 @@ static eat_bool vivration_AutolockStateSend(eat_bool state)
 
 static eat_bool vibration_sendAlarm(void)
 {
-    u8 msgLen = sizeof(MSG_THREAD) + 1;
-    MSG_THREAD* msg = NULL;
-    unsigned char* alarmType = NULL;
+    u8 msgLen = sizeof(MSG_THREAD) + sizeof(ALARM_INFO);
+    MSG_THREAD *msg = NULL;
+    ALARM_INFO *msg_data = NULL;
 
-    if(AlarmCount++ <= 3)
+    Add_AlarmCount();
+    if(Get_AlarmCount() <= 3)
     {
         msg = allocMsg(msgLen);
-        alarmType = (unsigned char*)msg->data;
+        msg_data = (ALARM_INFO*)msg->data;
 
-        msg->cmd = CMD_THREAD_VIBRATE;
-        msg->length = 1;
-        *alarmType = ALARM_VIBRATE;
+        msg->cmd = CMD_THREAD_ALARM;
+        msg->length = sizeof(ALARM_INFO);
+        msg_data->alarm_type = ALARM_VIBRATE;
 
-        LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, *(unsigned char*)msg->data);
+        LOG_DEBUG("vibration alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, msg_data->alarm_type);
         avoid_freq_flag = EAT_TRUE;
         return sendMsg(THREAD_MAIN, msg, msgLen);
     }
+
+    return EAT_FALSE;
 }
 
 /*
@@ -276,27 +277,27 @@ static void vibration_timer_handler(void)
         {
             isFirstTime = EAT_FALSE;
 
-            isMoved = EAT_FALSE;
+            Vibration_setMoved(EAT_FALSE);
         }
         else
         {
-            isMoved = EAT_TRUE;
+            Vibration_setMoved(EAT_TRUE);
         }
     }
     else
     {
-        isMoved = EAT_FALSE;
+        Vibration_setMoved(EAT_FALSE);
     }
 
     //always to judge if need to alarm , just judge the defend state before send alarm
-    if(isMoved && avoid_freq_flag == EAT_FALSE)
+    if(Vibration_isMoved() && avoid_freq_flag == EAT_FALSE)
     {
         avoid_fre_send(EAT_FALSE);
         eat_timer_start(TIMER_MOVE_ALARM, MOVE_TIMER_PERIOD);
         //vibration_sendAlarm();  //bec use displacement judgement , there do not alarm
     }
 
-    if(isMoved)
+    if(Vibration_isMoved())
     {
         ResetVibrationTime();
         LOG_DEBUG("shake!");
@@ -315,13 +316,6 @@ static void vibration_timer_handler(void)
                     set_vibration_state(EAT_TRUE);
                 }
             }
-
-
-            if(AlarmCount > 0)
-            {
-                AlarmCount = 0;
-            }
-
         }
 
         if(getVibrationTime() * setting.vibration_timer_period >= (2 * 60000))// 2min dont move ,judge one itinerary
@@ -330,6 +324,8 @@ static void vibration_timer_handler(void)
             {
                 vivration_SendItinerarayState(ITINERARY_END);
             }
+
+            Reset_AlarmCount();
         }
     }
 

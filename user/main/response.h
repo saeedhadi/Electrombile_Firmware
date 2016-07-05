@@ -34,4 +34,16 @@ int cmd_UpgradeData_rsp(const void* msg);
 int cmd_UpgradeEnd_rsp(const void* msg);
 int cmd_DeviceInfo_rsp(const void* msg);
 
+int cmd_LogInfo_rsp(const void * msg);
+int cmd_GSMSignal_rsp(const void * msg);
+int cmd_GPSSignal_rsp(const void * msg);
+int cmd_433Signal_rsp(const void * msg);
+int cmd_GetSetting_rsp(const void * msg);
+int cmd_GetBattery_rsp(const void* msg);
+int cmd_GetAT_rsp(const void* msg);
+
+
+#define MAX_DEBUG_BUF_LEN 256   //128 for loginfo is not enough
+
+
 #endif /* USER_MAIN_RESPONSE_H_ */

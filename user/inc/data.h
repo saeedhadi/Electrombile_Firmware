@@ -27,10 +27,6 @@ eat_bool gps_dequeue(GPS* gps);
 
 int gps_size(void);
 
-unsigned char battery_get_percent(void);
-unsigned char battery_get_miles(void);
-void battery_store_voltage(u32 voltage);
-
 LOCAL_GPS* gps_get_last(void);
 int gps_save_last(LOCAL_GPS* gps);
 
@@ -40,6 +36,19 @@ void set_itinerary_state(char state);
 int getVibrationTime(void);
 int VibrationTimeAdd(void);
 int ResetVibrationTime(void);
+
+void set_manager_ATcmd_state(char state);
+eat_bool get_manager_ATcmd_state(void);
+
+void set_manager_seq(int seq);
+int get_manager_seq(void);
+
+void Vibration_setMoved(eat_bool state);
+eat_bool Vibration_isMoved(void);
+
+void Reset_AlarmCount(void);
+int Get_AlarmCount(void);
+void Add_AlarmCount(void);
 
 
 #define MAX_GPS_COUNT 10

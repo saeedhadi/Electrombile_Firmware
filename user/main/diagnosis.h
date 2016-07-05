@@ -10,5 +10,10 @@
 
 eat_bool diag_check(void);
 
+u32 diag_433_get(void);
+int diag_gsm_get(void);
+
+
+
 
 #endif /* USER_MAIN_DIAGNOSIS_H_ */

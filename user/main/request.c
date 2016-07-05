@@ -120,9 +120,9 @@ int cmd_Itinerary_check(void)
 
     itinerary_msg = alloc_msg(CMD_ITINERARY, sizeof(MSG_ITINERARY_REQ));
 
-    itinerary_msg->starttime = htonl(itinerary.starttime);
-    itinerary_msg->mileage= htonl(itinerary.miles);
-    itinerary_msg->endtime= htonl(itinerary.endtime);
+    itinerary_msg->starttime = itinerary.starttime;
+    itinerary_msg->mileage= itinerary.miles;
+    itinerary_msg->endtime= itinerary.endtime;
 
     LOG_DEBUG("send itinerary msg,start:%d end:%d itinerary:%d",ntohl(itinerary_msg->starttime),ntohl(itinerary_msg->endtime),ntohl(itinerary_msg->mileage));
 
@@ -131,8 +131,18 @@ int cmd_Itinerary_check(void)
     return 0;
 }
 
-int cmd_SMS(const void* msg)
+int cmd_SMS(char number[], char type, char smsLen, char content[])
 {
+    u8 msgLen = sizeof(MSG_SMS_REQ) + smsLen;
+    MSG_SMS_REQ *msg = alloc_msg(CMD_SMS, msgLen);
+
+    msg->type = type;
+    msg->smsLen = smsLen;
+    strncpy(msg->telphone, number, TEL_NO_LENGTH);
+    msg->telphone[TEL_NO_LENGTH] = 0;
+    strncpy(msg->sms, content, smsLen);
+
+    socket_sendDataDirectly(msg, msgLen);
     return 0;
 }
 

@@ -14,11 +14,15 @@
 enum CMD
 {
     CMD_THREAD_GPS,
+    CMD_THREAD_GPSHDOP,
     CMD_THREAD_SMS,
-    CMD_THREAD_VIBRATE,
+    CMD_THREAD_ALARM,
     CMD_THREAD_LOCATION,
     CMD_THREAD_AUTOLOCK,
     CMD_THREAD_ITINERARY,
+    CMD_THREAD_BATTERY,
+    CMD_THREAD_BATTERY_INFO,
+    CMD_THREAD_BATTERY_GET,
 };
 
 
@@ -58,6 +62,11 @@ typedef struct
 
 typedef struct
 {
+    char alarm_type;
+}__attribute__((__packed__))ALARM_INFO;
+
+typedef struct
+{
     char state;
 
 }VIBRATION_ITINERARY_INFO;
@@ -65,13 +74,46 @@ typedef struct
 
 typedef struct
 {
-    u32 starttime;
-    u32 endtime;
-    u32 itinerary;
+    int starttime;
+    int endtime;
+    int itinerary;
 
 }__attribute__((__packed__))GPS_ITINERARY_INFO;
 
 
+typedef struct
+{
+    float hdop;
+    char satellites;
+    int managerSeq;
+}__attribute__((__packed__))GPS_HDOP_INFO;
+
+typedef struct
+{
+    int managerSeq;
+}__attribute__((__packed__))MANAGERSEQ_INFO;
+
+typedef struct
+{
+    char percent;
+    char miles;
+}__attribute__((__packed__))BATTERY_INFO;
+
+
+typedef struct
+{
+    char percent;
+    char miles;
+    int managerSeq;
+}__attribute__((__packed__))BATTERY_GET_INFO;
+
+typedef struct
+{
+    char number[TEL_NO_LENGTH];
+    char type;
+    char smsLen;
+    char content[];
+}__attribute__((__packed__))SMS_SEND_INFO;
 
 
 #define allocMsg(len) eat_mem_alloc(len)
