@@ -108,6 +108,7 @@ static u8 battery_Judge_type(u32 voltage)
 
     percent = (int)Voltage2Percent(ADvalue_2_Realvalue(voltage));
     percent = percent>MAX_PERCENT_NUM?MAX_PERCENT_NUM:percent;
+    LOG_DEBUG("battery_Judge_type:%d,%d",percent,battery_type);
 
     if(percent > 30 && percent < 70)
     {
@@ -148,7 +149,7 @@ static u8 battery_getType_percent(u32 voltage)
 
     percent = (int)Voltage2Percent(ADvalue_2_Realvalue(voltage));
     percent = percent>MAX_PERCENT_NUM?MAX_PERCENT_NUM:percent;
-
+    LOG_DEBUG("battery_getType_percent:%d,%d",percent,battery_type);
     if(percent == 0)                //if percent == 0,mostly judged error,set type to default
     {
         set_battery_type(BATTERY_TYPENULL);
@@ -163,6 +164,7 @@ static u8 battery_get_percent(void)
     u8 percent = 0;
     u8 percent_tmp = 0;
     u32 voltage = 0;
+    LOG_DEBUG("battery_get_percent");
 
     voltage = battery_get_Voltage();
 
@@ -318,7 +320,7 @@ void app_battery_thread(void *data)
     }
 
 	LOG_INFO("TIMER_BATTERY_CHECK start.");
-    eat_timer_start(TIMER_BATTERY_CHECK,BATTERY_TIMER_PEROID);
+    eat_timer_start(TIMER_BATTERY_CHECK,30*1000);
 
 	while(EAT_TRUE)
 	{
@@ -329,6 +331,7 @@ void app_battery_thread(void *data)
                 switch (event.data.timer.timer_id)
                 {
                     case TIMER_BATTERY_CHECK:
+                        LOG_ERROR("timer TIMER_BATTERY_CHECK expire!");
                         if(!Vibration_isMoved())
                         {
                             battery_alarm_handler();

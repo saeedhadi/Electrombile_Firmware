@@ -50,6 +50,9 @@ void Reset_AlarmCount(void);
 int Get_AlarmCount(void);
 void Add_AlarmCount(void);
 
+char *Get_IMEI(void);
+void Save_IMEI(char *imei);
+
 
 #define MAX_GPS_COUNT 10
 #define MAX_VLOTAGE_NUM 10

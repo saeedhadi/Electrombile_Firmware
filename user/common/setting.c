@@ -212,6 +212,7 @@ unsigned char get_battery_type(void)
 void set_battery_type(unsigned char batterytype)
 {
     setting.BaterryType = batterytype;
+    LOG_DEBUG("setting save");
     setting_save();
 }
 

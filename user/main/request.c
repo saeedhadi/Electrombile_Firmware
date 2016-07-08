@@ -28,6 +28,7 @@ int cmd_Login(void)
 {
     MSG_LOGIN_REQ* msg = alloc_msg(CMD_LOGIN, sizeof(MSG_LOGIN_REQ));
     u8 imei[MAX_IMEI_LENGTH] = {0};
+    u8 *ret = NULL;
 
     if (!msg)
     {
@@ -37,7 +38,14 @@ int cmd_Login(void)
 
     msg->version = htonl(VERSION_NUM);
 
-    eat_get_imei(imei, MAX_IMEI_LENGTH);
+    ret = eat_get_imei(imei, MAX_IMEI_LENGTH);
+    if(NULL == ret)
+    {
+        LOG_ERROR("get imei error");
+        eat_reset_module();
+    }
+
+    Save_IMEI(imei);
 
     memcpy(msg->IMEI, imei, MAX_IMEI_LENGTH);
 
@@ -202,11 +210,7 @@ int cmd_GPSPack(void)
     u8 imei[MAX_IMEI_LENGTH] = {0};
     int count = 0;
 
-    if(!eat_get_imei(imei,MAX_IMEI_LENGTH))
-    {
-        LOG_ERROR("get imei error!");
-        return -1;
-    }
+    strncpy(imei, Get_IMEI(), MAX_IMEI_LENGTH);
 
     if(gps_isQueueEmpty())//if queue is empty , do not send gps msg
     {

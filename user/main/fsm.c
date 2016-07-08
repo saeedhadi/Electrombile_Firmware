@@ -274,7 +274,6 @@ static int action_onSocketConnectFailed(void)
 static int action_onLogined(void)
 {
     fsm_trans(STATE_RUNNING);
-
     return 0;
 }
 

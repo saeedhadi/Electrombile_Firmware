@@ -29,6 +29,9 @@ static int manager_seq = 0;
 
 static eat_bool isMoved = EAT_FALSE;
 
+#define MAX_IMEI_LEN 15
+static char IMEI[15] = {0};
+
 
 /*
  * to judge whether the queue is full
@@ -211,5 +214,16 @@ void Add_AlarmCount(void)
 {
     AlarmCount++;
 }
+
+void Save_IMEI(char *imei)
+{
+    strncpy(IMEI, imei, MAX_IMEI_LEN);
+}
+
+char *Get_IMEI(void)
+{
+    return IMEI;
+}
+
 
 
