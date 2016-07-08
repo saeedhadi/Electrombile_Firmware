@@ -109,7 +109,7 @@ static u8 battery_Judge_type(u32 voltage)
     percent = (int)Voltage2Percent(ADvalue_2_Realvalue(voltage));
     percent = percent>MAX_PERCENT_NUM?MAX_PERCENT_NUM:percent;
 
-    if(percent > 30 && percent < 70)
+    if(percent > 40 && percent < 60)
     {
         set_battery_type(battery_type);
     }
@@ -148,11 +148,6 @@ static u8 battery_getType_percent(u32 voltage)
 
     percent = (int)Voltage2Percent(ADvalue_2_Realvalue(voltage));
     percent = percent>MAX_PERCENT_NUM?MAX_PERCENT_NUM:percent;
-
-    if(percent == 0)                //if percent == 0,mostly judged error,set type to default
-    {
-        set_battery_type(BATTERY_TYPENULL);
-    }
 
     return (u8)percent;
 }
