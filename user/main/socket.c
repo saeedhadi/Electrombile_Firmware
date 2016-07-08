@@ -226,8 +226,8 @@ static void hostname_notify_cb(u32 request_id, eat_bool result, u8 ip_addr[4])
 	if (result == EAT_TRUE)
 	{
 		LOG_DEBUG("hostname notify:%s -> %d.%d.%d.%d.", setting.domain, ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3], setting.port);
-        strncpy(setting.ipaddr,ip_addr,sizeof(unsigned char)*4);
-        socket_connect(ip_addr); //TODO:this should be done in function action_hostname2ip
+
+		socket_connect(ip_addr); //TODO:this should be done in function action_hostname2ip
 		fsm_run(EVT_HOSTNAME2IP);
 	}
 	else
@@ -317,10 +317,11 @@ int socket_setup(void)
     }
     else
     {
+        u8 ipaddr[4] = {0};
         u8 len = 0;
 
         eat_soc_gethost_notify_register(hostname_notify_cb);
-        rc = eat_soc_gethostbyname(setting.domain, setting.ipaddr, &len, request_id++);
+        rc = eat_soc_gethostbyname(setting.domain, ipaddr, &len, request_id++);
         if (rc == SOC_WOULDBLOCK)
         {
             LOG_DEBUG("eat_soc_gethostbyname wait callback.");
@@ -328,8 +329,8 @@ int socket_setup(void)
         }
         else if (rc == SOC_SUCCESS)
         {
-            LOG_DEBUG("host:%s -> %d.%d.%d.%d:%d.", setting.domain, setting.ipaddr[0], setting.ipaddr[1], setting.ipaddr[2], setting.ipaddr[3], setting.port);
-            return socket_connect(setting.ipaddr);
+            LOG_DEBUG("host:%s -> %d.%d.%d.%d:%d.", setting.domain, ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3], setting.port);
+            return socket_connect(ipaddr);
         }
         else
         {

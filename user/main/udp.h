@@ -8,9 +8,9 @@
 #define UDP_CLIENT_H_
 
 
-int socket_connect_udp(u8 ip_addr[4]);
+int udp_socket_connect(u8 ip_addr[4]);
 
-int socket_sendData_UDP(void* data, s32 len);
+int udp_socket_sendData(void* data, s32 len);
 
 
 

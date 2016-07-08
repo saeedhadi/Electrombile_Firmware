@@ -241,7 +241,7 @@ int cmd_GPSPack(void)
         msg->gps[count].course = htons(msg->gps[count].course);
     }
 
-    socket_sendData_UDP(msg, msgLen);
+    udp_socket_sendData(msg, msgLen);
 
     return 0;
 
