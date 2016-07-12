@@ -290,13 +290,16 @@ static int battery_get_msg(const MSG_THREAD* thread_msg)
 */
 static void battery_event_adc(EatEvent_st *event)
 {
-    if(event->data.adc.pin == ADC_VOLTAGE)
+    if(!Vibration_isMoved())
     {
-        battery_store_voltage(event->data.adc.v);
-    }
-    else
-    {
-        LOG_ERROR("ADC_433 = %d",event->data.adc.v);
+        if(event->data.adc.pin == ADC_VOLTAGE)
+        {
+            battery_store_voltage(event->data.adc.v);
+        }
+        else
+        {
+            LOG_ERROR("ADC_433 = %d",event->data.adc.v);
+        }
     }
 }
 
@@ -324,10 +327,7 @@ void app_battery_thread(void *data)
                 switch (event.data.timer.timer_id)
                 {
                     case TIMER_BATTERY_CHECK:
-                        if(!Vibration_isMoved())
-                        {
-                            battery_alarm_handler();
-                        }
+                        battery_alarm_handler();
                         eat_timer_start(event.data.timer.timer_id,BATTERY_TIMER_PEROID);
                         break;
 
