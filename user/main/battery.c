@@ -109,9 +109,35 @@ static u8 battery_Judge_type(u32 voltage)
     percent = (int)Voltage2Percent(ADvalue_2_Realvalue(voltage));
     percent = percent>MAX_PERCENT_NUM?MAX_PERCENT_NUM:percent;
 
-    if(percent > 40 && percent < 60)
+    if(battery_type == get_battery_type())
     {
-        set_battery_type(battery_type);
+        LOG_DEBUG("battery type OK: %d",battery_type);
+        return (u8)percent;
+    }
+
+    if(60 < percent)
+    {
+        if(battery_type != get_battery_test_type())
+        {
+            LOG_DEBUG("set battery flag: %d",battery_type);
+            set_battery_flag(EAT_TRUE, battery_type);
+        }
+
+        return (u8)percent;
+    }
+
+    if(40 > percent)
+    {
+        if(get_battery_flag() && battery_type == get_battery_test_type())
+        {
+            LOG_DEBUG("set battery type: %d",battery_type);
+            set_battery_type(battery_type);
+        }
+        else
+        {
+            LOG_DEBUG("reset battery type: %d",battery_type);
+            set_battery_flag(NULL, NULL);
+        }
     }
 
     return (u8)percent;
@@ -135,7 +161,7 @@ static u8 battery_getType_percent(u32 voltage)
     }
     else if(battery_type == BATTERY_TYPE48)
     {
-        voltage = voltage;
+        voltage = voltage;          //normalizing to 48V
     }
     else if(battery_type == BATTERY_TYPE36)
     {
@@ -143,7 +169,7 @@ static u8 battery_getType_percent(u32 voltage)
     }
     else
     {
-        return (MAX_PERCENT_NUM+1); //BATTERY_TYPENULL as MAX_PERCENT_NUM + 1 > MAX_PERCENT_NUM
+        return (MAX_PERCENT_NUM + 1); //BATTERY_TYPENULL as MAX_PERCENT_NUM + 1 > MAX_PERCENT_NUM
     }
 
     percent = (int)Voltage2Percent(ADvalue_2_Realvalue(voltage));
@@ -208,9 +234,9 @@ static int battery_alarm_handler(void)
     u8 msgLen = sizeof(MSG_THREAD) + sizeof(ALARM_INFO);
     MSG_THREAD *msg = NULL;
     ALARM_INFO *alarmType = NULL;
-    char type = battery_percent_check();
+    char alarm_type = battery_percent_check();
 
-    if(type == BATTERY_ALARM_NULL)
+    if(alarm_type == BATTERY_ALARM_NULL)
     {
         return 0;
     }
@@ -220,9 +246,9 @@ static int battery_alarm_handler(void)
 
     msg->cmd = CMD_THREAD_ALARM;
     msg->length = sizeof(ALARM_INFO);
-    alarmType->alarm_type = type;
+    alarmType->alarm_type = alarm_type;
 
-    LOG_DEBUG("battery alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, type);
+    LOG_DEBUG("battery alarm:cmd(%d),length(%d),data(%d)", msg->cmd, msg->length, alarm_type);
 
     return sendMsg(THREAD_MAIN, msg, msgLen);
 

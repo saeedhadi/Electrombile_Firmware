@@ -57,6 +57,8 @@ SETTING setting;
 
 #define TAG_BATTERY  "battery"
 #define TAG_BATTERYTYPE "batterytype"
+#define TAG_BATTERY_TEST_TYPE "battery_test_type"
+#define TAG_BATTERY_FLAG "battery_flag"
 
 
 //the setting file format is as follow
@@ -166,7 +168,9 @@ static void setting_initial(void)
     setting.autodefendPeriod = 5;
 
     //Baterry Type
-    setting.BaterryType = 0;    //Initial default NULL,wait for certainly judge type
+    setting.BaterryType = NULL;    //Initial default NULL,wait for certainly judge type
+    setting.Baterry_Test_Type = NULL;
+    setting.Baterry_Flag = NULL;
 
     return;
 }
@@ -214,6 +218,22 @@ void set_battery_type(unsigned char batterytype)
     setting_save();
 }
 
+unsigned char get_battery_test_type(void)
+{
+    return setting.Baterry_Test_Type;
+}
+
+eat_bool get_battery_flag(void)
+{
+    return setting.Baterry_Flag;
+}
+
+void set_battery_flag(eat_bool flag, int test_type)
+{
+    setting.Baterry_Test_Type = test_type;
+    setting.Baterry_Flag = flag;
+    setting_save();
+}
 
 
 eat_bool setting_restore(void)
@@ -355,6 +375,8 @@ eat_bool setting_restore(void)
         return EAT_FALSE;
     }
     setting.BaterryType = cJSON_GetObjectItem(battery, TAG_BATTERYTYPE)->valueint;
+    setting.Baterry_Test_Type = cJSON_GetObjectItem(battery, TAG_BATTERY_TEST_TYPE)->valueint;
+    setting.Baterry_Flag = cJSON_GetObjectItem(battery, TAG_BATTERY_FLAG)->valueint ? EAT_TRUE : EAT_FALSE;
 
     LOG_DEBUG("BATTERY TYPE IS %d", setting.BaterryType);
 
@@ -400,6 +422,8 @@ eat_bool setting_save(void)
     cJSON_AddItemToObject(root, TAG_AUTOLOCK, autolock);
 
     cJSON_AddNumberToObject(battery, TAG_BATTERYTYPE, setting.BaterryType);
+    cJSON_AddNumberToObject(battery, TAG_BATTERY_TEST_TYPE, setting.Baterry_Test_Type);
+    cJSON_AddNumberToObject(battery, TAG_BATTERY_FLAG, setting.Baterry_Flag);
     cJSON_AddItemToObject(root, TAG_BATTERY, battery);
 
 
