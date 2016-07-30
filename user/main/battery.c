@@ -136,7 +136,7 @@ static u8 battery_Judge_type(u32 voltage)
         else
         {
             LOG_DEBUG("reset battery type: %d",battery_type);
-            set_battery_flag(NULL, NULL);
+            set_battery_flag(EAT_FALSE, NULL);
         }
     }
 
@@ -235,6 +235,11 @@ static int battery_alarm_handler(void)
     MSG_THREAD *msg = NULL;
     ALARM_INFO *alarmType = NULL;
     char alarm_type = battery_percent_check();
+
+    if(Vibration_isMoved())
+    {
+        return 0;
+    }
 
     if(alarm_type == BATTERY_ALARM_NULL)
     {
@@ -350,10 +355,7 @@ void app_battery_thread(void *data)
                 switch (event.data.timer.timer_id)
                 {
                     case TIMER_BATTERY_CHECK:
-                        if(!Vibration_isMoved())
-                        {
-                            battery_alarm_handler();
-                        }
+                        battery_alarm_handler();
                         eat_timer_start(event.data.timer.timer_id,BATTERY_TIMER_PEROID);
                         break;
 

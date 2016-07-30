@@ -169,8 +169,8 @@ static void setting_initial(void)
 
     //Baterry Type
     setting.BaterryType = NULL;    //Initial default NULL,wait for certainly judge type
-    setting.Baterry_Test_Type = NULL;
-    setting.Baterry_Flag = NULL;
+    setting.Baterry_Test_Type = EAT_FALSE;
+    setting.Baterry_Flag = EAT_FALSE;
 
     return;
 }
@@ -228,7 +228,7 @@ eat_bool get_battery_flag(void)
     return setting.Baterry_Flag;
 }
 
-void set_battery_flag(eat_bool flag, int test_type)
+void set_battery_flag(eat_bool flag, unsigned char test_type)
 {
     setting.Baterry_Test_Type = test_type;
     setting.Baterry_Flag = flag;

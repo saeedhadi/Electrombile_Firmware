@@ -76,7 +76,7 @@ unsigned char get_battery_type(void);
 void set_battery_type(unsigned char batterytype);
 unsigned char get_battery_test_type(void);
 eat_bool get_battery_flag(void);
-void set_battery_flag(eat_bool flag, int test_type);
+void set_battery_flag(eat_bool flag, unsigned char test_type);
 
 eat_bool setting_restore(void);
 eat_bool setting_save(void);
