@@ -72,7 +72,7 @@ static eat_bool vibration_sendAlarm(void)
     ALARM_INFO *msg_data = NULL;
 
     Add_AlarmCount();
-    if(Get_AlarmCount() <= 3)
+    if(Get_AlarmCount() < 3)
     {
         msg = allocMsg(msgLen);
         msg_data = (ALARM_INFO*)msg->data;
