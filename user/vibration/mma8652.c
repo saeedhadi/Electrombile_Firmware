@@ -6,12 +6,22 @@
  */
  
 #include "mma8652.h"
+#include "eat_type.h"
 
 bool mma8652_init(void)
 {
 	mma8652_i2c_init();
-	
-	return mma8652_verify_device_id();
+
+	if(mma8652_verify_device_id())
+	{
+        unsigned char readbuf[3];
+        bool ret = mma8652_i2c_register_read(MMA8652_REG_OUT_X_MSB, readbuf, 3);
+        if(readbuf[0] != 0 || readbuf[1] != 0 || readbuf[2] != 0)
+        {
+            return EAT_TRUE;
+        }
+	}
+    return EAT_FALSE;
 }
 
 bool mma8652_verify_device_id(void)

@@ -349,6 +349,7 @@ void app_vibration_thread(void *data)
 	else
 	{
 	    mma8652_config();
+        LOG_ERROR("mma8652 init success");
 	}
 
 	eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
